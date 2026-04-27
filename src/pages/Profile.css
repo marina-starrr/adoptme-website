@@ -1,0 +1,278 @@
+/* --- СТОРІНКА ПРОФІЛЮ --- */
+
+.profile-page {
+    background-color: var(--body-bg); 
+    padding: 60px 5%;
+    display: flex;
+    justify-content: center;
+    flex-grow: 1; 
+}
+
+.profile-container {
+    display: flex;
+    max-width: 1200px;
+    width: 100%;
+    gap: 40px;
+    background-color: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow: hidden; 
+    min-height: 600px;
+}
+
+/* Ліва колонка (Sidebar) */
+.profile-sidebar {
+    width: 300px;
+    background: linear-gradient(to bottom, #f8f5ff, #eee1ff);
+    padding: 40px 20px;
+    border-right: 2px solid #e0d4f5;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-avatar-section {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.profile-avatar-large {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--purple-light);
+    margin-bottom: 15px;
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.2);
+}
+
+.profile-name {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 5px;
+}
+
+.profile-status {
+    font-size: 14px;
+    color: var(--purple-medium);
+    font-weight: 500;
+}
+
+/* Кнопки навігації */
+.profile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.profile-nav-btn {
+    background-color: transparent;
+    border: 2px solid transparent;
+    padding: 15px 20px;
+    border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--black);
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-nav-btn:hover {
+    background-color: rgba(104, 71, 221, 0.1);
+}
+
+.profile-nav-btn.active {
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: var(--white);
+    box-shadow: 0 4px 10px rgba(104, 71, 221, 0.3);
+}
+
+/* Права колонка (Контент) */
+.profile-content-area {
+    flex-grow: 1;
+    padding: 40px;
+    background-color: var(--white);
+}
+
+.profile-tab-content h3 {
+    font-size: 28px;
+    color: var(--purple-dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee1ff;
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Адаптивність */
+@media (max-width: 850px) {
+    .profile-container {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 2px solid #e0d4f5;
+        padding: 30px 20px;
+    }
+
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-nav {
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap; 
+    }
+
+    .profile-nav-btn {
+        text-align: center;
+        padding: 12px 15px;
+    }
+
+    .profile-content-area {
+        padding: 30px 20px;
+    }
+}
+/* --- СТИЛІ ФОРМИ ОСОБИСТИХ ДАНИХ --- */
+.profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 500px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.form-group label {
+    font-weight: 600;
+    color: var(--purple-dark);
+    font-size: 14px;
+}
+
+.form-group input {
+    padding: 12px 15px;
+    border: 2px solid #e0d4f5;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.form-group input:focus {
+    border-color: #6847DD;
+}
+
+.save-profile-btn {
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    border: none;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.save-profile-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
+}
+
+/* --- СТИЛІ ДЛЯ ЗАЯВОК --- */
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.application-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 2px solid #eee1ff;
+    border-radius: 12px;
+    background-color: #faf8ff;
+}
+
+.app-details h4 {
+    margin-bottom: 5px;
+    color: var(--black);
+}
+
+.app-details h4 span {
+    color: #6847DD;
+}
+
+.app-details p {
+    font-size: 14px;
+    color: #666;
+}
+
+.app-status {
+    padding: 8px 15px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.status-green { background-color: #d4edda; color: #155724; }
+.status-yellow { background-color: #fff3cd; color: #856404; }
+
+/* --- СТИЛІ ДЛЯ УЛЮБЛЕНЦІВ В ПРОФІЛІ --- */
+.profile-favorites-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
+}
+
+.fav-profile-card {
+    border: 2px solid #6847DD;
+    border-radius: 12px;
+    padding: 10px;
+    text-align: center;
+    background-color: white;
+}
+
+.fav-profile-card img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.badge {
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 10px;
+}
+
+.empty-message {
+    color: #666;
+    font-style: italic;
+}
