@@ -210,7 +210,7 @@ fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {
                 <div className="drawer-links">
                     {favorites.length > -1 ? (
                         <>
-                            <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
+                            <Link to="/Profile" className="drawer-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
                                 Мій профіль
                             </Link>
                             <button className="drawer-btn logout-btn" onClick={() => {

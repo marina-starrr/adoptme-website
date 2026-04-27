@@ -40,7 +40,7 @@ function Reviews() {
         }
     });
   };
-
+  
   return (
     <div className="reviews-section">
         <div className="reviews-title-container">
