@@ -7,6 +7,16 @@ function Header() {
   const [isAccountOpen, setIsAccountOpen] = useState(false); // 👇 НОВИЙ СТАН
   const [favorites, setFavorites] = useState([]);
   const [showForm, setShowForm] = useState(false);
+  const [isClosing, setIsClosing] = useState(false); // 👇 Новий стан
+
+  // 👇 Нова функція для плавного закриття
+  const handleCloseDrawer = () => {
+      setIsClosing(true); // 1. Вмикаємо анімацію зникнення
+      setTimeout(() => {
+          setIsAccountOpen(false); // 2. Видаляємо з екрана
+          setIsClosing(false);     // 3. Скидаємо стан для наступного разу
+      }, 300); // Чекаємо 300мс (час нашої CSS анімації)
+  };
 
   // Дані форми
   const [adopterName, setAdopterName] = useState('');
@@ -179,23 +189,47 @@ fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {
                 </div>
             </div>
         )}
-
-        {/* 👇 НОВЕ МОДАЛЬНЕ ВІКНО ДЛЯ АКАУНТУ */}
-        {isAccountOpen && (
-            <div className="modal" style={{ display: 'flex' }}>
-                <div className="modal-content">
-                    <span className="close-btn" onClick={() => setIsAccountOpen(false)}>&times;</span>
-                    <div className="modal-header">
-                        <h3>Особистий кабінет</h3>
-                    </div>
-                    <div style={{ textAlign: 'center', marginTop: '20px' }}>
-                        <p>Тут буде інформація про користувача або форма входу.</p>
-                        <button className="submit-adoption-btn" onClick={() => setIsAccountOpen(false)}>Закрити</button>
-                    </div>
+        
+        {/* Бічна панель акаунту */}
+{isAccountOpen && (
+    <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
+        <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+            
+            <img 
+                src="/хрест.png" 
+                alt="Закрити" 
+                className="drawer-close-icon"
+                onClick={handleCloseDrawer} 
+                style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px' }} 
+            />
+            
+            <div className="drawer-content">
+                <img src="/ava.jpg" alt="Профіль" className="drawer-avatar" />
+                <h3>Мій акаунт</h3>
+                
+                <div className="drawer-links">
+                    {favorites.length > -1 ? (
+                        <>
+                            <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
+                                Мій профіль
+                            </Link>
+                            <button className="drawer-btn logout-btn" onClick={() => {
+                                // Логіка виходу
+                                handleCloseDrawer(); {/* 👇 Замінили функцію */}
+                            }}>
+                                Вийти
+                            </button>
+                        </>
+                    ) : (
+                        <Link to="/login" className="drawer-btn login-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
+                            Увійти
+                        </Link>
+                    )}
                 </div>
             </div>
-        )}
-        
+        </div>
+    </div>
+)}
     </header>
   );
 }
