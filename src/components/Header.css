@@ -1,0 +1,481 @@
+/* =========================================
+   ОСНОВНИЙ ХЕДЕР ТА НАВІГАЦІЯ
+   ========================================= */
+.header {
+    background-color: var(--header-bg);
+    color: var(--white);
+    height: 75px;
+    width: 100%;
+    padding: 15px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    position: relative;
+}
+
+.logo-img {
+    height: auto;
+    max-height: 72px;
+    width: auto;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    flex-grow: 1;
+    justify-content: center;
+    gap: 40px;
+}
+
+.nav-link {
+    color: var(--black);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 18px;
+    transition: color 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--white);
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+.support-btn {
+    background-color: #7e5afd;
+    color: var(--white);
+    border: none;
+    padding: 15px 30px;
+    border-radius: 10px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    margin-right: 15px;
+}
+
+.support-btn:hover {
+    background-color: #6646db;
+}
+
+.favorite-icon {
+    width: 40px;
+    height: 40px;
+    transition: filter 0.3s ease;
+    cursor: pointer;
+}
+
+.favorite-icon:hover {
+    filter: invert(100%);
+}
+
+/* =========================================
+   МОБІЛЬНЕ МЕНЮ (ГАМБУРГЕР)
+   ========================================= */
+.hamburger {
+    display: none; 
+    cursor: pointer;
+}
+
+.hamburger-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1001;
+}
+
+.hamburger-menu .bar {
+    width: 100%;
+    height: 3px;
+    background-color: var(--black);
+    border-radius: 5px;
+    transition: all 0.3s ease;
+}
+
+/* =========================================
+   МОДАЛЬНІ ВІКНА (ОБРАНЕ)
+   ========================================= */
+.modal {
+    display: none; 
+    position: fixed;
+    z-index: 1000; 
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); 
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    padding: 20px; /* Змінено з 30px на 20px згідно з нижнім дублем в оригіналі */
+    border-radius: 12px; /* В оригіналі було і 12px, і 10px, залишаю 12px для плавності */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    width: 90%;
+    max-width: 800px; /* Об'єднано стилі з обох блоків .modal-content */
+    max-height: 90%;
+    overflow-y: auto;
+    text-align: center;
+    position: relative;
+    animation-name: animatetop;
+    animation-duration: 0.4s;
+}
+
+.modal-content p {
+    color: black;
+}
+
+@keyframes animatetop {
+    from {top: -300px; opacity: 0}
+    to {top: 0; opacity: 1}
+}
+
+.close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+.modal-header {
+    padding: 10px 16px;
+    background-color: #f1f1f1;
+    border-bottom: 1px solid #ccc;
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.modal-header h3 {
+    color: #7B61FF; 
+}
+
+/* =========================================
+   ВМІСТ ОБРАНОГО (КАРТКИ ТА КНОПКИ)
+   ========================================= */
+.favorite-pets-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+} 
+
+.favorite-card {
+    background-color: var(--white);
+    border: 2px solid #6847DD;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 150px;
+}
+
+.favorite-card-image {
+    width: 100%;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.favorite-card-name {
+    font-weight: bold;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.remove-favorite-btn {
+    background-color: #ff4d4d;
+    color: var(--white);
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.remove-favorite-btn:hover {
+    background-color: #cc0000;
+}
+
+.adopt-pet-btn, .submit-adoption-btn, .back-to-favorites-btn {
+    background-color: #805CFF;
+    color: var(--white);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 8px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.adopt-pet-btn:hover, .submit-adoption-btn:hover, .back-to-favorites-btn:hover {
+    background-color: #6a4ec9;
+}
+
+/* =========================================
+   ФОРМА ПРИХИСТКУ
+   ========================================= */
+.adoption-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.adoption-form input {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.adoption-form h4 {
+    text-align: center;
+    margin-top: 0;
+    color: #333;
+}
+
+/* =========================================
+   БІЧНА ПАНЕЛЬ АКАУНТУ (Account Drawer)
+   ========================================= */
+.side-drawer-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(2px);
+    z-index: 2000;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.side-drawer {
+    width: 320px;
+    height: 100%;
+    background: #a083f9;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.1);
+    padding: 40px 25px;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.drawer-links {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.drawer-btn {
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: 0.2s;
+    border: 2px solid #4a148c;
+    background-color: #eee1ff;
+    width: 250px;   
+    display: block;
+    font-size: 16px;
+    font-family: inherit; 
+    cursor: pointer;
+}
+
+.login-btn {
+    background: #7B61FF;
+    color: white;
+}
+
+.logout-btn {
+    border: 2px solid #4a148c;
+    color: #b00b0b;
+    background-color: #fba2a2;
+    cursor: pointer;
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+}
+
+.drawer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+    margin-top: 40px; 
+    color: white; 
+}
+
+.drawer-content h3 {
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.drawer-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; 
+    object-fit: cover;
+    margin-bottom: 15px;
+    border: 3px solid white; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
+}
+
+.side-drawer-backdrop.closing {
+    animation: fadeOut 0.3s forwards;
+}
+
+.side-drawer.closing {
+    animation: slideOutRight 0.3s forwards;
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideOutRight {
+    from { transform: translateX(0); }
+    to { transform: translateX(100%); }
+}
+
+.account-icon {
+    transition: filter 0.3s ease;
+}
+
+.account-icon:hover {
+    filter: invert(100%); 
+}
+
+.drawer-close-icon {
+    transition: filter 0.3s ease;
+}
+
+.drawer-close-icon:hover {
+    filter: invert(100%);
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ ХЕДЕРА (Media Queries)
+   ========================================= */
+@media (max-width: 1024px) {
+    .header {
+        padding: 1px 3%;
+    }
+    .nav-menu {
+        gap: 20px;
+    }
+    .nav-link {
+        font-size: 16px;
+    }
+    .support-btn {
+        padding: 10px 20px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 768px) {
+    .header {
+        justify-content: space-between;
+        padding: 15px;
+    }
+    .header-left, .header-right {
+        margin: 0;
+    }
+    .nav-menu {
+        display: none;
+    }
+    .nav-menu.active {
+        display: flex; 
+        flex-direction: column;
+        position: absolute;
+        top: 75px;
+        left: 0;
+        width: 100%;
+        background-color: var(--header-bg);
+        padding: 20px 0;
+        text-align: center;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    }
+    .hamburger {
+        display: block; 
+    }  
+    .hamburger-menu {
+        display: flex;
+    }
+    .hamburger-menu .bar {
+        width: 100%;
+        height: 3px;
+        background-color: var(--black);
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+    .header {
+        position: static;
+    }
+}
+
+@media (max-width: 480px) {
+    .logo-img {
+        max-height: 50px;
+    }
+    .support-btn {
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+    .favorite-icon {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+@media (hover: none) {
+    .nav-link:hover {
+        color: var(--black);
+    }
+    .support-btn:hover {
+        background-color: #805CFF;
+    }
+}

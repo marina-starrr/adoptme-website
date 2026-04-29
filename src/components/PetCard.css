@@ -1,0 +1,151 @@
+/* =========================================
+   КАРТКА ТВАРИНКИ (PetCard)
+   ========================================= */
+.pet-card {
+    background-color: var(--white);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    position: relative;
+    transition: transform 0.3s ease;
+    border: 3px solid #6847DD;
+}
+
+.pet-card:hover {
+    transform: translateY(-10px);
+}
+
+/* =========================================
+   ВЕРХНЯ ЧАСТИНА КАРТКИ (ФОТО ТА ІМ'Я)
+   ========================================= */
+.pet-card-image-container {
+    width: 100%;
+    height: 250px;
+    overflow: hidden;
+    position: relative;
+}
+
+.pet-card-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.pet-name {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--white);
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 2;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.favorite-heart {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    z-index: 2;
+}
+
+/* =========================================
+   НИЖНЯ ЧАСТИНА КАРТКИ (ІНФОРМАЦІЯ)
+   ========================================= */
+.pet-card-content {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    background-color: #6847DD;
+    color: var(--white);
+    justify-content: flex-end;
+    position: relative;
+    padding-top: 50px;
+    min-height: 120px;
+}
+
+.pet-info-row {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    right: 20px;
+    justify-content: space-between;
+    color: var(--black);
+    width: calc(100% - 40px);
+}
+
+.pet-info {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--black);
+}
+
+.pet-info img {
+    width: 24px;
+    height: 24px;
+    margin-right: 10px;
+    filter: none;
+}
+
+.pet-info-chatacter {
+    display: flex;
+    align-items: first baseline;
+    font-size: 16px;
+    font-weight: bold;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 10px;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ КАРТКИ (Media Queries)
+   ========================================= */
+@media (max-width: 768px) {
+    .pet-card {
+        margin-bottom: 20px;
+        max-width: 100%;
+    }
+    .pet-card-content {
+        min-height: 100px;
+        padding-top: 40px;
+    }
+    .pet-info {
+        font-size: 14px;
+    }
+    .pet-info-chatacter {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pet-name {
+        font-size: 24px;
+    }
+    .pet-info {
+        font-size: 14px;
+    }
+    .pet-info img {
+        width: 18px;
+        height: 18px;
+    }
+}
+
+@media (hover: none) {
+    /* Вимикаємо ефект підстрибування картки на пристроях з тачскріном */
+    .pet-card:hover {
+        transform: none;
+    }
+}
