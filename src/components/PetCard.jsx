@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import './PetCard.css';
 
 function PetCard({ id, name, image, age, gender, tags }) {
   // 1. Оголошуємо стан для сердечка

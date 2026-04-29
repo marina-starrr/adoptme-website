@@ -1,0 +1,206 @@
+/* =========================================
+   СЕКЦІЯ ВІДГУКІВ (ОСНОВНИЙ КОНТЕЙНЕР)
+   ========================================= */
+.reviews-section {
+    background: linear-gradient(to bottom, #805CFF, #4024A4);
+    padding: 80px 5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    flex: 1; /* Додано для притискання футера */
+}
+
+/* =========================================
+   ЗАГОЛОВОК ІЗ ПЕНЗЛИКОМ ТА ЛАПКОЮ
+   ========================================= */
+.reviews-title-container {
+    width: 332px;
+    height: 111px;
+    background-image: url('/brush3.png');
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 40px;
+    position: relative;
+}
+
+.reviews-title-container h2 {
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--black);
+    margin-right: 10px;
+}
+
+.reviews-title-container .title-lapki {
+    width: 60px;
+    height: 60px;
+}    
+
+/* =========================================
+   ФОРМА ТА ІКОНКИ (КІТ ТА СОБАКА)
+   ========================================= */
+.reviews-content-wrapper {
+    max-width: 800px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+}
+
+.review-card-container {
+    background-color: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    position: relative;
+    padding: 30px;
+    width: 100%;
+}
+
+.cat-icon, .dog-icon {
+    position: absolute;
+    top: -100px;
+    z-index: 1;
+    width: 100px;
+}
+
+.cat-icon {
+    left: 20px;
+    transform: translateY(8px); 
+}
+
+.dog-icon {
+    right: 20px;
+    transform: translateY(20px);
+}  
+
+.review-form {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}  
+
+.form-label {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #ccc;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    resize: none;
+    background-color: var(--body-bg);
+}
+
+.form-textarea {
+    min-height: 150px;
+}
+
+.submit-container {
+    display: flex;
+    align-items: flex-end;
+}
+
+.submit-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 20px;
+    align-self: flex-end;
+}
+
+.submit-btn img {
+    width: 62px;
+    height: 62px;
+    transition: transform 0.3s ease;
+    transform: rotate(-48deg);
+}
+
+.submit-btn:hover img {
+    transform: scale(1.1) rotate(-48deg);
+}
+
+/* =========================================
+   СПИСОК ВІДГУКІВ ТА КАРТКИ ВІДГУКІВ
+   ========================================= */
+.review-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.review-card {
+    background-color: var(--white);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--black);
+}
+
+.review-date {
+    font-size: 14px;
+    color: #6847DD;
+}
+
+.review-text {
+    font-size: 16px;
+    color: var(--text-color);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ ВІДГУКІВ (Media Queries)
+   ========================================= */
+@media (max-width: 768px) {
+    .reviews-title-container {
+        width: 90%;
+        height: auto;
+        padding: 20px 0;
+    }
+    .reviews-title-container h2 {
+        font-size: 28px;
+    }
+    .review-card-container {
+        padding: 20px;
+    }
+    .cat-icon, .dog-icon {
+        display: none; /* Приховуємо тваринок на малих екранах */
+    }
+}
+
+@media (max-width: 480px) {
+    .reviews-title-container h2 {
+        font-size: 24px;
+    }
+    .form-input, .form-textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+    .submit-btn img {
+        width: 50px;
+        height: 50px;
+    }
+}

@@ -1,0 +1,279 @@
+/* =========================================
+   ГОЛОВНА СЕКЦІЯ (HERO)
+   ========================================= */
+.hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 900px;
+    padding: 20px 5%;
+    background-color: transparent;
+    overflow: hidden;
+    z-index: 1;
+    flex: 1; /* Для коректного притискання футера */
+}
+
+.hero-left {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    position: relative;
+    z-index: 2;
+}
+
+/* =========================================
+   ЗАКЛИК ДО ДІЇ (CALL TO ACTION)
+   ========================================= */
+.call-to-action-container {
+    position: relative;
+    margin-left: -60px;
+    right: -90px;
+    z-index: 2;
+}
+
+.call-to-action {
+    color: var(--black);
+    padding: 80px 70px;
+    border-radius: 15px;
+    width: 100%;
+    max-width: 700px;
+    min-height: 350px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 50px;
+    font-weight: 700;
+    position: relative;
+    z-index: 3;
+    transition: all 0.3s ease;
+}
+
+.call-to-action::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/brush01.png');
+    background-size: cover;
+    background-position: center;
+    opacity: 0.7;
+    z-index: -1;
+}
+
+/* =========================================
+   МИГОТЛИВА ЛАПКА (АНІМАЦІЯ)
+   ========================================= */
+.blinking-paw {
+    width: 420px; 
+    height: 420px;
+    background-image: url('/brushlapka.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    position: absolute;
+    right: 400px;
+    top: 100%;
+    transform: translateY(-50%);
+    pointer-events: none; /* Щоб лапка не заважала клікати на кнопку */
+    animation: neon-pulse 1.2s infinite alternate; 
+}
+
+@keyframes neon-pulse {
+    0% { 
+        filter: drop-shadow(0 0 2px rgba(142, 112, 253, 0.3)); 
+        opacity: 0.85; 
+    }
+    100% { 
+        filter: drop-shadow(0 0 12px rgba(142, 112, 253, 0.9)) 
+                drop-shadow(0 0 25px rgba(142, 112, 253, 0.6)); 
+        opacity: 1; 
+    }
+}
+
+/* =========================================
+   СТАТИСТИКА
+   ========================================= */
+.stats-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 50px;
+    row-gap: 30px;
+    margin-top: 50px;
+    max-width: 700px;
+    margin-left: 150px;
+    z-index: 2;
+}
+
+.stat-item {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.stat-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--black);
+    order: 1;
+}
+
+.stat-number {
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--purple-dark);
+    margin-bottom: 5px;
+    order: 2;
+}
+
+.stats-full-width {
+    grid-column: span 2;
+}
+
+/* =========================================
+   СЛАЙДЕР (HERO RIGHT)
+   ========================================= */
+.hero-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.image-slider {
+    position: relative;
+    width: 454px;
+    height: 614px;
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    z-index: 5;
+}
+
+.slider-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    font-size: 24px;
+    z-index: 10;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+.slider-nav.prev { left: 20px; }
+.slider-nav.next { right: 20px; }
+
+.slider-nav:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #000;
+}
+
+.cta-text-right {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: rgba(255, 255, 255, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    font-weight: 500;
+    font-size: 18px;
+    color: var(--text-color);
+    z-index: 6;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ (Media Queries)
+   ========================================= */
+@media (max-width: 1200px) {
+    .hero {
+        height: auto;
+        flex-direction: column;
+        padding: 40px 5%;
+    }
+    .hero-left, .hero-right {
+        width: 100%;
+        justify-content: center;
+        align-items: center;
+    }
+    .call-to-action-container {
+        margin-left: 0;
+        right: 0;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    } 
+    .stats-container {
+        margin-left: 0;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 1024px) {
+    .call-to-action {
+        font-size: 40px;
+        padding: 60px 50px;
+        max-width: 90%;
+    }
+    .stat-number { font-size: 48px; }
+    .stat-text { font-size: 20px; }
+    .image-slider {
+        width: 400px;
+        height: 540px;
+    }
+}
+
+@media (max-width: 768px) {
+    .call-to-action {
+        font-size: 30px;
+        padding: 40px 30px;
+        min-height: 250px;
+    }
+    .stats-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    .stats-full-width { grid-column: 1; }
+    .stat-number { font-size: 36px; }
+    .stat-text { font-size: 18px; }
+    .image-slider {
+        width: 100%;
+        height: 400px;
+    }
+    .blinking-paw { display: none; } /* Приховуємо лапку на малих екранах */
+}
+
+@media (max-width: 480px) {
+    .call-to-action {
+        font-size: 24px;
+        padding: 30px 20px;
+    }
+    .stat-number { font-size: 28px; }
+    .stat-text { font-size: 16px; }
+    .image-slider { height: 300px; }
+    .cta-text-right { font-size: 14px; padding: 10px; }
+}

@@ -1,0 +1,66 @@
+/* =========================================
+   СЕКЦІЯ ТВАРИН (ОСНОВНИЙ КОНТЕЙНЕР)
+   ========================================= */
+.pets-section {
+    padding: 80px 5%;
+    background-color: var(--body-bg);
+    text-align: center;
+    flex: 1; /* Змушує секцію розтягуватися до футера */
+    width: 100%;
+}
+
+/* =========================================
+   ЗАГОЛОВОК СЕКЦІЇ
+   ========================================= */
+.pets-title-container {
+    width: 1024px;
+    height: 142px;
+    margin: 0 auto 60px auto;
+    background-image: url('/brush2.png'); /* Додано слеш для надійності */
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--white);
+    text-align: center;
+    position: relative;
+}
+
+/* =========================================
+   СІТКА КАРТОК (Grid)
+   ========================================= */
+.pet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ СІТКИ ТА ЗАГОЛОВКА
+   ========================================= */
+@media (max-width: 1200px) {
+    .pets-title-container {
+        width: 90%;
+        height: auto;
+        padding: 30px 0;
+        background-size: 100% 100%;
+    }
+}
+
+@media (max-width: 1024px) {
+    .pet-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .pet-grid {
+        grid-template-columns: 1fr;
+    }
+}

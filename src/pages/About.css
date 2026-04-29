@@ -1,0 +1,262 @@
+/* =========================================
+   СЕКЦІЯ "ПРО НАС" (ОСНОВНИЙ КОНТЕЙНЕР)
+   ========================================= */
+.about-us {
+    position: relative;
+    width: 100%;
+    background: linear-gradient(to bottom, #805CFF, #4024A4);
+    color: var(--white);
+    z-index: 1;
+    overflow: hidden;
+    display: flex;
+    justify-content: flex-start;
+    align-items: flex-start;
+    padding: 100px 5%;
+    min-height: 1500px;
+    flex: 1; /* Робить контейнер гнучким для притискання футера */
+}
+
+.about-us-relative-wrapper {
+    position: relative;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    z-index: 2;
+    top: 100px;
+}
+
+/* =========================================
+   ЗАГОЛОВОК ІЗ ВІДОБРАЖЕННЯМ
+   ========================================= */
+.adopt-me-title-block {
+    position: absolute;
+    top: -60px;
+    left: -100px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    z-index: 3;
+}
+
+.adopt-me-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 80px;
+    font-weight: 900;
+    color: var(--black);
+    line-height: 1;
+    text-transform: lowercase;
+    white-space: nowrap;
+}
+
+.adopt-me-title-reflection {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 80px;
+    font-weight: 900;
+    color: rgba(0, 0, 0, 0.3);
+    transform: scaleY(-1);
+    transform-origin: top;
+    white-space: nowrap;
+    margin-top: 80px;
+}
+
+/* =========================================
+   ТЕКСТОВІ БЛОКИ ТА ФОНИ
+   ========================================= */
+.overlay-text-container {
+    position: absolute;
+    top: 140px;
+    left: -200px;
+    width: 740px;
+    height: 245px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 20px 20px 50px;
+    box-sizing: border-box;
+    z-index: 3;
+    color: var(--black);
+    font-weight: 700;
+    font-size: 24px;
+    text-align: center;
+}
+
+.overlay-text-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/11.png'); /* Додано слеш для надійності шляху */
+    background-size: cover;
+    background-position: center;
+    z-index: -1;
+}
+
+/* Загальні стилі для блоків із текстом на фоні (12, 13, 14, 15) */
+.image-12-positioned,
+.image-13-positioned,
+.image-14-positioned,
+.image-15-positioned {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: black;
+    font-weight: 700;
+    font-size: 24px;
+    padding: 20px;
+    box-sizing: border-box;
+    max-width: 100%;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    z-index: 3;
+    position: absolute;
+}
+
+.image-12-positioned {
+    top: 340px;
+    right: -150px;
+    width: 568px;
+    height: 194px;
+    background-image: url('/12.png');
+}
+
+.image-13-positioned {
+    top: 540px;
+    left: 340px;
+    width: 577px;
+    height: 184px;
+    background-image: url('/13.png');
+}
+
+.image-14-positioned {
+    top: 830px;
+    left: -130px;
+    width: 635px;
+    height: 182px;
+    background-image: url('/14.png');
+}
+
+.image-15-positioned {
+    top: 1130px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 875px;
+    height: 123px;
+    background-image: url('/15.png');
+    font-size: 20px;
+    line-height: 1.3;
+    max-width: 90%;
+}
+
+/* =========================================
+   АБСОЛЮТНО ПОЗИЦІЙОВАНІ КАРТИНКИ
+   ========================================= */
+.image-1-positioned,
+.image-2-positioned,
+.image-4-positioned,
+.image-3-positioned,
+.image-5-positioned,
+.image-6-positioned {
+    max-width: 100%;
+    height: auto;
+    position: absolute;
+    z-index: 3;
+}
+
+.image-1-positioned { top: -60px; right: 160px; width: 388px; height: 388px; }
+.image-2-positioned { top: -60px; right: -120px; width: 241px; height: 241px; }
+.image-3-positioned { top: 440px; left: -130px; width: 393px; height: 393px; }
+.image-4-positioned { top: 540px; right: -100px; width: 209px; height: 209px; }
+.image-5-positioned { top: 800px; left: 595px; width: 286px; height: 286px; }
+.image-6-positioned { top: 760px; left: 925px; width: 383px; height: 383px; }
+
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ СЕКЦІЇ (Media Queries)
+   ========================================= */
+@media(max-width: 1500px) {
+    .about-us { min-height: 1400px; padding: 80px 3%; }
+    .about-us-relative-wrapper { max-width: 1100px; top: 80px; }
+    .adopt-me-title-block { left: 30px; }
+    .adopt-me-title, .adopt-me-title-reflection { font-size: 70px; }
+    .overlay-text-container { left: -90px; width: 650px; height: 220px; font-size: 22px; }
+    
+    .image-1-positioned { right: 200px; width: 300px; height: 300px; }
+    .image-2-positioned { right: -10px; width: 200px; height: 200px; }
+    .image-3-positioned { left: 0px; width: 300px; height: 300px; }
+    .image-4-positioned { right: 0px; width: 190px; height: 190px; }
+    .image-5-positioned { left: 560px; width: 240px; height: 240px; }
+    .image-6-positioned { left: 820px; width: 300px; height: 300px; }
+    
+    .image-12-positioned { right: -10px; width: 520px; height: 180px; font-size: 22px; }
+    .image-13-positioned { left: 320px; width: 530px; height: 170px; font-size: 22px; }
+    .image-14-positioned { left: -60px; width: 580px; height: 170px; font-size: 22px; }
+    .image-15-positioned { top: 1100px; width: 800px; height: 110px; font-size: 19px; }
+}
+
+@media (max-width: 1200px) {
+    .about-us-relative-wrapper { top: 50px; }
+    .adopt-me-title-block { position: relative; top: 0; left: 0; margin-bottom: 30px; align-items: center; }
+    .overlay-text-container { position: relative; top: 0; left: 0; width: 100%; margin: 20px 0; }
+    
+    .image-1-positioned, .image-2-positioned, .image-12-positioned, 
+    .image-4-positioned, .image-13-positioned, .image-3-positioned, 
+    .image-14-positioned, .image-5-positioned, .image-6-positioned, 
+    .image-15-positioned {
+        position: relative;
+        top: 0; right: 0; left: 0;
+        margin: 20px auto;
+        width: 80%;
+        height: auto;
+    }
+    
+    .image-15-positioned { transform: none; margin-top: 30px; } 
+    
+    .image-1-positioned { width: 300px; height: 300px; }
+    .image-2-positioned { width: 200px; height: 200px; }
+    .image-3-positioned { width: 300px; height: 300px; }
+    .image-4-positioned { width: 160px; height: 160px; }
+    .image-5-positioned { width: 220px; height: 220px; }
+    .image-6-positioned { width: 300px; height: 300px; }
+}
+
+@media (max-width: 768px) {
+    .about-us { padding: 60px 3%; min-height: auto; }
+    .adopt-me-title { font-size: 50px; }
+    .adopt-me-title-reflection { font-size: 50px; margin-top: 40px; }
+    
+    .image-1-positioned { width: 250px; height: 250px; }
+    .image-2-positioned { width: 150px; height: 150px; }
+    .image-3-positioned { width: 250px; height: 250px; }
+    .image-4-positioned { width: 120px; height: 120px; }
+    .image-5-positioned { width: 180px; height: 180px; }
+    .image-6-positioned { width: 250px; height: 250px; }
+    
+    .overlay-text-container, .image-12-positioned, 
+    .image-13-positioned, .image-14-positioned, .image-15-positioned {
+        font-size: 18px;
+        padding: 15px;
+        height: auto;
+        min-height: 120px;
+    }
+}
+
+@media (max-width: 480px) {
+    .adopt-me-title { font-size: 36px; }
+    .adopt-me-title-reflection { font-size: 36px; margin-top: 30px; }
+    
+    .image-1-positioned { width: 200px; height: 200px; }
+    .image-2-positioned { width: 120px; height: 120px; }
+    .image-3-positioned { width: 200px; height: 200px; }
+    .image-4-positioned { width: 100px; height: 100px; }
+    .image-5-positioned { width: 150px; height: 150px; }
+    .image-6-positioned { width: 200px; height: 200px; }
+    
+    .image-12-positioned, .image-13-positioned, 
+    .image-14-positioned, .image-15-positioned {
+        font-size: 16px;
+        padding: 10px;
+    } 
+}
