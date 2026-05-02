@@ -119,19 +119,22 @@
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.6); 
+    background-color: rgba(0, 0, 0, 0.5); 
+    backdrop-filter: blur(3px); 
     justify-content: center;
     align-items: center;
+    animation: fadeInModal 0.3s ease-out forwards; 
 }
 
 .modal-content {
     background-color: #fefefe;
-    padding: 20px; /* Змінено з 30px на 20px згідно з нижнім дублем в оригіналі */
-    border-radius: 12px; /* В оригіналі було і 12px, і 10px, залишаю 12px для плавності */
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    color: var(--black);
+    padding: 30px; 
+    border-radius: 16px; 
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 800px; /* Об'єднано стилі з обох блоків .modal-content */
-    max-height: 90%;
+    max-width: 600px; 
+    max-height: 90vh;
     overflow-y: auto;
     text-align: center;
     position: relative;
@@ -139,42 +142,102 @@
     animation-duration: 0.4s;
 }
 
-.modal-content p {
-    color: black;
-}
-
 @keyframes animatetop {
-    from {top: -300px; opacity: 0}
-    to {top: 0; opacity: 1}
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
 }
 
 .close-btn {
     color: #aaa;
     position: absolute;
-    top: 10px;
+    top: 15px;
     right: 20px;
-    font-size: 30px;
+    font-size: 28px;
     font-weight: bold;
     cursor: pointer;
+    transition: color 0.2s ease;
 }
 
 .close-btn:hover,
 .close-btn:focus {
-    color: #000;
+    color: #333;
     text-decoration: none;
 }
 
 .modal-header {
-    padding: 10px 16px;
-    background-color: #f1f1f1;
-    border-bottom: 1px solid #ccc;
+    padding-bottom: 15px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #eee1ff; 
     text-align: center;
-    font-size: 24px;
-    font-weight: bold;
 }
 
 .modal-header h3 {
-    color: #7B61FF; 
+    color: #4A148C; 
+    font-size: 26px;
+    margin: 0;
+}
+
+.modal.closing {
+    animation: fadeOutModal 0.3s forwards;
+}
+
+.modal-content.closing {
+    animation: animateclose 0.3s forwards;
+}
+
+@keyframes animateclose {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.9); opacity: 0; }
+}
+
+@keyframes fadeInModal {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOutModal {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+/* 👇 ДОДАНО: Анімація для плавного переходу всередині модального вікна */
+.fade-view {
+    animation: fadeInView 0.3s ease-out forwards;
+}
+
+@keyframes fadeInView {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Стиль для тексту, коли обране порожнє */
+.empty-favorites-text {
+    color: #333;
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.6;
+    padding: 30px 10px;
+}
+
+.empty-link-purple {
+    color: #6847DD; 
+    font-weight: 700;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.empty-link-purple:hover {
+    color: #4A148C; 
+    text-decoration: underline; 
+}
+
+.success-favorites-text {
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 15px;
 }
 
 /* =========================================
@@ -185,89 +248,259 @@
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    padding: 20px;
+    padding-bottom: 20px;
 } 
 
 .favorite-card {
     background-color: var(--white);
-    border: 2px solid #6847DD;
-    border-radius: 10px;
-    padding: 10px;
+    border: 2px solid #e0d4f5; 
+    border-radius: 12px;
+    padding: 12px;
     text-align: center;
     position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 150px;
+    width: 160px; 
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.favorite-card:hover {
+    transform: translateY(-5px); 
+    box-shadow: 0 8px 20px rgba(104, 71, 221, 0.15);
+    border-color: #6847DD; 
 }
 
 .favorite-card-image {
     width: 100%;
-    height: 100px;
+    height: 120px;
     object-fit: cover;
     border-radius: 8px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
 }
 
 .favorite-card-name {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--black);
+    margin: 0;
 }
 
-.remove-favorite-btn {
-    background-color: #ff4d4d;
-    color: var(--white);
-    border: none;
-    padding: 8px 15px;
-    border-radius: 5px;
-    font-weight: bold;
+.remove-favorite-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ffffff;
+    color: #ff4d4d;
+    border: 2px solid #ff4d4d;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    opacity: 0; 
 }
 
-.remove-favorite-btn:hover {
-    background-color: #cc0000;
+.favorite-card:hover .remove-favorite-icon {
+    opacity: 1;
+}
+
+.remove-favorite-icon:hover {
+    background-color: #ff4d4d;
+    color: white;
+    transform: scale(1.1);
 }
 
 .adopt-pet-btn, .submit-adoption-btn, .back-to-favorites-btn {
-    background-color: #805CFF;
+    background: linear-gradient(to right, #6847DD, #382677); 
     color: var(--white);
     border: none;
-    padding: 12px 25px;
-    border-radius: 8px;
+    padding: 14px 35px;
+    border-radius: 10px;
     font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .adopt-pet-btn:hover, .submit-adoption-btn:hover, .back-to-favorites-btn:hover {
-    background-color: #6a4ec9;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
 
 /* =========================================
-   ФОРМА ПРИХИСТКУ
+   ФОРМА ПРИХИСТКУ (ОНОВЛЕНА БАГАТОКРОКОВА)
    ========================================= */
 .adoption-form {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 20px;
+    padding: 10px 5px;
+    text-align: left; /* Вирівнюємо форму по лівому краю для зручності читання */
+}
+
+.form-step {
+    background-color: #faf8ff;
+    border: 1px solid #e0d4f5;
+    border-radius: 12px;
     padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-.adoption-form input {
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+.form-step-title {
+    margin: 0 0 10px 0;
+    color: #4A148C;
     font-size: 16px;
+    border-bottom: 2px solid #e0d4f5;
+    padding-bottom: 8px;
 }
 
-.adoption-form h4 {
-    text-align: center;
-    margin-top: 0;
+.adoption-form input[type="text"],
+.form-select,
+.form-textarea-small {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0d4f5;
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.3s;
+    background-color: white;
+    box-sizing: border-box;
+}
+
+.adoption-form input:focus,
+.form-select:focus,
+.form-textarea-small:focus {
+    border-color: #6847DD;
+}
+
+.form-textarea-small {
+    resize: none; /* 👇 ЗАБОРОНЯЄМО ручне розширення (було vertical) */
+    min-height: 80px;
+    padding-bottom: 25px; 
+    overflow: hidden; /* 👇 Ховаємо смугу прокрутки, бо поле буде рости саме */
+}
+/* 👇 ЦЬОГО БЛОКУ НЕ ВИСТАЧАЛО 👇 */
+.textarea-container {
+    position: relative; /* Це утримує лічильник всередині поля */
+    width: 100%;
+}
+
+.char-counter {
+    position: absolute;
+    bottom: 8px;
+    right: 12px;
+    font-size: 12px;
+    color: #999; 
+    font-weight: 500;
+    pointer-events: none; 
+    transition: color 0.3s ease;
+}
+
+.form-textarea-small:focus + .char-counter {
+    color: #6847DD; 
+}
+
+/* 👇 ДОДАНО: Стиль, коли залишок дорівнює 0 */
+.char-counter.limit-reached {
+    color: #ff4d4d !important; /* Яскраво-червоний колір попередження */
+    font-weight: 700;
+}
+
+/* Радіо кнопки */
+.radio-group-container p {
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    font-size: 14px;
     color: #333;
+}
+
+.radio-options {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 8px;
+}
+
+.radio-options label {
+    cursor: pointer;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #333;
+}
+
+.conditional-input {
+    margin-top: 5px;
+}
+
+/* Чекбокс */
+.checkbox-container {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.checkbox-container input[type="checkbox"] {
+    margin-top: 3px;
+    width: 18px;
+    height: 18px;
+    accent-color: #6847DD;
+    cursor: pointer;
+}
+
+.checkbox-text {
+    font-size: 14px;
+    color: #444;
+    line-height: 1.4;
+}
+
+/* Кнопки форми */
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-top: 10px;
+}
+
+.form-actions button {
+    flex: 1;
+}
+
+/* Контейнер для однорядкових полів з лічильником */
+.input-container {
+    position: relative;
+    width: 100%;
+}
+
+/* Відступ всередині інпуту, щоб текст не наїжджав на лічильник */
+.input-container input[type="text"] {
+    padding-right: 45px; 
+}
+
+/* Спеціальне позиціонування лічильника для однорядкового поля */
+.char-counter.input-counter {
+    bottom: auto; /* Скасовуємо відступ знизу, який був для textarea */
+    top: 50%; /* Опускаємо на 50% зверху */
+    transform: translateY(-50%); /* Ідеально центруємо по вертикалі */
+}
+
+/* Підсвітка фіолетовим при фокусі на однорядковому полі */
+.input-container input[type="text"]:focus + .char-counter {
+    color: #6847DD; 
 }
 
 /* =========================================
@@ -478,4 +711,81 @@
     .support-btn:hover {
         background-color: #805CFF;
     }
+}
+
+/* =========================================
+   ДОДАТКОВІ СТИЛІ ФОРМИ ТА ЕКРАНУ УСПІХУ
+   ========================================= */
+
+.name-inputs-row {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+}
+
+.name-inputs-row input {
+    flex: 1; 
+}
+
+@media (max-width: 480px) {
+    .name-inputs-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+}
+
+.success-message-container {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-icon {
+    font-size: 60px;
+    margin-bottom: 15px;
+    animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.success-title {
+    color: #4A148C;
+    font-size: 28px;
+    margin-bottom: 15px;
+    margin-top: 0;
+}
+
+.success-text {
+    font-size: 16px;
+    color: var(--text-color);
+    line-height: 1.5;
+    margin-bottom: 10px;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); opacity: 0; }
+    80% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* =========================================
+   СТИЛІ ДЛЯ ПОСИЛАННЯ В КАРТЦІ ТВАРИНКИ
+   ========================================= */
+.favorite-card-link {
+    text-decoration: none; /* Прибираємо підкреслення */
+    color: inherit; /* Зберігаємо чорний колір тексту */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+}
+
+/* Робимо так, щоб при наведенні на посилання ім'я трохи змінювало колір (необов'язково, але гарно) */
+.favorite-card-link:hover .favorite-card-name {
+    color: #6847DD;
+    transition: color 0.2s ease;
 }
