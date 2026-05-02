@@ -8,6 +8,8 @@ import About from './pages/About';
 import Reviews from './pages/Reviews';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
+import PetDetails from './pages/PetDetails';
+<Route path="/pets/:id" element={<PetDetails />} />
 
 function App() {
   return (

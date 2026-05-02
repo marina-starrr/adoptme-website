@@ -1,110 +1,155 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import './Header.css';
 
 function Header() {
   const [isOpen, setIsOpen] = useState(false);
   const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
-  const [isAccountOpen, setIsAccountOpen] = useState(false); // 👇 НОВИЙ СТАН
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [favorites, setFavorites] = useState([]);
   const [showForm, setShowForm] = useState(false);
-  const [isClosing, setIsClosing] = useState(false); // 👇 Новий стан
+  
+  const [isClosing, setIsClosing] = useState(false);
+  const [isModalClosing, setIsModalClosing] = useState(false);
+  const [isSuccessScreen, setIsSuccessScreen] = useState(false);
 
-  // 👇 Нова функція для плавного закриття
+  // Стани форми (Крок 1)
+  const [adopterFirstName, setAdopterFirstName] = useState('');
+  const [adopterLastName, setAdopterLastName] = useState('');
+  const [adopterPhone, setAdopterPhone] = useState('');
+  
+  // Стани форми (Крок 2 та 3)
+  const [housingType, setHousingType] = useState('');
+  const [hasExperience, setHasExperience] = useState('no');
+  const [experienceDetails, setExperienceDetails] = useState('');
+  const [hasOtherPets, setHasOtherPets] = useState('no');
+  const [otherPetsDetails, setOtherPetsDetails] = useState('');
+  const [comment, setComment] = useState('');
+  const [agreeToTerms, setAgreeToTerms] = useState(false);
+  const textareaRef = useRef(null);
+
   const handleCloseDrawer = () => {
-      setIsClosing(true); // 1. Вмикаємо анімацію зникнення
+      setIsClosing(true);
       setTimeout(() => {
-          setIsAccountOpen(false); // 2. Видаляємо з екрана
-          setIsClosing(false);     // 3. Скидаємо стан для наступного разу
-      }, 300); // Чекаємо 300мс (час нашої CSS анімації)
+          setIsAccountOpen(false);
+          setIsClosing(false);
+      }, 300);
   };
 
-  // Дані форми
-  const [adopterName, setAdopterName] = useState('');
-  const [adopterPhone, setAdopterPhone] = useState('');
+  const handleCloseFavorites = () => {
+      setIsModalClosing(true);
+      setTimeout(() => {
+          setIsFavoritesOpen(false);
+          setIsModalClosing(false);
+          setShowForm(false);
+          setIsSuccessScreen(false);
+      }, 300);
+  };
 
   const toggleMenu = () => setIsOpen(!isOpen);
   const closeMenu = () => setIsOpen(false);
   const handleLogoClick = () => {
-    window.scrollTo(0, 0); // Примусово крутимо на самий верх
-    setIsOpen(false);      // Закриваємо мобільне меню (якщо воно було відкрите)
+    window.scrollTo(0, 0);
+    setIsOpen(false);
   };
 
-  // Відкриття кошика
   const openFavorites = () => {
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
     setShowForm(false); 
+    setIsSuccessScreen(false); 
     setIsFavoritesOpen(true);
   };
 
-  // Видалення з кошика
   const handleRemove = (id) => {
      const newFavs = favorites.filter(pet => pet.id !== id);
      setFavorites(newFavs);
      localStorage.setItem('favorites', JSON.stringify(newFavs));
-       window.dispatchEvent(new Event('cartUpdated'));
+     window.dispatchEvent(new Event('cartUpdated'));
   };
 
-
-  // Відправка заявки в базу
+  // Оновлена функція відправки даних
   const handleSubmit = (e) => {
      e.preventDefault();
      const petNames = favorites.map(f => f.name).join(", ");
 
-fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {       
-     method: 'POST',
+     const adoptionData = {
+         PetName: petNames,
+         FirstName: adopterFirstName,
+         LastName: adopterLastName,
+         AdopterPhone: adopterPhone,
+         LivingConditions: housingType,
+         HasExperience: hasExperience === 'yes',
+         ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
+         HasOtherPets: hasOtherPets === 'yes',
+         OtherPetsDetails: hasOtherPets === 'yes' ? otherPetsDetails : '',
+         Reason: comment,
+         AgreedToInterview: agreeToTerms
+     };
+
+    fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {       
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ petName: petNames, adopterName, adopterPhone })
+        body: JSON.stringify(adoptionData)
      })
      .then(res => {
         if (res.ok) {
-           alert(`Дякуємо, ${adopterName}! Ваша заява була успішно подана.`);
-           localStorage.removeItem('favorites'); // Очищаємо пам'ять
-           setFavorites([]);
-           setIsFavoritesOpen(false);
-           // Оновлюємо сторінку, щоб скинути сердечка
-           window.location.reload(); 
+           localStorage.removeItem('favorites');
+           setIsSuccessScreen(true); 
+           window.dispatchEvent(new Event('cartUpdated'));
+        } else {
+           alert("Сталася помилка при відправці. Перевір консоль сервера.");
         }
-     });
+     })
+     .catch(err => console.error("Помилка відправки:", err));
   };
 
-  // Фільтр для імені: тільки літери, пробіли, тире. Ліміт 50 символів.
-  const handleNameChange = (e) => {
-    // Видаляємо всі цифри та спецсимволи (залишаємо укр/англ літери, пробіл та тире)
+  const finishAdoption = () => {
+      setIsModalClosing(true); 
+      setTimeout(() => {
+          setFavorites([]);
+          setIsFavoritesOpen(false);
+          setIsModalClosing(false);
+          setIsSuccessScreen(false);
+          window.location.reload(); 
+      }, 300);
+  };
+
+  const handleFirstNameChange = (e) => {
     const cleanedValue = e.target.value.replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ\s\-]/g, '');
-    setAdopterName(cleanedValue.substring(0, 50)); // Ліміт 50 символів
+    setAdopterFirstName(cleanedValue.substring(0, 25));
   };
 
-  // Фільтр для телефону: автоматична маска +38(0XX) XXX XX XX
+  const handleLastNameChange = (e) => {
+    const cleanedValue = e.target.value.replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ\s\-]/g, '');
+    setAdopterLastName(cleanedValue.substring(0, 25));
+  };
+
   const handlePhoneChange = (e) => {
-    // Залишаємо ТІЛЬКИ цифри
     const rawDigits = e.target.value.replace(/\D/g, '');
-    
-    // Якщо поле пусте — очищаємо
-    if (rawDigits.length === 0) {
-      setAdopterPhone('');
-      return;
-    }
-
-    // Якщо користувач вводить першу цифру (наприклад '0'), автоматично додаємо '38'
+    if (rawDigits.length === 0) { setAdopterPhone(''); return; }
     let digits = rawDigits;
-    if (!digits.startsWith('38')) {
-      digits = '38' + digits;
-    }
-
-    // Обрізаємо до 12 цифр максимум
+    if (!digits.startsWith('38')) digits = '38' + digits;
     digits = digits.substring(0, 12);
-
-    // Збираємо гарну маску
     let formatted = '+';
-    if (digits.length > 0) formatted += digits.substring(0, 2); // +38
-    if (digits.length > 2) formatted += '(' + digits.substring(2, 5); // +38(0XX
-    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8); // +38(0XX) XXX
-    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10); // ... XX
-    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12); // ... XX
-
+    if (digits.length > 0) formatted += digits.substring(0, 2);
+    if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
+    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
+    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
+    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
     setAdopterPhone(formatted);
+  };
+
+  const handleCommentChange = (e) => {
+      const value = e.target.value;
+      if (value.length <= 300) {
+          setComment(value);
+          if (textareaRef.current) {
+              textareaRef.current.style.height = '0px'; 
+              const scrollHeight = textareaRef.current.scrollHeight;
+              textareaRef.current.style.height = `${scrollHeight}px`; 
+          }
+      }
   };
 
   return (
@@ -131,7 +176,6 @@ fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {
         
         <div className="header-right">
             <button className="support-btn">Підтримати</button>
-            {/* 👇 Кнопка відкриття Обраного */}
             <img 
                 src="/obrane.png" 
                 alt="Обране" 
@@ -139,98 +183,227 @@ fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {
                 onClick={openFavorites} 
                 style={{ cursor: 'pointer', marginLeft: '15px' }} 
             />
-            <img 
-                src="/avatar.png" 
-                alt="Акаунт" 
-                className="account-icon" // Змінив клас для ясності
-                onClick={() => setIsAccountOpen(true)} // Відкриває вікно акаунту
-                style={{ cursor: 'pointer', marginLeft: '15px', width: '30px', height: '30px' }} // Додав розміри про всяк випадок
-            />
+            <Link to="/profile">
+                <img 
+                    src="/avatar.png" 
+                    alt="Акаунт" 
+                    className="account-icon"
+                    onClick={() => setIsAccountOpen(true)}
+                    style={{ cursor: 'pointer', marginLeft: '15px', width: '30px', height: '30px' }} 
+                />
+            </Link>
         </div>
 
-        {/* 👇 САМЕ МОДАЛЬНЕ ВІКНО */}
         {isFavoritesOpen && (
-            <div className="modal" style={{ display: 'flex' }}>
-                <div className="modal-content">
-                    <span className="close-btn" onClick={() => setIsFavoritesOpen(false)}>&times;</span>
-                    <div className="modal-header">
-                        <h3>Обрані тварини</h3>
-                    </div>
-
-                    {!showForm ? (
-                        <>
+            <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
+                <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
+                    <span className="close-btn" onClick={handleCloseFavorites}>&times;</span>
+                    
+                    {isSuccessScreen ? (
+                        <div key="success" className="fade-view success-message-container">
+                            <div className="success-icon">🐾</div>
+                            <h3 className="success-title">Дякуємо, {adopterFirstName}!</h3>
+                            <p className="success-text">Вашу заявку успішно надіслано.</p>
+                            <p className="success-text">Ми дуже цінуємо ваше бажання подарувати дім {favorites.length === 1 ? 'тваринці' : 'тваринкам'} і зв’яжемося з вами найближчим часом.</p>
+                            <button className="adopt-pet-btn" style={{ marginTop: '20px' }} onClick={finishAdoption}>Супер!</button>
+                        </div>
+                    ) : !showForm ? (
+                        <div key="cart" className="fade-view">
+                            <div className="modal-header">
+                                <h3>Обрані тварини</h3>
+                            </div>
                             <div className="favorite-pets-container">
                                 {favorites.length === 0 ? (
-                                    <p>Список порожній. Перейдіть до "Тварини", щоб обрати друга!</p>
+                                    <p className="empty-favorites-text">
+                                        Ти досі не вибрав свого улюбленця? <br />
+                                        Перейди на сторінку <Link to="/pets" className="empty-link-purple" onClick={handleCloseFavorites}>Тварини</Link> і обери найкращого друга!
+                                    </p>
                                 ) : (
                                     favorites.map(pet => (
                                         <div className="favorite-card" key={pet.id}>
-                                            <img src={pet.image} alt={pet.name} className="favorite-card-image" />
-                                            <h4 className="favorite-card-name">{pet.name}</h4>
-                                            <button className="remove-favorite-btn" onClick={() => handleRemove(pet.id)}>Прибрати</button>
-                                        </div>
+    <button 
+        className="remove-favorite-icon" 
+        onClick={(e) => {
+            e.preventDefault(); // Зупиняємо перехід, якщо випадково клікнули поруч
+            handleRemove(pet.id);
+        }}
+        title="Прибрати з обраного"
+    >
+        &times;
+    </button>
+    
+    {/* 👇 ОБГОРНУЛИ ФОТО ТА ІМ'Я В ПОСИЛАННЯ 👇 */}
+    <Link 
+        to={`/pets/${pet.id}`} /* ⚠️ Зміни шлях, якщо у тебе він інший (напр. /pet/ або /details/) */
+        className="favorite-card-link"
+        onClick={handleCloseFavorites} /* Закриваємо модалку при переході */
+    >
+        <img src={pet.image} alt={pet.name} className="favorite-card-image" />
+        <h4 className="favorite-card-name">{pet.name}</h4>
+    </Link>
+</div>
                                     ))
                                 )}
                             </div>
                             {favorites.length > 0 && (
-                                <div style={{ textAlign: 'center', marginTop: '20px' }}>
+                                <div style={{ textAlign: 'center', marginTop: '15px' }}>
+                                    <p className="success-favorites-text">
+                                        Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
+                                    </p>
                                     <button className="adopt-pet-btn" onClick={() => setShowForm(true)}>Прихистити</button>
                                 </div>
                             )}
-                        </>
+                        </div>
                     ) : (
-                        <form className="adoption-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', marginTop: '20px' }}>
-                            <h4>Форма заяви на прихисток</h4>
-<input type="text" placeholder="Ваше Ім'я та Прізвище" value={adopterName} onChange={handleNameChange}/>
-<input type="text" placeholder="+38(0__) ___ __ __" value={adopterPhone} onChange={handlePhoneChange}/>
-<button type="submit" className="submit-adoption-btn" style={{ marginTop: '10px' }}>Подати заяву</button>
-                            <button type="button" className="back-to-favorites-btn" onClick={() => setShowForm(false)} style={{ marginTop: '10px' }}>Назад</button>
-                        </form>
+                        <div key="form" className="fade-view">
+                            <div className="modal-header">
+                                <h3>Анкета на прихисток</h3>
+                            </div>
+                            <form className="adoption-form" onSubmit={handleSubmit}>
+                                
+                                <div className="form-step">
+                                    <h4 className="form-step-title">Крок 1: Ваші контакти</h4>
+                                    <div className="name-inputs-row">
+                                        <input type="text" placeholder="Ім'я" value={adopterFirstName} onChange={handleFirstNameChange} required />
+                                        <input type="text" placeholder="Прізвище" value={adopterLastName} onChange={handleLastNameChange} required />
+                                    </div>
+                                    <input type="text" placeholder="+38(0__) ___ __ __" value={adopterPhone} onChange={handlePhoneChange} required />
+                                </div>
+
+                                <div className="form-step">
+                                    <h4 className="form-step-title">Крок 2: Умови проживання</h4>
+                                    
+                                    <select value={housingType} onChange={(e) => setHousingType(e.target.value)} required className="form-select">
+                                        <option value="" disabled>Оберіть тип житла</option>
+                                        <option value="Власна квартира">Власна квартира</option>
+                                        <option value="Орендована квартира">Орендована квартира</option>
+                                        <option value="Приватний будинок">Приватний будинок</option>
+                                    </select>
+
+                                    <div className="radio-group-container">
+                                        <p>Чи був у вас досвід з тваринами?</p>
+                                        <div className="radio-options">
+                                            <label><input type="radio" name="exp" value="yes" checked={hasExperience === 'yes'} onChange={() => setHasExperience('yes')} /> Так</label>
+                                            <label><input type="radio" name="exp" value="no" checked={hasExperience === 'no'} onChange={() => setHasExperience('no')} /> Ні</label>
+                                        </div>
+                                        {hasExperience === 'yes' && (
+                                            <div className="input-container fade-view conditional-input">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Який саме? (напр. був собака)" 
+                                                    value={experienceDetails} 
+                                                    onChange={(e) => {
+                                                        if (e.target.value.length <= 100) setExperienceDetails(e.target.value);
+                                                    }} 
+                                                    maxLength="100"
+                                                    required 
+                                                />
+                                                <span className={`char-counter input-counter ${experienceDetails.length >= 100 ? 'limit-reached' : ''}`}>
+                                                    {100 - experienceDetails.length}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="radio-group-container">
+                                        <p>Чи є зараз інші тварини вдома?</p>
+                                        <div className="radio-options">
+                                            <label><input type="radio" name="other" value="yes" checked={hasOtherPets === 'yes'} onChange={() => setHasOtherPets('yes')} /> Так</label>
+                                            <label><input type="radio" name="other" value="no" checked={hasOtherPets === 'no'} onChange={() => setHasOtherPets('no')} /> Ні</label>
+                                        </div>
+                                        {hasOtherPets === 'yes' && (
+                                            <div className="input-container fade-view conditional-input">
+                                                <input 
+                                                    type="text" 
+                                                    placeholder="Які саме? (напр. кіт, папуга)" 
+                                                    value={otherPetsDetails} 
+                                                    onChange={(e) => {
+                                                        if (e.target.value.length <= 100) setOtherPetsDetails(e.target.value);
+                                                    }} 
+                                                    maxLength="100"
+                                                    required 
+                                                />
+                                                <span className={`char-counter input-counter ${otherPetsDetails.length >= 100 ? 'limit-reached' : ''}`}>
+                                                    {100 - otherPetsDetails.length}
+                                                </span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div> {/* 👈 ОСЬ ЦЕЙ DIV БУВ ЗАГУБЛЕНИЙ */}
+
+                                <div className="form-step">
+                                    <h4 className="form-step-title">Крок 3: Додатково</h4>
+                                    
+                                    <div className="textarea-container">
+                                        <textarea 
+                                            ref={textareaRef}
+                                            placeholder="Чому ви обрали саме цю тваринку? (необов'язково)" 
+                                            value={comment} 
+                                            onChange={handleCommentChange}
+                                            className="form-textarea-small"
+                                            rows="3"
+                                            maxLength="300" 
+                                        ></textarea>
+                                        <span className={`char-counter ${comment.length >= 300 ? 'limit-reached' : ''}`}>
+                                            {300 - comment.length}
+                                        </span>
+                                    </div>
+                                    
+                                    <label className="checkbox-container">
+                                        <input type="checkbox" checked={agreeToTerms} onChange={(e) => setAgreeToTerms(e.target.checked)} required />
+                                        <span className="checkbox-text">Я погоджуюся на співбесіду з куратором та подальшу підтримку зв'язку.</span>
+                                    </label>
+                                </div>
+
+                                <div className="form-actions">
+                                    <button type="button" className="back-to-favorites-btn" onClick={() => setShowForm(false)}>Назад</button>
+                                    <button type="submit" className="submit-adoption-btn">Надіслати заявку</button>
+                                </div>
+                            </form>
+                        </div>
                     )}
                 </div>
             </div>
         )}
         
-        {/* Бічна панель акаунту */}
-{isAccountOpen && (
-    <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
-        <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
-            
-            <img 
-                src="/хрест.png" 
-                alt="Закрити" 
-                className="drawer-close-icon"
-                onClick={handleCloseDrawer} 
-                style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px' }} 
-            />
-            
-            <div className="drawer-content">
-                <img src="/ava.jpg" alt="Профіль" className="drawer-avatar" />
-                <h3>Мій акаунт</h3>
-                
-                <div className="drawer-links">
-                    {favorites.length > -1 ? (
-                        <>
-                            <Link to="/Profile" className="drawer-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
-                                Мій профіль
-                            </Link>
-                            <button className="drawer-btn logout-btn" onClick={() => {
-                                // Логіка виходу
-                                handleCloseDrawer(); {/* 👇 Замінили функцію */}
-                            }}>
-                                Вийти
-                            </button>
-                        </>
-                    ) : (
-                        <Link to="/login" className="drawer-btn login-btn" onClick={handleCloseDrawer}> {/* 👇 Замінили функцію */}
-                            Увійти
-                        </Link>
-                    )}
+        {isAccountOpen && (
+            <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
+                <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
+                    
+                    <img 
+                        src="/хрест.png" 
+                        alt="Закрити" 
+                        className="drawer-close-icon"
+                        onClick={handleCloseDrawer} 
+                        style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px' }} 
+                    />
+                    
+                    <div className="drawer-content">
+                        <img src="/ava.jpg" alt="Профіль" className="drawer-avatar" />
+                        <h3>Мій акаунт</h3>
+                        
+                        <div className="drawer-links">
+                            {favorites.length > -1 ? (
+                                <>
+                                    <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
+                                        Мій профіль
+                                    </Link>
+                                    <button className="drawer-btn logout-btn" onClick={() => {
+                                        handleCloseDrawer();
+                                    }}>
+                                        Вийти
+                                    </button>
+                                </>
+                            ) : (
+                                <Link to="/login" className="drawer-btn login-btn" onClick={handleCloseDrawer}>
+                                    Увійти
+                                </Link>
+                            )}
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-)}
+        )}
     </header>
   );
 }
