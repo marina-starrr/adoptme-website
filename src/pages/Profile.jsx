@@ -1,130 +1,105 @@
 import { useState, useEffect, useRef } from 'react';
+import { supabase } from '../supabaseClient'; // Імпортуємо клієнт Supabase
 import './Profile.css'; 
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('personal');
-  
-  // Додаємо реф для прихованого інпуту файлу
   const fileInputRef = useRef(null);
+  const [applications, setApplications] = useState([]); // Стан для реальних заявок
+  const [loadingApps, setLoadingApps] = useState(false);
 
-  // Стан для особистих даних (тепер з аватаркою)
   const [userData, setUserData] = useState({
-    name: 'Марина О.',
+    name: 'Марина Денісова', // Твоє повне ім'я згідно з профілем
     phone: '',
     email: '',
-    // Встановлюємо дефолтну аватарку, якщо користувач ще не завантажив свою
     avatarUrl: '/ava.jpg' 
   });
 
   const [favorites, setFavorites] = useState([]);
 
-  const mockApplications = [
-    { id: 1, petName: 'Річард', date: '25.04.2026', status: 'Розглядається' },
-    { id: 2, petName: 'Луна', date: '10.04.2026', status: 'Схвалено' }
-  ];
-
   useEffect(() => {
+    // Завантаження обраного
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
 
+    // Завантаження профілю
     const savedUser = JSON.parse(localStorage.getItem('profileData'));
     if (savedUser) {
       setUserData(savedUser);
     }
   }, []);
 
+  // 1. Функція завантаження заявок з Supabase
+  useEffect(() => {
+    if (activeTab === 'applications') {
+      const fetchMyApplications = async () => {
+        setLoadingApps(true);
+        const { data, error } = await supabase
+          .from('AdoptionRequests')
+          .select('*')
+          .eq('AdopterName', userData.name) // Фільтруємо заявки за твоїм ім'ям
+          .order('Id', { ascending: false });
+
+        if (!error) {
+          setApplications(data);
+        }
+        setLoadingApps(false);
+      };
+
+      fetchMyApplications();
+    }
+  }, [activeTab, userData.name]);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserData(prevData => ({
-      ...prevData,
-      [name]: value
-    }));
+    setUserData(prevData => ({ ...prevData, [name]: value }));
   };
 
   const handleSaveProfile = (e) => {
     e.preventDefault();
     localStorage.setItem('profileData', JSON.stringify(userData));
-    alert('Ваші дані успішно збережено!');
+    alert('Дані збережено локально!');
   };
 
-  // --- НОВІ ФУНКЦІЇ ДЛЯ АВАТАРКИ ---
+  const handleAvatarClick = () => fileInputRef.current.click();
 
-  // 1. Користувач клікає по аватарці -> програмно натискаємо на прихований інпут
-  const handleAvatarClick = () => {
-    fileInputRef.current.click();
-  };
-
-  // 2. Користувач обрав файл
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      // Перевіряємо, чи це дійсно картинка
-      if (!file.type.startsWith('image/')) {
-        alert('Будь ласка, оберіть зображення (JPEG, PNG).');
-        return;
-      }
-
-      // Використовуємо FileReader для перетворення файлу у формат base64 (текстовий рядок), 
-      // щоб його можна було зберегти в localStorage
+    if (file && file.type.startsWith('image/')) {
       const reader = new FileReader();
-      
       reader.onloadend = () => {
-        // Коли файл прочитано, оновлюємо стан userData
         const base64String = reader.result;
-        
         setUserData(prevData => {
             const newData = { ...prevData, avatarUrl: base64String };
-            // Одразу зберігаємо в localStorage, щоб не треба було тиснути "Зберегти зміни"
             localStorage.setItem('profileData', JSON.stringify(newData));
             return newData;
         });
       };
-      
-      // Запускаємо читання файлу
       reader.readAsDataURL(file);
     }
   };
 
-
   return (
     <div className="profile-page"> 
       <div className="profile-container">
-        
         <aside className="profile-sidebar">
           <div className="profile-avatar-section">
-            
-            {/* Оновлений блок аватарки */}
-            <div className="avatar-wrapper" onClick={handleAvatarClick} title="Натисніть, щоб змінити фото">
-                <img 
-                    src={userData.avatarUrl} 
-                    alt="Моя аватарка" 
-                    className="profile-avatar-large" 
-                />
-                <div className="avatar-overlay">
-                    <span>Змінити фото</span>
-                </div>
+            <div className="avatar-wrapper" onClick={handleAvatarClick}>
+                <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
+                <div className="avatar-overlay"><span>Змінити</span></div>
             </div>
-
-            {/* Прихований інпут для вибору файлу */}
-            <input 
-                type="file" 
-                accept="image/*" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                style={{ display: 'none' }} // Ховаємо його з екрану
-            />
-
-            <h2 className="profile-name">{userData.name || 'Користувач'}</h2>
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
+            <h2 className="profile-name">{userData.name}</h2>
             <p className="profile-status">Власниця акаунту</p>
           </div>
           
           <nav className="profile-nav">
-             {/* ... (Кнопки навігації залишаються без змін) ... */}
             <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
               Особисті дані
             </button>
             <button className={`profile-nav-btn ${activeTab === 'applications' ? 'active' : ''}`} onClick={() => setActiveTab('applications')}>
               Мої заявки
+              {applications.length > 0 && <span className="badge">{applications.length}</span>}
             </button>
             <button className={`profile-nav-btn ${activeTab === 'favorites' ? 'active' : ''}`} onClick={() => setActiveTab('favorites')}>
               Улюбленці
@@ -134,22 +109,21 @@ function Profile() {
         </aside>
 
         <section className="profile-content-area">
-          {/* ... (Вміст вкладок залишається без змін) ... */}
           {activeTab === 'personal' && (
             <div className="profile-tab-content fade-in">
               <h3>Особисті дані</h3>
               <form className="profile-form" onSubmit={handleSaveProfile}>
                 <div className="form-group">
                   <label>Ім'я та Прізвище</label>
-                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} placeholder="Введіть ваше ім'я" required />
+                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
                   <label>Номер телефону</label>
-                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} placeholder="+38(0__) ___ __ __" />
+                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} />
                 </div>
                 <div className="form-group">
                   <label>Електронна пошта</label>
-                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} placeholder="example@mail.com" />
+                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} />
                 </div>
                 <button type="submit" className="save-profile-btn">Зберегти зміни</button>
               </form>
@@ -158,20 +132,23 @@ function Profile() {
 
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
-              <h3>Історія заявок</h3>
-              <div className="applications-list">
-                {mockApplications.map(app => (
-                  <div className="application-card" key={app.id}>
-                    <div className="app-details">
-                      <h4>Заявка на: <span>{app.petName}</span></h4>
-                      <p>Дата подачі: {app.date}</p>
-                    </div>
-                    <div className={`app-status ${app.status === 'Схвалено' ? 'status-green' : 'status-yellow'}`}>
-                      {app.status}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <h3>Історія заявок у притулок</h3>
+              {loadingApps ? <p>Завантаження заявок...</p> : (
+                <div className="applications-list">
+                  {applications.length === 0 ? <p>Ви ще не подавали заявок.</p> : 
+                    applications.map(app => (
+                      <div className="application-card" key={app.Id}>
+                        <div className="app-details">
+                          <h4>Тваринка: <span>{app.PetName}</span></h4>
+                          <p>Дата: {app.RequestDate}</p>
+                          <small>Умови: {app.LivingConditions}</small>
+                        </div>
+                        <div className="app-status status-yellow">На розгляді</div>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
             </div>
           )}
 
@@ -179,7 +156,7 @@ function Profile() {
             <div className="profile-tab-content fade-in">
               <h3>Мої улюбленці</h3>
               {favorites.length === 0 ? (
-                <p className="empty-message">Список порожній. Перейдіть до каталогу, щоб обрати друга!</p>
+                <p className="empty-message">Список порожній.</p>
               ) : (
                 <div className="profile-favorites-grid">
                   {favorites.map(pet => (
@@ -192,7 +169,6 @@ function Profile() {
               )}
             </div>
           )}
-
         </section>
       </div>
     </div>

@@ -1,45 +1,65 @@
 import { useState, useEffect } from 'react';
+import { supabase } from '../supabaseClient'; // 👈 Додали імпорт Supabase
 import './Reviews.css';
 
 function Reviews() {
   const [reviews, setReviews] = useState([]);
-  // Стан для форми (щоб React запам'ятовував, що ти друкуєш)
   const [name, setName] = useState('');
   const [text, setText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Функція для завантаження відгуків
-  const fetchReviews = () => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/reviews`)
-      .then(res => res.json())
-      .then(data => setReviews(data))
-      .catch(err => console.error("Помилка завантаження:", err));
+  // 1. Функція для завантаження відгуків із Supabase
+  const fetchReviews = async () => {
+    const { data, error } = await supabase
+      .from('Reviews')
+      .select('*')
+      .order('Id', { ascending: false }); // Показувати нові відгуки першими
+
+    if (error) {
+      console.error("Помилка завантаження відгуків:", error);
+    } else {
+      setReviews(data);
+    }
   };
 
-  // Завантажуємо відгуки один раз при відкритті сторінки
   useEffect(() => {
     fetchReviews();
   }, []);
 
-  // Функція відправки нового відгуку
-  const handleSubmit = (e) => {
-    e.preventDefault(); // Зупиняє перезавантаження сторінки
+  // 2. Функція відправки нового відгуку в Supabase
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !text) return; // Захист від порожніх повідомлень
     
-    const newReview = { name: name, text: text };
+    setIsLoading(true);
 
-    fetch(`${import.meta.env.VITE_API_URL}/api/reviews`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newReview)
-    })
-    .then(res => {
-        if (res.ok) {
-            // Очищаємо форму
-            setName(''); 
-            setText('');
-            // Завантажуємо оновлений список відгуків з бази
-            fetchReviews(); 
+    // Отримуємо поточну дату у форматі ДД.ММ.РРРР
+    const today = new Date();
+    const formattedDate = today.toLocaleDateString('uk-UA');
+
+    // Вставляємо рядок у таблицю Reviews
+    const { error } = await supabase
+      .from('Reviews')
+      .insert([
+        { 
+          Name: name, 
+          Text: text, 
+          Date: formattedDate 
         }
-    });
+      ]);
+
+    setIsLoading(false);
+
+    if (error) {
+      console.error("Помилка збереження:", error.message);
+      alert("Не вдалося відправити відгук. Спробуйте пізніше.");
+    } else {
+      // Очищаємо форму
+      setName(''); 
+      setText('');
+      // Завантажуємо оновлений список відгуків з бази
+      fetchReviews(); 
+    }
   };
   
   return (
@@ -79,8 +99,9 @@ function Reviews() {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                         ></textarea>
-                        <button type="submit" className="submit-btn">
-                            <img src="/Send.png" alt="Відправити" />
+                        <button type="submit" className="submit-btn" disabled={isLoading}>
+                            {/* Якщо йде завантаження, ховаємо іконку, щоб користувач не клікав двічі */}
+                            {isLoading ? '...' : <img src="/Send.png" alt="Відправити" />}
                         </button>
                     </div>
                 </form>
@@ -91,12 +112,12 @@ function Reviews() {
                 {reviews.length === 0 && <p style={{textAlign: 'center', color: 'white'}}>Поки що немає відгуків. Будьте першим!</p>}
                 
                 {reviews.map((review) => (
-                    <div className="review-card" key={review.id}>
+                    <div className="review-card" key={review.Id}> {/* 👈 Змінено на review.Id з великої літери */}
                         <div className="review-header">
-                            <span className="review-name">{review.name}</span>
-                            <span className="review-date">{review.date}</span>
+                            <span className="review-name">{review.Name}</span> {/* 👈 Змінено на review.Name */}
+                            <span className="review-date">{review.Date}</span> {/* 👈 Змінено на review.Date */}
                         </div>
-                        <p className="review-text">{review.text}</p>
+                        <p className="review-text">{review.Text}</p> {/* 👈 Змінено на review.Text */}
                     </div>
                 ))}
             </div>

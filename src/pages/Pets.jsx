@@ -1,40 +1,63 @@
 import { useState, useEffect } from 'react';
 import PetCard from '../components/PetCard';
+import { supabase } from '../supabaseClient'; // Імпортуємо налаштований клієнт
 import './Pets.css';
 
 function Pets() {
   const [petsList, setPetsList] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 👇 ЗАМІНИ ПОРТ НА СВІЙ (той, що у чорному вікні C#)
-    fetch(`${import.meta.env.VITE_API_URL}/api/pets`)
-      .then(res => res.json())
-      .then(data => setPetsList(data))
-      .catch(err => console.error("Помилка:", err));
+    async function getPets() {
+      try {
+        // Запит до таблиці "Pets" у Supabase
+        const { data, error } = await supabase
+          .from('Pets')
+          .select('*');
+
+        if (error) throw error;
+        setPetsList(data);
+      } catch (err) {
+        console.error("Помилка завантаження:", err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    getPets();
   }, []);
+
+  // Функція для отримання прямого посилання на фото з бакета "pets"
+  const getImageUrl = (fileName) => {
+    if (!fileName) return '/placeholder-pet.png'; // Заглушка, якщо фото немає
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${fileName}`;
+  };
 
   return (
     <div className="pets-section">
-        <div className="pets-title-container">
-            Знайди свого найкращого друга
-        </div>
+      <div className="pets-title-container">
+        Знайди свого найкращого друга
+      </div>
 
-        {/* Якщо база пуста або сервер вимкнений */}
-        {petsList.length === 0 && <p>Завантаження пухнастиків...</p>}
+      {loading && <p>Завантаження пухнастиків...</p>}
 
-        <div className="pet-grid">
-            {petsList.map((pet) => (
-                <PetCard 
-                    key={pet.id}
-                    id={pet.id}
-                    name={pet.name}
-                    image={pet.image} // Переконайся, що імена файлів в базі співпадають з файлами в public
-                    age={pet.age}
-                    gender={pet.gender}
-                    tags={pet.tags}
-                />
-            ))}
-        </div>
+      {!loading && petsList.length === 0 && (
+        <p>Наразі в притулку немає хвостиків, але скоро вони з'являться!</p>
+      )}
+
+      <div className="pet-grid">
+        {petsList.map((pet) => (
+          <PetCard 
+            key={pet.Id}
+            id={pet.Id}
+            name={pet.Name}
+            image={getImageUrl(pet.ImageName)} // Формуємо URL для картинки
+            age={pet.Age}
+            gender={pet.Gender}
+            tags={pet.Tags}
+          />
+        ))}
+      </div>
     </div>
   );
 }

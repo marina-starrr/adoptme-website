@@ -1,37 +1,43 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 function Home() {
-  // 👇 Магія React: Стан для слайдера
-  // images - це список картинок з папки public
   const images = ['/dog.png', '/cat.png', '/dog2.png', '/cat2.png', '/dog3.png'];
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Функція для перемикання слайдів
+  // Функція для ручного або автоматичного перемикання слайдів
   const changeImage = (direction) => {
-    let newIndex = currentIndex + direction;
-    
-    // Якщо дійшли до кінця - повертаємось на початок
-    if (newIndex >= images.length) newIndex = 0;
-    // Якщо пішли назад з початку - йдемо в кінець
-    if (newIndex < 0) newIndex = images.length - 1;
-    
-    setCurrentIndex(newIndex);
+    setCurrentIndex((prevIndex) => {
+      let newIndex = prevIndex + direction;
+      if (newIndex >= images.length) newIndex = 0;
+      if (newIndex < 0) newIndex = images.length - 1;
+      return newIndex;
+    });
   };
+
+  // 👇 НОВЕ: Магія автоматичного перемикання (Автопілот)
+  useEffect(() => {
+    // Встановлюємо таймер, який викликає зміну картинки кожні 4 секунди
+    const sliderTimer = setInterval(() => {
+      changeImage(1);
+    }, 4000);
+
+    // Очищаємо таймер, якщо користувач пішов з головної сторінки
+    return () => clearInterval(sliderTimer);
+  }, []);
 
   return (
     <div className="hero">
         <div className="hero-left">
             <div className="call-to-action-container">
-    <Link to="/pets" style={{ textDecoration: 'none' }}>
-        <div className="call-to-action">
-            Знайди свого улюбленця
-            {/* 👇 Додаємо нашу лапку сюди 👇 */}
-            <div className="blinking-paw"></div>
-        </div>
-    </Link>
-</div>
+                <Link to="/pets" style={{ textDecoration: 'none' }}>
+                    <div className="call-to-action">
+                        Знайди свого улюбленця
+                        <div className="blinking-paw"></div>
+                    </div>
+                </Link>
+            </div>
             
             <div className="stats-container">
                 <div className="stat-item">
@@ -49,16 +55,19 @@ function Home() {
             </div>
         </div>
 
-        <div className="hero-right">
+       <div className="hero-right">
             <div className="image-slider">
-                {/* 👇 Тут картинка змінюється залежно від currentIndex */}
-                <img 
-                    src={images[currentIndex]} 
-                    alt="Happy pet" 
-                    className="slider-image" 
-                />
+                {/* 👇 НОВЕ: Виводимо всі картинки, але активною робимо тільки одну */}
+                {images.map((imgSrc, index) => (
+                    <img 
+                        key={index}
+                        src={imgSrc} 
+                        alt="Happy pet" 
+                        // Додаємо клас 'active', якщо індекс збігається з поточним
+                        className={`slider-image ${index === currentIndex ? 'active' : ''}`} 
+                    />
+                ))}
                 
-                {/* Кнопки перемикання */}
                 <button className="slider-nav prev" onClick={() => changeImage(-1)}>&lt;</button>
                 <button className="slider-nav next" onClick={() => changeImage(1)}>&gt;</button>
                 

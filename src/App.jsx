@@ -9,12 +9,10 @@ import Reviews from './pages/Reviews';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import PetDetails from './pages/PetDetails';
-<Route path="/pets/:id" element={<PetDetails />} />
 
 function App() {
   return (
     <BrowserRouter>
-      {/* 1. Фонові лапки (твої paw-1, paw-2...) можна додати сюди, щоб вони були скрізь */}
       <div className="background-paws">
         <div className="paw paw-1"></div>
         <div className="paw paw-2"></div>
@@ -23,14 +21,14 @@ function App() {
       </div>
 
       <div className="app-container">
-        {/* 2. Шапка завжди зверху */}
         <Header />
 
-        {/* 3. Тут змінюється контент */}
         <main>
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/pets" element={<Pets />} />
+            {/* Рядок нижче тепер на своєму місці всередині Routes */}
+            <Route path="/pets/:id" element={<PetDetails />} /> 
             <Route path="/about" element={<About />} />
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/contact" element={<Contact />} />
@@ -38,7 +36,6 @@ function App() {
           </Routes>
         </main>
 
-        {/* 4. Футер завжди знизу */}
         <Footer />
       </div>
     </BrowserRouter>
