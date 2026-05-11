@@ -160,7 +160,7 @@
 
 .close-btn:hover,
 .close-btn:focus {
-    color: #333;
+    color: #000000;
     text-decoration: none;
 }
 
@@ -212,7 +212,7 @@
 
 /* Стиль для тексту, коли обране порожнє */
 .empty-favorites-text {
-    color: #333;
+    color: #000000;
     font-size: 18px;
     font-weight: 500;
     line-height: 1.6;
@@ -423,7 +423,7 @@
     margin: 0 0 8px 0;
     font-weight: 600;
     font-size: 14px;
-    color: #333;
+    color: #000000;
 }
 
 .radio-options {
@@ -438,7 +438,7 @@
     display: flex;
     align-items: center;
     gap: 5px;
-    color: #333;
+    color: #000000;
 }
 
 .conditional-input {
@@ -788,4 +788,23 @@
 .favorite-card-link:hover .favorite-card-name {
     color: #6847DD;
     transition: color 0.2s ease;
+}
+
+.login-nav-btn {
+    background-color: transparent;
+    color: var(--purple-dark);
+    border: 2px solid var(--purple-dark);
+    padding: 8px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 15px;
+    transition: all 0.3s ease;
+}
+
+.login-nav-btn:hover {
+    background-color: var(--purple-dark);
+    color: white;
+    transform: translateY(-2px);
 }

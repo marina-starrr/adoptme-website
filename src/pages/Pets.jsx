@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import PetCard from '../components/PetCard';
-import { supabase } from '../supabaseClient'; // Імпортуємо налаштований клієнт
+import BackgroundPaws from '../components/BackgroundPaws'; // 👈 1. Імпортуємо наш компонент
+import { supabase } from '../supabaseClient';
 import './Pets.css';
 
 function Pets() {
@@ -10,7 +11,6 @@ function Pets() {
   useEffect(() => {
     async function getPets() {
       try {
-        // Запит до таблиці "Pets" у Supabase
         const { data, error } = await supabase
           .from('Pets')
           .select('*');
@@ -27,36 +27,42 @@ function Pets() {
     getPets();
   }, []);
 
-  // Функція для отримання прямого посилання на фото з бакета "pets"
   const getImageUrl = (fileName) => {
-    if (!fileName) return '/placeholder-pet.png'; // Заглушка, якщо фото немає
+    if (!fileName) return '/placeholder-pet.png';
     return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${fileName}`;
   };
 
   return (
-    <div className="pets-section">
-      <div className="pets-title-container">
-        Знайди свого найкращого друга
-      </div>
+    <div className="page-transition">
+      <div className="pets-section">
 
-      {loading && <p>Завантаження пухнастиків...</p>}
+        {/* 👇 2. Викликаємо лапки одним рядком! */}
+        <BackgroundPaws />
 
-      {!loading && petsList.length === 0 && (
-        <p>Наразі в притулку немає хвостиків, але скоро вони з'являться!</p>
-      )}
+        <div style={{ position: 'relative', zIndex: 2 }}>
+          <div className="pets-title-container">
+            Знайди свого найкращого друга
+          </div>
+          {loading && <p>Завантаження пухнастиків...</p>}
 
-      <div className="pet-grid">
-        {petsList.map((pet) => (
-          <PetCard 
-            key={pet.Id}
-            id={pet.Id}
-            name={pet.Name}
-            image={getImageUrl(pet.ImageName)} // Формуємо URL для картинки
-            age={pet.Age}
-            gender={pet.Gender}
-            tags={pet.Tags}
-          />
-        ))}
+          {!loading && petsList.length === 0 && (
+            <p>Наразі в притулку немає хвостиків, але скоро вони з'являться!</p>
+          )}
+
+          <div className="pet-grid">
+            {petsList.map((pet) => (
+              <PetCard
+                key={pet.Id}
+                id={pet.Id}
+                name={pet.Name}
+                image={getImageUrl(pet.ImageName)}
+                age={pet.Age}
+                gender={pet.Gender}
+                tags={pet.Tags}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );

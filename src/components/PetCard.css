@@ -149,3 +149,41 @@
         transform: none;
     }
 }
+
+/* =========================================
+   КНОПКА "ДЕТАЛЬНІШЕ"
+   ========================================= */
+.pet-details-btn {
+    display: block;
+    margin-top: 15px;
+    padding: 10px 0;
+    background-color: var(--white, #ffffff);
+    color: #6847DD; /* Фірмовий фіолетовий колір тексту */
+    text-align: center;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    border: 2px solid transparent;
+}
+
+.pet-details-btn:hover {
+    background-color: #f0ebff; /* Світло-фіолетовий відтінок при наведенні */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* =========================================
+   ДОДАТКОВІ ПРАВКИ ДЛЯ ПЛАВНОСТІ
+   ========================================= */
+.pet-card-content {
+    /* Додаємо трохи більше відступу знизу, щоб кнопка дихала */
+    padding-bottom: 20px; 
+}
+
+.pet-info-chatacter {
+    /* Робимо відступ від тегів до нової кнопки */
+    margin-bottom: 5px; 
+}

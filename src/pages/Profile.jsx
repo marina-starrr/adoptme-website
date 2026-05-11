@@ -1,15 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../supabaseClient'; // Імпортуємо клієнт Supabase
+import { supabase } from '../supabaseClient'; 
+import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css'; 
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('personal');
   const fileInputRef = useRef(null);
-  const [applications, setApplications] = useState([]); // Стан для реальних заявок
+  const [applications, setApplications] = useState([]); 
   const [loadingApps, setLoadingApps] = useState(false);
 
   const [userData, setUserData] = useState({
-    name: 'Марина Денісова', // Твоє повне ім'я згідно з профілем
+    name: 'Марина Денісова', 
     phone: '',
     email: '',
     avatarUrl: '/ava.jpg' 
@@ -18,18 +19,15 @@ function Profile() {
   const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
-    // Завантаження обраного
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
 
-    // Завантаження профілю
     const savedUser = JSON.parse(localStorage.getItem('profileData'));
     if (savedUser) {
       setUserData(savedUser);
     }
   }, []);
 
-  // 1. Функція завантаження заявок з Supabase
   useEffect(() => {
     if (activeTab === 'applications') {
       const fetchMyApplications = async () => {
@@ -37,7 +35,7 @@ function Profile() {
         const { data, error } = await supabase
           .from('AdoptionRequests')
           .select('*')
-          .eq('AdopterName', userData.name) // Фільтруємо заявки за твоїм ім'ям
+          .eq('AdopterName', userData.name) 
           .order('Id', { ascending: false });
 
         if (!error) {
@@ -82,8 +80,13 @@ function Profile() {
   return (
     <div className="profile-page"> 
       <div className="profile-container">
+        
         <aside className="profile-sidebar">
-          <div className="profile-avatar-section">
+          {/* Лапки сайдбару */}
+          <BackgroundPaws customClass="sidebar-paws" />
+          
+          {/* 👇 ДОДАНО zIndex: 2, щоб аватарка була над лапками */}
+          <div className="profile-avatar-section" style={{ position: 'relative', zIndex: 2 }}>
             <div className="avatar-wrapper" onClick={handleAvatarClick}>
                 <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
                 <div className="avatar-overlay"><span>Змінити</span></div>
@@ -93,7 +96,8 @@ function Profile() {
             <p className="profile-status">Власниця акаунту</p>
           </div>
           
-          <nav className="profile-nav">
+          {/* 👇 ДОДАНО zIndex: 2, щоб кнопки натискалися */}
+          <nav className="profile-nav" style={{ position: 'relative', zIndex: 2 }}>
             <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
               Особисті дані
             </button>

@@ -1,11 +1,16 @@
 /* --- СТОРІНКА ПРОФІЛЮ --- */
 
 .profile-page {
-    background-color: var(--body-bg); 
+    background: linear-gradient(to bottom, #805CFF, #4024A4);
+    background-color: transparent; /* 👈 ЗМІНЕНО: прозорий фон */
     padding: 60px 5%;
     display: flex;
     justify-content: center;
+    text-align: center;
     flex-grow: 1; 
+    position: relative; /* 👈 ДОДАНО: для лапок */
+    flex: 1;
+    width: 100%;
 }
 
 .profile-container {
@@ -20,8 +25,11 @@
     min-height: 600px;
 }
 
-/* Ліва колонка (Sidebar) */
+/* --- ЛАПКИ ДЛЯ САЙДБАРУ --- */
+
 .profile-sidebar {
+    position: relative; 
+    overflow: hidden;    
     width: 300px;
     background: linear-gradient(to bottom, #f8f5ff, #eee1ff);
     padding: 40px 20px;
@@ -29,6 +37,31 @@
     display: flex;
     flex-direction: column;
 }
+
+.sidebar-paws {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 1; 
+    pointer-events: none; /* Щоб не блокували кліки по кнопках! */
+}
+
+.sidebar-paws .paw {
+    background-image: url('/lapki.png') !important; /* Надійно підключаємо картинку */
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    width: 100px !important;  
+    height: 100px !important;
+    opacity: 10.15 !important; /* 👈 Виправлено! Тепер це валідне значення */
+    filter: sepia(1) saturate(5) hue-rotate(230deg) !important; 
+}
+
+.sidebar-paws .paw-1 { top: 5%; left: -10%; transform: rotate(-20deg); }
+.sidebar-paws .paw-2 { top: 40%; right: -15%; transform: rotate(45deg); }
+.sidebar-paws .paw-3 { bottom: 10%; left: 5%; transform: rotate(15deg); }
+.sidebar-paws .paw-4 { top: 70%; left: 40%; transform: rotate(-10deg); opacity: 0.05 !important; }
 
 .profile-avatar-section {
     text-align: center;

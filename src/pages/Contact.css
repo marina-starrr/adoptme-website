@@ -5,8 +5,9 @@
     width: 100%;
     padding: 60px 5%;
     text-align: center;
-    background-color: var(--body-bg);
-    flex: 1; /* Змушує секцію займати вільне місце до футера */
+    background-color: transparent; /* 👈 ЗМІНЕНО ТУТ: прозорий фон */
+    flex: 1; 
+    position: relative; /* 👈 ДОДАНО ТУТ: щоб лапки знали свої межі */
 }
 
 /* =========================================

@@ -1,0 +1,93 @@
+/* =========================================
+   СТОРІНКА ВХОДУ ДЛЯ АДМІНІСТРАТОРА
+   ========================================= */
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80vh;
+  padding: 20px;
+}
+
+/* Сама картка входу (в стилі модалки) */
+.login-card {
+  background: white;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 15px 35px rgba(74, 20, 140, 0.15); /* Легка фіолетова тінь */
+  border: 2px solid var(--body-bg); /* Світла рамочка */
+  max-width: 400px;
+  width: 100%;
+  text-align: center;
+}
+
+.login-card h2 {
+  color: #472aae; /* Насичений темно-фіолетовий (не малиновий) */
+  margin-bottom: 5px;
+  font-weight: 800;
+  font-size: 26px;
+}
+
+.login-card p {
+  color: var(--text-color);
+  opacity: 0.8;
+  font-size: 14px;
+  margin-bottom: 30px;
+}
+
+.input-group {
+  text-align: left;
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 700;
+  color: #472aae; /* Темно-фіолетовий */
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+/* Поля вводу (стиль матового скла з фіолетовим відтінком) */
+.input-group input {
+  width: 100%;
+  padding: 14px 15px;
+  border-radius: 12px; /* М'які кути, як у кнопки */
+  border: 2px solid transparent;
+  background: var(--body-bg); /* Світло-фіолетовий фон */
+  outline: none;
+  font-family: inherit;
+  color: var(--text-color);
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+/* Коли користувач клікає на поле (фокус) */
+.input-group input:focus {
+  border-color: #6d4ce4; /* Чистий фіолетовий контур */
+  background: white;
+  box-shadow: 0 4px 10px rgba(109, 76, 228, 0.15);
+}
+
+/* Кнопка "Увійти" */
+.login-submit-btn {
+  width: 100%;
+  background-color: #6d4ce4; /* Чистий фіолетовий колір */
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px; /* Прямокутна з м'якими кутами */
+  font-weight: 700;
+  font-size: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(109, 76, 228, 0.3);
+  margin-top: 10px;
+  transition: all 0.3s ease;
+}
+
+.login-submit-btn:hover {
+  background-color: #472aae; /* Стає темнішою при наведенні */
+  transform: translateY(-2px); /* Ледь піднімається */
+  box-shadow: 0 6px 20px rgba(71, 42, 174, 0.4);
+}

@@ -1,0 +1,220 @@
+/* =========================================
+   СТИЛІ ДЛЯ КНОПКИ ТА МОДАЛКИ "ПІДТРИМАТИ"
+   ========================================= */
+
+/* Головна кнопка */
+.donate-btn-main {
+    background-color: #6d4ce4; 
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 15px #613de2; 
+    transition: all 0.3s ease;
+}
+
+.donate-btn-main:hover {
+    background-color: #472aae; 
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px #3917b1;
+}
+
+.heart-icon {
+    font-size: 18px;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+}
+
+/* Оверлей модалки (темний фон) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5); /* Трохи світліше затемнення */
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+/* Саме вікно модалки (У стилі вікна "Обрані") */
+.donate-modal {
+    background: white;
+    padding: 35px 40px;
+    border-radius: 20px; /* Зробили кути як у карток */
+    max-width: 650px;
+    width: 90%;
+    position: relative;
+    text-align: center;
+    box-shadow: 0 15px 35px rgba(74, 20, 140, 0.15); /* Легка фіолетова тінь */
+    border: 2px solid var(--body-bg); /* Світла рамочка */
+}
+
+/* Заголовок модалки */
+.donate-modal h2 {
+    color: var(--purple-dark);
+    font-weight: 800;
+    font-size: 26px;
+    margin-bottom: 5px;
+}
+
+.close-modal {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 32px;
+    cursor: pointer;
+    color: #999; /* Сірий хрестик */
+    transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+    transform: scale(1.2);
+    color: var(--purple-dark); /* Темнішає при наведенні */
+}
+
+.modal-desc {
+    margin-top: 10px;
+    color: #000000;
+    font-weight: 500;
+    opacity: 0.8;
+    margin-bottom: 30px;
+}
+
+/* Контент всередині (QR та реквізити) */
+.donate-content {
+    display: flex;
+    gap: 30px;
+    align-items: center;
+    text-align: left;
+    flex-wrap: wrap;
+}
+
+/* Блок з QR-кодом */
+.qr-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    border: 2px solid var(--body-bg); /* Рамочка як у карток */
+    box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+}
+
+.qr-img {
+    width: 140px;
+    height: 140px;
+    border-radius: 12px;
+    object-fit: cover;
+}
+
+.qr-section span {
+    font-size: 13px;
+    color: var(--purple-medium);
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Права частина з реквізитами */
+.requisites-section {
+    flex: 2;
+}
+
+.req-item {
+    margin-bottom: 15px;
+}
+
+.req-item label {
+    display: block;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--purple-dark);
+}
+
+.req-item p {
+    color: var(--text-color);
+    font-weight: 500;
+    font-size: 15px;
+}
+
+/* Поля для копіювання */
+.copy-box {
+    display: flex;
+    background: var(--body-bg); 
+    padding: 12px 15px;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: space-between;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+}
+
+.copy-box:hover {
+    border-color: var(--header-bg); 
+    box-shadow: 0 4px 10px rgba(180, 157, 255, 0.3);
+}
+
+.copy-box code {
+    font-family: 'Courier New', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--purple-dark); /* Темні цифри */
+    letter-spacing: 0.5px;
+}
+
+/* Кнопка "Скопіювати" */
+.copy-box button {
+    background: white;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 6px;
+    border-radius: 8px;
+    color: var(--purple-dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, background 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.copy-box button:hover {
+    transform: scale(1.1);
+    background: var(--header-bg);
+    color: white;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Адаптивність для телефонів */
+@media (max-width: 600px) {
+    .donate-content {
+        flex-direction: column;
+    }
+    .qr-section { width: 100%; }
+    .donate-modal { padding: 30px 20px; }
+}

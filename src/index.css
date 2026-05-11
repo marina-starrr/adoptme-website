@@ -12,7 +12,7 @@
     --text-color: #333333;
     --body-bg: #EEE1FF;
     --black: #000000;
-} 
+}
 
 /* =========================================
    2. БАЗОВІ НАЛАШТУВАННЯ (RESET)
@@ -21,7 +21,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    transition: all 0.3s ease; /* Плавність для всіх елементів */
+    transition: all 0.3s ease;
 }
 
 body {
@@ -43,7 +43,7 @@ img {
 .app-container {
     display: flex;
     flex-direction: column;
-    min-height: 100vh; /* Мінімум 100% висоти екрана */
+    min-height: 100vh;
 }
 
 main {
@@ -62,7 +62,7 @@ main {
     left: 0;
     width: 100%;
     height: 100%;
-    pointer-events: none; /* Щоб не перекривали кліки */
+    pointer-events: none;
     z-index: -1;
     overflow: hidden;
 }
@@ -73,6 +73,7 @@ main {
     background-size: contain;
     background-repeat: no-repeat;
     opacity: 0.1;
+    /* 👈 ЗМІНЕНО: Ідеальна напівпрозорість */
 }
 
 .paw-1 {
@@ -114,7 +115,30 @@ main {
     body {
         font-size: 14px;
     }
-    h1, h2, h3 {
-        word-wrap: break-word; /* Довгі слова не ламають верстку */
+
+    h1,
+    h2,
+    h3 {
+        word-wrap: break-word;
+    }
+}
+
+/* =========================================
+   6. ПЛАВНІ ПЕРЕХОДИ МІЖ СТОРІНКАМИ
+   ========================================= */
+.page-transition {
+    animation: fadeInPage 0.4s ease-out forwards;
+}
+
+@keyframes fadeInPage {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+        /* Сторінка ледь-ледь виїжджає знизу */
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

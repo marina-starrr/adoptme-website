@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom'; // 👈 Додали імпорт Link
 import './PetCard.css';
 
 function PetCard({ id, name, image, age, gender, tags }) {
-  // 1. Оголошуємо стан для сердечка
   const [isFavorite, setIsFavorite] = useState(false);
 
-  // 2. Перевіряємо, чи є тваринка в обраному при завантаженні сторінки
   useEffect(() => {
     const checkFavoriteStatus = () => {
       const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -13,10 +12,7 @@ function PetCard({ id, name, image, age, gender, tags }) {
       setIsFavorite(isFav);
     };
 
-    // Перевіряємо одразу
     checkFavoriteStatus();
-
-    // Вчимо сердечко слухати події (коли тваринку видаляють з кошика)
     window.addEventListener('cartUpdated', checkFavoriteStatus);
     
     return () => {
@@ -24,27 +20,32 @@ function PetCard({ id, name, image, age, gender, tags }) {
     };
   }, [id]);
 
-  // 3. Функція кліку по сердечку
-  const toggleFavorite = () => {
+  // Оновлена функція з блокуванням переходу
+  const toggleFavorite = (e) => {
+    e.preventDefault(); // 👈 Зупиняємо стандартну поведінку
+    e.stopPropagation(); // 👈 Блокуємо клік, щоб він не передався на фотографію під сердечком
+
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
     if (isFavorite) {
-      favorites = favorites.filter(pet => pet.id !== id); // Видаляємо
+      favorites = favorites.filter(pet => pet.id !== id);
     } else {
-      favorites.push({ id, name, image }); // Додаємо
+      favorites.push({ id, name, image });
     }
 
     localStorage.setItem('favorites', JSON.stringify(favorites));
-    setIsFavorite(!isFavorite); // Змінюємо колір сердечка
-
-    // Повідомляємо всьому сайту, що кошик оновився!
+    setIsFavorite(!isFavorite);
     window.dispatchEvent(new Event('cartUpdated')); 
   };
 
   return (
     <div className="pet-card">
         <div className="pet-card-image-container">
-            <img src={image} alt={name} className="pet-card-image" />
+            {/* 👈 Робимо фотографію клікабельною */}
+            <Link to={`/pets/${id}`} style={{ display: 'block', height: '100%' }}>
+                <img src={image} alt={name} className="pet-card-image" />
+            </Link>
+            
             <h3 className="pet-name">{name}</h3>
             
             <img 
@@ -67,6 +68,11 @@ function PetCard({ id, name, image, age, gender, tags }) {
             <div className="pet-info-chatacter"> 
                 {tags}
             </div>
+            
+            {/* 👈 Додана кнопка "Детальніше" */}
+            <Link to={`/pets/${id}`} className="pet-details-btn">
+                Детальніше &raquo;
+            </Link>
         </div>
     </div>
   );

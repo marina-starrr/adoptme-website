@@ -1,34 +1,44 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import BackgroundPaws from '../components/BackgroundPaws'; // 👈 1. Імпортуємо наші ідеальні лапки
 import './Home.css';
 
 function Home() {
-  const images = ['/dog.png', '/cat.png', '/dog2.png', '/cat2.png', '/dog3.png'];
+  const sliderPets = [
+    { src: '/mars1.png', id: 1 }, 
+    { src: '/bagir1.png', id: 2 },
+    { src: '/nensi1.png', id: 3 },
+    { src: '/momo1.png', id: 4 },
+    { src: '/kamila1.png', id: 5 }
+  ];
+  
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Функція для ручного або автоматичного перемикання слайдів
   const changeImage = (direction) => {
     setCurrentIndex((prevIndex) => {
       let newIndex = prevIndex + direction;
-      if (newIndex >= images.length) newIndex = 0;
-      if (newIndex < 0) newIndex = images.length - 1;
+      if (newIndex >= sliderPets.length) newIndex = 0;
+      if (newIndex < 0) newIndex = sliderPets.length - 1;
       return newIndex;
     });
   };
 
-  // 👇 НОВЕ: Магія автоматичного перемикання (Автопілот)
+  // Магія автоматичного перемикання (Автопілот)
   useEffect(() => {
-    // Встановлюємо таймер, який викликає зміну картинки кожні 4 секунди
     const sliderTimer = setInterval(() => {
       changeImage(1);
     }, 4000);
 
-    // Очищаємо таймер, якщо користувач пішов з головної сторінки
     return () => clearInterval(sliderTimer);
   }, []);
 
   return (
     <div className="hero">
+        
+        {/* 👇 2. Вмикаємо лапки для головної сторінки! */}
+        <BackgroundPaws />
+
         <div className="hero-left">
             <div className="call-to-action-container">
                 <Link to="/pets" style={{ textDecoration: 'none' }}>
@@ -55,21 +65,21 @@ function Home() {
             </div>
         </div>
 
-       <div className="hero-right">
+        <div className="hero-right">
             <div className="image-slider">
-                {/* 👇 НОВЕ: Виводимо всі картинки, але активною робимо тільки одну */}
-                {images.map((imgSrc, index) => (
-                    <img 
-                        key={index}
-                        src={imgSrc} 
-                        alt="Happy pet" 
-                        // Додаємо клас 'active', якщо індекс збігається з поточним
-                        className={`slider-image ${index === currentIndex ? 'active' : ''}`} 
-                    />
-                ))}
+                <Link to={`/pets/${sliderPets[currentIndex].id}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+                    {sliderPets.map((pet, index) => (
+                        <img 
+                            key={index}
+                            src={pet.src} 
+                            alt="Happy pet" 
+                            className={`slider-image ${index === currentIndex ? 'active' : ''}`} 
+                        />
+                    ))}
+                </Link>
                 
-                <button className="slider-nav prev" onClick={() => changeImage(-1)}>&lt;</button>
-                <button className="slider-nav next" onClick={() => changeImage(1)}>&gt;</button>
+                <button className="slider-nav prev" onClick={(e) => { e.preventDefault(); changeImage(-1); }}>&lt;</button>
+                <button className="slider-nav next" onClick={(e) => { e.preventDefault(); changeImage(1); }}>&gt;</button>
                 
                 <div className="cta-text-right">
                     Ці цифри ростуть з кожним днем, стань частиною нашої родини!
