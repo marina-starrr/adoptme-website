@@ -1,23 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../supabaseClient'; 
+import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
-import './Profile.css'; 
+import './Profile.css';
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('personal');
   const fileInputRef = useRef(null);
-  const [applications, setApplications] = useState([]); 
+  const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
 
   const [userData, setUserData] = useState({
-    name: 'Марина Денісова', 
+    name: ' ',
     phone: '',
     email: '',
-    avatarUrl: '/ava.jpg' 
+    avatarUrl: '/ava.jpg'
   });
 
   const [favorites, setFavorites] = useState([]);
-
+  
+  const userRole = localStorage.getItem('userRole');
+  const isProfileAdmin = userRole === 'admin'; // Змінна, що каже, чи це адмін
+  
   useEffect(() => {
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
@@ -35,7 +38,7 @@ function Profile() {
         const { data, error } = await supabase
           .from('AdoptionRequests')
           .select('*')
-          .eq('AdopterName', userData.name) 
+          .eq('AdopterName', userData.name)
           .order('Id', { ascending: false });
 
         if (!error) {
@@ -59,7 +62,9 @@ function Profile() {
     alert('Дані збережено локально!');
   };
 
-  const handleAvatarClick = () => fileInputRef.current.click();
+const handleAvatarClick = () => {
+    if (!isProfileAdmin) fileInputRef.current.click();
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -68,9 +73,9 @@ function Profile() {
       reader.onloadend = () => {
         const base64String = reader.result;
         setUserData(prevData => {
-            const newData = { ...prevData, avatarUrl: base64String };
-            localStorage.setItem('profileData', JSON.stringify(newData));
-            return newData;
+          const newData = { ...prevData, avatarUrl: base64String };
+          localStorage.setItem('profileData', JSON.stringify(newData));
+          return newData;
         });
       };
       reader.readAsDataURL(file);
@@ -78,24 +83,25 @@ function Profile() {
   };
 
   return (
-    <div className="profile-page"> 
+    <div className="profile-page">
       <div className="profile-container">
-        
+
         <aside className="profile-sidebar">
           {/* Лапки сайдбару */}
           <BackgroundPaws customClass="sidebar-paws" />
-          
+
           {/* 👇 ДОДАНО zIndex: 2, щоб аватарка була над лапками */}
           <div className="profile-avatar-section" style={{ position: 'relative', zIndex: 2 }}>
             <div className="avatar-wrapper" onClick={handleAvatarClick}>
                 <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
-                <div className="avatar-overlay"><span>Змінити</span></div>
+                {/* 👇 Ховаємо напис "Змінити" для адміна */}
+                {!isProfileAdmin && <div className="avatar-overlay"><span>Змінити</span></div>}
             </div>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
             <h2 className="profile-name">{userData.name}</h2>
             <p className="profile-status">Власниця акаунту</p>
           </div>
-          
+
           {/* 👇 ДОДАНО zIndex: 2, щоб кнопки натискалися */}
           <nav className="profile-nav" style={{ position: 'relative', zIndex: 2 }}>
             <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
@@ -119,17 +125,20 @@ function Profile() {
               <form className="profile-form" onSubmit={handleSaveProfile}>
                 <div className="form-group">
                   <label>Ім'я та Прізвище</label>
-                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required />
+                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required disabled={isProfileAdmin} />
                 </div>
                 <div className="form-group">
                   <label>Номер телефону</label>
-                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} />
+                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} disabled={isProfileAdmin} />
                 </div>
                 <div className="form-group">
                   <label>Електронна пошта</label>
-                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} />
+                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} disabled={isProfileAdmin} />
                 </div>
-                <button type="submit" className="save-profile-btn">Зберегти зміни</button>
+                {/* 👇 Ховаємо кнопку збереження для адміна */}
+                {!isProfileAdmin && (
+                    <button type="submit" className="save-profile-btn">Зберегти зміни</button>
+                )}
               </form>
             </div>
           )}
@@ -139,7 +148,7 @@ function Profile() {
               <h3>Історія заявок у притулок</h3>
               {loadingApps ? <p>Завантаження заявок...</p> : (
                 <div className="applications-list">
-                  {applications.length === 0 ? <p>Ви ще не подавали заявок.</p> : 
+                  {applications.length === 0 ? <p>Ви ще не подавали заявок.</p> :
                     applications.map(app => (
                       <div className="application-card" key={app.Id}>
                         <div className="app-details">

@@ -1,18 +1,21 @@
-import { useState, useRef, useEffect } from 'react'; // 👈 Додано useEffect
+import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './Header.css';
 import DonateButton from './DonateButton';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
 
 function Header() {
+    const { isAdmin, logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [favorites, setFavorites] = useState([]);
     const [showForm, setShowForm] = useState(false);
 
-    // 👇 СТАН АВТОРИЗАЦІЇ (Чи увійшов користувач)
-    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('isAdmin'));
-
+    // СТАН АВТОРИЗАЦІЇ
+const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
+    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userEmail'));
     const [isClosing, setIsClosing] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isSuccessScreen, setIsSuccessScreen] = useState(false);
@@ -21,6 +24,7 @@ function Header() {
     const [adopterFirstName, setAdopterFirstName] = useState('');
     const [adopterLastName, setAdopterLastName] = useState('');
     const [adopterPhone, setAdopterPhone] = useState('');
+    const [adopterEmail, setAdopterEmail] = useState(''); // 👈 Стан для пошти
 
     // Стани форми (Крок 2 та 3)
     const [housingType, setHousingType] = useState('');
@@ -34,12 +38,12 @@ function Header() {
 
     const navigate = useNavigate();
 
-    // 👇 ЕФЕКТ ДЛЯ ВІДСТЕЖЕННЯ ВХОДУ/ВИХОДУ
+    // ЕФЕКТ ДЛЯ ВІДСТЕЖЕННЯ ВХОДУ/ВИХОДУ
     useEffect(() => {
         const checkAuth = () => {
-            setIsLoggedIn(!!localStorage.getItem('isAdmin'));
+            setIsLoggedIn(!!localStorage.getItem('userEmail'));
+            setUserRole(localStorage.getItem('userRole'));
         };
-        // Слухаємо зміни в localStorage (наприклад, коли відбувається вхід на сторінці Login)
         window.addEventListener('storage', checkAuth);
         return () => window.removeEventListener('storage', checkAuth);
     }, []);
@@ -84,52 +88,6 @@ function Header() {
         window.dispatchEvent(new Event('cartUpdated'));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        const petNames = favorites.map(f => f.name).join(", ");
-
-        const adoptionData = {
-            PetName: petNames,
-            FirstName: adopterFirstName,
-            LastName: adopterLastName,
-            AdopterPhone: adopterPhone,
-            LivingConditions: housingType,
-            HasExperience: hasExperience === 'yes',
-            ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
-            HasOtherPets: hasOtherPets === 'yes',
-            OtherPetsDetails: hasOtherPets === 'yes' ? otherPetsDetails : '',
-            Reason: comment,
-            AgreedToInterview: agreeToTerms
-        };
-
-        fetch(`${import.meta.env.VITE_API_URL}/api/adopt`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(adoptionData)
-        })
-            .then(res => {
-                if (res.ok) {
-                    localStorage.removeItem('favorites');
-                    setIsSuccessScreen(true);
-                    window.dispatchEvent(new Event('cartUpdated'));
-                } else {
-                    alert("Сталася помилка при відправці. Перевір консоль сервера.");
-                }
-            })
-            .catch(err => console.error("Помилка відправки:", err));
-    };
-
-    const finishAdoption = () => {
-        setIsModalClosing(true);
-        setTimeout(() => {
-            setFavorites([]);
-            setIsFavoritesOpen(false);
-            setIsModalClosing(false);
-            setIsSuccessScreen(false);
-            window.location.reload();
-        }, 300);
-    };
-
     const handleFirstNameChange = (e) => {
         const cleanedValue = e.target.value.replace(/[^a-zA-Zа-яА-ЯіІїЇєЄґҐ\s\-]/g, '');
         setAdopterFirstName(cleanedValue.substring(0, 25));
@@ -167,6 +125,64 @@ function Header() {
         }
     };
 
+    // 👇 ОНОВЛЕНА ФУНКЦІЯ ВІДПРАВКИ ЗАЯВКИ В SUPABASE
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Отримуємо імена всіх обраних тварин через кому
+        const petNames = favorites.map(f => f.name).join(", ");
+        // Дістаємо пошту залогіненого юзера (якщо є)
+        const loggedInEmail = localStorage.getItem('userEmail');
+
+        const adoptionData = {
+            PetName: petNames,
+            FirstName: adopterFirstName,
+            LastName: adopterLastName,
+            AdopterPhone: adopterPhone,
+            AdopterEmail: loggedInEmail || adopterEmail, // 👈 Відправляємо email у базу
+            LivingConditions: housingType,
+            HasExperience: hasExperience === 'yes',
+            ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
+            HasOtherPets: hasOtherPets === 'yes',
+            OtherPetsDetails: hasOtherPets === 'yes' ? otherPetsDetails : '',
+            Reason: comment,
+            Status: 'Нова'
+        };
+
+        const { error } = await supabase
+            .from('AdoptionRequests')
+            .insert([adoptionData]);
+
+        if (!error) {
+            // Успішно! Очищаємо кошик і показуємо екран подяки
+            localStorage.removeItem('favorites');
+            setIsSuccessScreen(true);
+            window.dispatchEvent(new Event('cartUpdated'));
+
+            // Очищаємо форму
+            setAdopterFirstName('');
+            setAdopterLastName('');
+            setAdopterPhone('');
+            setAdopterEmail('');
+            setHousingType('');
+            setComment('');
+            setAgreeToTerms(false);
+        } else {
+            alert("Сталася помилка при відправці: " + error.message);
+        }
+    };
+
+    const finishAdoption = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setFavorites([]);
+            setIsFavoritesOpen(false);
+            setIsModalClosing(false);
+            setIsSuccessScreen(false);
+            window.location.reload();
+        }, 300);
+    };
+
     return (
         <header className="header" id="home">
             <div className="header-left">
@@ -183,6 +199,7 @@ function Header() {
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
                     <li><Link to="/" className="nav-link" onClick={closeMenu}>Головна</Link></li>
                     <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
+                    <li><Link to="/adoptions" className="nav-link" onClick={closeMenu}>Заявки</Link></li>
                     <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
                     <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
                     <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
@@ -199,7 +216,6 @@ function Header() {
                     style={{ cursor: 'pointer', marginLeft: '15px' }}
                 />
 
-                {/* 👇 УМОВНИЙ РЕНДЕРИНГ: Аватарка для Адміна, Кнопка для Гостя 👇 */}
                 {isLoggedIn ? (
                     <img
                         src="/avatar.png"
@@ -271,8 +287,16 @@ function Header() {
                                         <p className="success-favorites-text">
                                             Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
                                         </p>
-                                        <button className="adopt-pet-btn" onClick={() => setShowForm(true)}>Прихистити</button>
-                                    </div>
+                                        <button className="adopt-pet-btn" onClick={() => {
+                                            const userEmail = localStorage.getItem('userEmail'); // Перевіряємо, чи є пошта в пам'яті
+                                            if (!userEmail && !isAdmin) {
+                                                alert("🐾 Будь ласка, увійдіть в систему або зареєструйтесь, щоб подати заявку.");
+                                                handleCloseFavorites(); // Закриваємо вікно обраного
+                                                navigate('/login'); // Перекидаємо на сторінку входу
+                                            } else {
+                                                setShowForm(true); // Якщо увійшов - показуємо анкету
+                                            }
+                                        }}>Прихистити</button>                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -280,6 +304,7 @@ function Header() {
                                 <div className="modal-header">
                                     <h3>Анкета на прихисток</h3>
                                 </div>
+                                {/* 👇 ТУТ ТЕПЕР ВИКЛИКАЄТЬСЯ ОНОВЛЕНИЙ handleSubmit */}
                                 <form className="adoption-form" onSubmit={handleSubmit}>
 
                                     <div className="form-step">
@@ -288,6 +313,14 @@ function Header() {
                                             <input type="text" placeholder="Ім'я" value={adopterFirstName} onChange={handleFirstNameChange} required />
                                             <input type="text" placeholder="Прізвище" value={adopterLastName} onChange={handleLastNameChange} required />
                                         </div>
+                                        {/* 👇 НОВЕ ПОЛЕ ДЛЯ EMAIL 👇 */}
+                                        <input
+                                            type="email"
+                                            placeholder="Ваш Email"
+                                            value={adopterEmail}
+                                            onChange={(e) => setAdopterEmail(e.target.value)}
+                                            required
+                                        />
                                         <input type="text" placeholder="+38(0__) ___ __ __" value={adopterPhone} onChange={handlePhoneChange} required />
                                     </div>
 
@@ -405,16 +438,24 @@ function Header() {
                             <h3>Мій акаунт</h3>
 
                             <div className="drawer-links">
-                                <Link to="/admin-panel" className="drawer-btn" onClick={handleCloseDrawer}> {/* Змінено на /admin-panel */}
-                                    Мій профіль
-                                </Link>
+                                {/* 👇 Якщо адмін - ведемо на заявки, якщо юзер - у профіль */}
+                                {userRole === 'admin' ? (
+                                    <Link to="/adoptions" className="drawer-btn" onClick={handleCloseDrawer}>
+                                        Панель заявок
+                                    </Link>
+                                ) : (
+                                    <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
+                                        Мій профіль
+                                    </Link>
+                                )}
 
-                                {/* 👇 ОНОВЛЕНА КНОПКА "ВИЙТИ" 👇 */}
                                 <button className="drawer-btn logout-btn" onClick={() => {
-                                    localStorage.removeItem('isAdmin'); // Очищаємо статус адміна
-                                    setIsLoggedIn(false); // Хедер розуміє, що ми вийшли
-                                    handleCloseDrawer(); // Закриваємо панель
-                                    navigate('/login'); // Перекидаємо на сторінку входу
+                                    logout();
+                                    localStorage.removeItem('userEmail');
+                                    localStorage.removeItem('userRole'); // 👈 Очищаємо роль
+                                    setIsLoggedIn(false); // Оновлюємо стан відразу
+                                    handleCloseDrawer();
+                                    navigate('/');
                                 }}>
                                     Вийти
                                 </button>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom'; // 👈 Додали імпорт Link
+import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // 👈 1. Додали імпорт контексту
 import './PetCard.css';
 
 function PetCard({ id, name, image, age, gender, tags }) {
+  const { isAdmin } = useAuth(); // 👈 2. Дістаємо статус адміна
   const [isFavorite, setIsFavorite] = useState(false);
 
   useEffect(() => {
@@ -20,10 +22,9 @@ function PetCard({ id, name, image, age, gender, tags }) {
     };
   }, [id]);
 
-  // Оновлена функція з блокуванням переходу
   const toggleFavorite = (e) => {
-    e.preventDefault(); // 👈 Зупиняємо стандартну поведінку
-    e.stopPropagation(); // 👈 Блокуємо клік, щоб він не передався на фотографію під сердечком
+    e.preventDefault(); 
+    e.stopPropagation(); 
 
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
@@ -41,19 +42,21 @@ function PetCard({ id, name, image, age, gender, tags }) {
   return (
     <div className="pet-card">
         <div className="pet-card-image-container">
-            {/* 👈 Робимо фотографію клікабельною */}
             <Link to={`/pets/${id}`} style={{ display: 'block', height: '100%' }}>
                 <img src={image} alt={name} className="pet-card-image" />
             </Link>
             
             <h3 className="pet-name">{name}</h3>
             
-            <img 
-                src={isFavorite ? "/heart2.png" : "/heart.png"} 
-                alt="Like" 
-                className="favorite-heart"
-                onClick={toggleFavorite}
-            />
+            {/* 👇 3. УМОВА: Показувати сердечко ТІЛЬКИ якщо НЕ адмін (!isAdmin) */}
+            {!isAdmin && (
+                <img 
+                    src={isFavorite ? "/heart2.png" : "/heart.png"} 
+                    alt="Like" 
+                    className="favorite-heart"
+                    onClick={toggleFavorite}
+                />
+            )}
         </div>
         
         <div className="pet-card-content">
@@ -69,7 +72,6 @@ function PetCard({ id, name, image, age, gender, tags }) {
                 {tags}
             </div>
             
-            {/* 👈 Додана кнопка "Детальніше" */}
             <Link to={`/pets/${id}`} className="pet-details-btn">
                 Детальніше &raquo;
             </Link>
