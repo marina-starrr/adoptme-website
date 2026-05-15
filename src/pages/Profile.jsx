@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
@@ -6,21 +7,19 @@ import './Profile.css';
 function Profile() {
   const [activeTab, setActiveTab] = useState('personal');
   const fileInputRef = useRef(null);
+  
   const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
+  const [favorites, setFavorites] = useState([]);
 
+  // Одразу беремо email з пам'яті
   const [userData, setUserData] = useState({
-    name: ' ',
+    name: '',
     phone: '',
-    email: '',
+    email: localStorage.getItem('userEmail') || '', 
     avatarUrl: '/ava.jpg'
   });
 
-  const [favorites, setFavorites] = useState([]);
-  
-  const userRole = localStorage.getItem('userRole');
-  const isProfileAdmin = userRole === 'admin'; // Змінна, що каже, чи це адмін
-  
   useEffect(() => {
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
@@ -31,25 +30,45 @@ function Profile() {
     }
   }, []);
 
+  // 👇 ЗАВАНТАЖЕННЯ ЗАЯВОК ПО EMAIL
+  // 👇 1. ОНОВЛЕНИЙ ЗАПИТ: Шукаємо заявку + підтягуємо фото тваринки
+  // 👇 ОНОВЛЕНИЙ ЗАПИТ: Завантажуємо одразу при відкритті сторінки профілю!
   useEffect(() => {
-    if (activeTab === 'applications') {
-      const fetchMyApplications = async () => {
-        setLoadingApps(true);
-        const { data, error } = await supabase
-          .from('AdoptionRequests')
-          .select('*')
-          .eq('AdopterName', userData.name)
-          .order('Id', { ascending: false });
+    const fetchMyApplications = async () => {
+      setLoadingApps(true);
+      const currentUserEmail = localStorage.getItem('userEmail');
 
-        if (!error) {
-          setApplications(data);
-        }
-        setLoadingApps(false);
-      };
+      // Отримуємо заявки
+      const { data: appsData, error: appsError } = await supabase
+        .from('AdoptionRequests')
+        .select('*')
+        .eq('AdopterEmail', currentUserEmail)
+        .order('Id', { ascending: false });
 
-      fetchMyApplications();
-    }
-  }, [activeTab, userData.name]);
+      if (!appsError && appsData) {
+        // Отримуємо всіх тваринок, щоб взяти їхні фотографії та ID
+        const { data: petsData } = await supabase.from('Pets').select('Id, Name, ImageName');
+
+        // З'єднуємо заявку з фотографією тваринки
+        const enrichedApps = appsData.map(app => {
+          const matchedPet = petsData?.find(p => p.Name === app.PetName.split(',')[0].trim());
+          return {
+            ...app,
+            PetId: matchedPet?.Id,
+            PetImage: matchedPet 
+              ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}` 
+              : '/ava.jpg'
+          };
+        });
+
+        setApplications(enrichedApps);
+      }
+      setLoadingApps(false);
+    };
+
+    // Викликаємо функцію БЕЗ ПЕРЕВІРКИ activeTab
+    fetchMyApplications();
+  }, []); // 👈 ТУТ ТЕПЕР ПОРОЖНІ ДУЖКИ! Це означає "запустити 1 раз при старті"
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -62,8 +81,8 @@ function Profile() {
     alert('Дані збережено локально!');
   };
 
-const handleAvatarClick = () => {
-    if (!isProfileAdmin) fileInputRef.current.click();
+  const handleAvatarClick = () => {
+    fileInputRef.current.click();
   };
 
   const handleFileChange = (e) => {
@@ -83,26 +102,22 @@ const handleAvatarClick = () => {
   };
 
   return (
-    <div className="profile-page">
+    <div className="profile-page page-transition">
       <div className="profile-container">
 
         <aside className="profile-sidebar">
-          {/* Лапки сайдбару */}
           <BackgroundPaws customClass="sidebar-paws" />
 
-          {/* 👇 ДОДАНО zIndex: 2, щоб аватарка була над лапками */}
           <div className="profile-avatar-section" style={{ position: 'relative', zIndex: 2 }}>
             <div className="avatar-wrapper" onClick={handleAvatarClick}>
                 <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
-                {/* 👇 Ховаємо напис "Змінити" для адміна */}
-                {!isProfileAdmin && <div className="avatar-overlay"><span>Змінити</span></div>}
+                <div className="avatar-overlay"><span>Змінити</span></div>
             </div>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-            <h2 className="profile-name">{userData.name}</h2>
-            <p className="profile-status">Власниця акаунту</p>
+            <h2 className="profile-name">{userData.name || 'Користувач'}</h2>
+            <p className="profile-status">Власник акаунту</p>
           </div>
 
-          {/* 👇 ДОДАНО zIndex: 2, щоб кнопки натискалися */}
           <nav className="profile-nav" style={{ position: 'relative', zIndex: 2 }}>
             <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
               Особисті дані
@@ -125,24 +140,22 @@ const handleAvatarClick = () => {
               <form className="profile-form" onSubmit={handleSaveProfile}>
                 <div className="form-group">
                   <label>Ім'я та Прізвище</label>
-                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required disabled={isProfileAdmin} />
+                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required />
                 </div>
                 <div className="form-group">
                   <label>Номер телефону</label>
-                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} disabled={isProfileAdmin} />
+                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} />
                 </div>
                 <div className="form-group">
                   <label>Електронна пошта</label>
-                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} disabled={isProfileAdmin} />
+                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} readOnly title="Пошта прив'язана до акаунту" />
                 </div>
-                {/* 👇 Ховаємо кнопку збереження для адміна */}
-                {!isProfileAdmin && (
-                    <button type="submit" className="save-profile-btn">Зберегти зміни</button>
-                )}
+                <button type="submit" className="save-profile-btn">Зберегти зміни</button>
               </form>
             </div>
           )}
 
+          {/* 👇 2. ОНОВЛЕНИЙ HTML: Виводимо фотографію і посилання */}
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
               <h3>Історія заявок у притулок</h3>
@@ -151,12 +164,35 @@ const handleAvatarClick = () => {
                   {applications.length === 0 ? <p>Ви ще не подавали заявок.</p> :
                     applications.map(app => (
                       <div className="application-card" key={app.Id}>
-                        <div className="app-details">
-                          <h4>Тваринка: <span>{app.PetName}</span></h4>
-                          <p>Дата: {app.RequestDate}</p>
-                          <small>Умови: {app.LivingConditions}</small>
+                        
+                        {/* ЛІВА ЧАСТИНА: Фото + Текст */}
+                        <div className="app-card-left">
+                          {app.PetId ? (
+                            <Link to={`/pets/${app.PetId}`}>
+                              <img src={app.PetImage} alt={app.PetName} className="app-pet-image" />
+                            </Link>
+                          ) : (
+                            <img src={app.PetImage} alt="Тваринка" className="app-pet-image" />
+                          )}
+                          
+                          <div className="app-details">
+                            <h4>Тваринка: 
+                              {app.PetId ? (
+                                <Link to={`/pets/${app.PetId}`} className="app-pet-link"><span>{app.PetName}</span></Link>
+                              ) : (
+                                <span>{app.PetName}</span>
+                              )}
+                            </h4>
+                            <p>Заявка №: {app.Id}</p>
+                            <small>Умови: {app.LivingConditions}</small>
+                          </div>
                         </div>
-                        <div className="app-status status-yellow">На розгляді</div>
+
+                        {/* ПРАВА ЧАСТИНА: Статус */}
+                        <div className={`app-status status-badge ${app.Status}`}>
+                           {app.Status || 'Нова'}
+                        </div>
+
                       </div>
                     ))
                   }
@@ -183,6 +219,7 @@ const handleAvatarClick = () => {
             </div>
           )}
         </section>
+
       </div>
     </div>
   );

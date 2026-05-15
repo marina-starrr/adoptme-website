@@ -247,11 +247,45 @@
     border: 2px solid #eee1ff;
     border-radius: 12px;
     background-color: #faf8ff;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.application-card:hover {
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Групуємо фотографію і текст зліва */
+.app-card-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.app-pet-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 12px;
+    object-fit: cover;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.app-pet-image:hover {
+    transform: scale(1.05);
 }
 
 .app-details h4 {
     margin-bottom: 5px;
     color: var(--black);
+}
+
+.app-pet-link {
+    text-decoration: none;
+}
+
+.app-pet-link:hover span {
+    text-decoration: underline;
 }
 
 .app-details h4 span {
@@ -261,8 +295,10 @@
 .app-details p {
     font-size: 14px;
     color: #666;
+    margin-bottom: 3px;
 }
 
+/* --- СТИЛІ ДЛЯ СТАТУСІВ ЗАЯВОК --- */
 .app-status {
     padding: 8px 15px;
     border-radius: 20px;
@@ -270,9 +306,25 @@
     font-weight: 700;
 }
 
-.status-green { background-color: #d4edda; color: #155724; }
-.status-yellow { background-color: #fff3cd; color: #856404; }
+.status-badge.Нова { 
+    background-color: #fff3cd; 
+    color: #856404; 
+} /* Жовтий */
 
+.status-badge.Розглядається { 
+    background-color: #cce5ff; 
+    color: #004085; 
+} /* Синій */
+
+.status-badge.Схвалено { 
+    background-color: #d4edda; 
+    color: #155724; 
+} /* Зелений */
+
+.status-badge.Відхилено { 
+    background-color: #f8d7da; 
+    color: #721c24; 
+} /* Червоний */
 /* --- СТИЛІ ДЛЯ УЛЮБЛЕНЦІВ В ПРОФІЛІ --- */
 .profile-favorites-grid {
     display: grid;

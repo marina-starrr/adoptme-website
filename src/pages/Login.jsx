@@ -1,69 +1,81 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'; // 👈 Наш глобальний контекст
 import './Login.css';
 
 function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
-
-  const { login } = useAuth();
+  
+  const { login } = useAuth(); // Беремо функцію login з контексту
 
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // ПЕРЕВІРКА НА АДМІНІСТРАТОРА
+    // 1. ПЕРЕВІРКА НА АДМІНІСТРАТОРА 🔴
     if (email === 'admin@mail.com' && password === 'admin123') {
-      login(); 
-      localStorage.setItem('userEmail', email); 
-      localStorage.setItem('userRole', 'admin'); 
-      window.dispatchEvent(new Event('authChanged')); // Оновлюємо стан на всьому сайті
-      navigate('/adoptions'); // Адміна кидаємо на панель заявок
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userRole', 'admin'); // Записуємо роль адміна
+        
+        login(); // Оновлюємо глобальний стан авторизації
+        window.dispatchEvent(new Event('authChanged')); // Сповіщаємо шапку сайту
+        
+        alert('Вітаємо в системі, Адміністраторе! 🐾');
+        navigate('/admin/pets'); // 👈 Автоматично перенаправляємо в панель адміна!
+        return;
+    }
+
+    // 2. ПЕРЕВІРКА НА ЗВИЧАЙНОГО КОРИСТУВАЧА 🟢
+    // Для диплому робимо просту імітацію (будь-який інший пароль)
+    if (password.length >= 4) {
+        localStorage.setItem('userEmail', email);
+        localStorage.setItem('userRole', 'user'); // Записуємо роль звичайного юзера
+        
+        login(); // Оновлюємо глобальний стан
+        window.dispatchEvent(new Event('authChanged')); // Сповіщаємо шапку сайту
+        
+        alert('Раді бачити вас знову! 🐾');
+        navigate('/profile'); // 👈 Перенаправляємо в особистий кабінет!
     } else {
-      // ЗВИЧАЙНИЙ КОРИСТУВАЧ
-      login(); 
-      localStorage.setItem('userEmail', email); 
-      localStorage.setItem('userRole', 'user'); 
-      window.dispatchEvent(new Event('authChanged'));
-      navigate('/profile'); // Користувача кидаємо в його кабінет
+        alert('Пароль має бути не менше 4 символів!');
     }
   };
 
   return (
     <div className="login-page page-transition">
       <div className="login-card">
-        <h2>Вхід в систему 🐾</h2>
-        <p>Введіть дані для доступу до свого акаунта</p>
-
+        <h2>Вхід у акаунт 🐾</h2>
+        <p>Увійдіть, щоб керувати своїми заявками</p>
+        
         <form onSubmit={handleLogin}>
           <div className="input-group">
             <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ваша@пошта.com"
-              required
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="vash@mail.com" 
+              required 
             />
           </div>
-
+          
           <div className="input-group">
             <label>Пароль</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="Введіть пароль" 
+              required 
             />
           </div>
-
+          
           <button type="submit" className="login-submit-btn">Увійти</button>
         </form>
-        
-        <div style={{ marginTop: '20px', textAlign: 'center' }}>
-          <p>Ще немає акаунта? <Link to="/register" style={{ color: '#6d4ce4', fontWeight: 'bold' }}>Створити</Link></p>
+
+        <div className="register-link-container" style={{ marginTop: '20px', textAlign: 'center' }}>
+            <p>Немає акаунту? <Link to="/register" style={{ color: '#6d4ce4', fontWeight: 'bold' }}>Зареєструватися</Link></p>
         </div>
       </div>
     </div>

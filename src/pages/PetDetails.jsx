@@ -34,6 +34,24 @@ function PetDetails() {
 
   const imageUrl = `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`;
 
+  const handleAdoptClick = () => {
+    // 1. Беремо поточний список обраних з пам'яті браузера
+    let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
+    // 2. Перевіряємо, чи тваринка вже є в "Кошику/Обраному"
+    const isAlreadyFav = favorites.some(fav => fav.id === pet.Id);
+
+    if (!isAlreadyFav) {
+        favorites.push({
+            id: pet.Id,
+            name: pet.Name,
+            image: imageUrl
+        });
+        localStorage.setItem('favorites', JSON.stringify(favorites));
+        window.dispatchEvent(new Event('cartUpdated'));
+    }
+    window.dispatchEvent(new Event('openFavorites'));
+  };
+
   return (
     <div className="page-transition">
     <div className="fade-view" style={{ padding: '100px 5%', position: 'relative', zIndex: 2 }}>
@@ -86,7 +104,8 @@ function PetDetails() {
             {pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!"}
           </p>
 
-          <button style={{
+          <button onClick={handleAdoptClick}
+           style={{
             marginTop: '40px',
             padding: '18px 45px',
             background: '#6847DD', /* Твій фірмовий колір */

@@ -6,16 +6,13 @@ import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 
 function UserHeader() {
-    // ❌ Прибрано isAdmin з useAuth
-    const { logout } = useAuth();
-    const [isOpen, setIsOpen] = useState(false);
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [favorites, setFavorites] = useState([]);
     const [showForm, setShowForm] = useState(false);
 
-    // СТАН АВТОРИЗАЦІЇ (❌ Прибрано userRole)
-    const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userEmail'));
+    const { isLoggedIn, logout } = useAuth();
+    const [isOpen, setIsOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isSuccessScreen, setIsSuccessScreen] = useState(false);
@@ -38,14 +35,28 @@ function UserHeader() {
 
     const navigate = useNavigate();
 
-    // ЕФЕКТ ДЛЯ ВІДСТЕЖЕННЯ ВХОДУ/ВИХОДУ
+    // 👇 ДОДАЙ ЦЕЙ БЛОК у Header.jsx 👇
     useEffect(() => {
-        const checkAuth = () => {
-            setIsLoggedIn(!!localStorage.getItem('userEmail'));
+        // Функція, яка відкриває бічну панель "Обране"
+        const handleOpenFavorites = () => {
+            // 1. ОНОВЛЕНО: Обов'язково читаємо нові дані з пам'яті ПЕРЕД відкриттям!
+            const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
+            setFavorites(savedFavs);
+            setShowForm(false);
+            setIsSuccessScreen(false);
+
+            // 2. Відкриваємо панель
+            setIsFavoritesOpen(true);
         };
-        window.addEventListener('storage', checkAuth);
-        return () => window.removeEventListener('storage', checkAuth);
+
+        // Слухаємо команду 'openFavorites' з будь-якого місця сайту
+        window.addEventListener('openFavorites', handleOpenFavorites);
+
+        return () => {
+            window.removeEventListener('openFavorites', handleOpenFavorites);
+        };
     }, []);
+    // 👆 КІНЕЦЬ БЛОКУ 👆
 
     const handleCloseDrawer = () => {
         setIsClosing(true);
@@ -132,8 +143,7 @@ function UserHeader() {
 
         const adoptionData = {
             PetName: petNames,
-            FirstName: adopterFirstName,
-            LastName: adopterLastName,
+            AdopterName: `${adopterFirstName} ${adopterLastName}`,
             AdopterPhone: adopterPhone,
             AdopterEmail: loggedInEmail || adopterEmail,
             LivingConditions: housingType,
@@ -438,10 +448,7 @@ function UserHeader() {
                                 </Link>
 
                                 <button className="drawer-btn logout-btn" onClick={() => {
-                                    logout();
-                                    localStorage.removeItem('userEmail');
-                                    localStorage.removeItem('userRole'); 
-                                    setIsLoggedIn(false);
+                                    logout(); // 👈 Вона сама видалить email і role з пам'яті
                                     handleCloseDrawer();
                                     navigate('/');
                                 }}>

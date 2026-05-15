@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import PetCard from '../components/UserPetCard'; // Використовуй UserPetCard, який ми зробили раніше
+import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './UserPets.css';
@@ -8,8 +8,8 @@ function UserPets() {
   const [petsList, setPetsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => { 
-    fetchPets(); 
+  useEffect(() => {
+    fetchPets();
   }, []);
 
   async function fetchPets() {
@@ -18,13 +18,13 @@ function UserPets() {
         .from('Pets')
         .select('*')
         .order('Id', { ascending: true });
-      
+
       if (error) throw error;
       setPetsList(data || []);
-    } catch (err) { 
-      console.error("Помилка завантаження тварин:", err.message); 
-    } finally { 
-      setLoading(false); 
+    } catch (err) {
+      console.error("Помилка завантаження тварин:", err.message);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -36,13 +36,17 @@ function UserPets() {
         <BackgroundPaws />
         <div style={{ position: 'relative', zIndex: 2 }}>
           <div className="pets-title-container">Знайди свого найкращого друга</div>
-          
+
           <div className="pet-grid">
             {petsList.map((pet) => (
               <div key={pet.Id} className="pet-card-wrapper">
-                <PetCard 
-                  {...pet} 
-                  image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`} 
+                <UserPetCard
+                  id={pet.Id}
+                  name={pet.Name}
+                  age={pet.Age}
+                  gender={pet.Gender}
+                  tags={pet.Tags} /* 👈 ОСЬ ЦЕЙ РЯДОК НАЙГОЛОВНІШИЙ ДЛЯ ОПИСУ */
+                  image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
                 />
               </div>
             ))}
