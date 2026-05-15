@@ -1,20 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import './Header.css';
+import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 
-function Header() {
-    const { isAdmin, logout } = useAuth();
+function UserHeader() {
+    // ❌ Прибрано isAdmin з useAuth
+    const { logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
     const [favorites, setFavorites] = useState([]);
     const [showForm, setShowForm] = useState(false);
 
-    // СТАН АВТОРИЗАЦІЇ
-const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
+    // СТАН АВТОРИЗАЦІЇ (❌ Прибрано userRole)
     const [isLoggedIn, setIsLoggedIn] = useState(!!localStorage.getItem('userEmail'));
     const [isClosing, setIsClosing] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
@@ -24,7 +24,7 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
     const [adopterFirstName, setAdopterFirstName] = useState('');
     const [adopterLastName, setAdopterLastName] = useState('');
     const [adopterPhone, setAdopterPhone] = useState('');
-    const [adopterEmail, setAdopterEmail] = useState(''); // 👈 Стан для пошти
+    const [adopterEmail, setAdopterEmail] = useState('');
 
     // Стани форми (Крок 2 та 3)
     const [housingType, setHousingType] = useState('');
@@ -42,7 +42,6 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
     useEffect(() => {
         const checkAuth = () => {
             setIsLoggedIn(!!localStorage.getItem('userEmail'));
-            setUserRole(localStorage.getItem('userRole'));
         };
         window.addEventListener('storage', checkAuth);
         return () => window.removeEventListener('storage', checkAuth);
@@ -125,13 +124,10 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
         }
     };
 
-    // 👇 ОНОВЛЕНА ФУНКЦІЯ ВІДПРАВКИ ЗАЯВКИ В SUPABASE
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Отримуємо імена всіх обраних тварин через кому
         const petNames = favorites.map(f => f.name).join(", ");
-        // Дістаємо пошту залогіненого юзера (якщо є)
         const loggedInEmail = localStorage.getItem('userEmail');
 
         const adoptionData = {
@@ -139,7 +135,7 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
             FirstName: adopterFirstName,
             LastName: adopterLastName,
             AdopterPhone: adopterPhone,
-            AdopterEmail: loggedInEmail || adopterEmail, // 👈 Відправляємо email у базу
+            AdopterEmail: loggedInEmail || adopterEmail,
             LivingConditions: housingType,
             HasExperience: hasExperience === 'yes',
             ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
@@ -154,12 +150,10 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
             .insert([adoptionData]);
 
         if (!error) {
-            // Успішно! Очищаємо кошик і показуємо екран подяки
             localStorage.removeItem('favorites');
             setIsSuccessScreen(true);
             window.dispatchEvent(new Event('cartUpdated'));
 
-            // Очищаємо форму
             setAdopterFirstName('');
             setAdopterLastName('');
             setAdopterPhone('');
@@ -199,7 +193,7 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
                     <li><Link to="/" className="nav-link" onClick={closeMenu}>Головна</Link></li>
                     <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
-                    <li><Link to="/adoptions" className="nav-link" onClick={closeMenu}>Заявки</Link></li>
+                    {/* ❌ Звідси прибрано посилання на "Заявки", бо це меню для гостей */}
                     <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
                     <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
                     <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
@@ -288,15 +282,17 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                                             Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
                                         </p>
                                         <button className="adopt-pet-btn" onClick={() => {
-                                            const userEmail = localStorage.getItem('userEmail'); // Перевіряємо, чи є пошта в пам'яті
-                                            if (!userEmail && !isAdmin) {
+                                            const userEmail = localStorage.getItem('userEmail');
+                                            // ❌ Прибрано перевірку на isAdmin
+                                            if (!userEmail) {
                                                 alert("🐾 Будь ласка, увійдіть в систему або зареєструйтесь, щоб подати заявку.");
-                                                handleCloseFavorites(); // Закриваємо вікно обраного
-                                                navigate('/login'); // Перекидаємо на сторінку входу
+                                                handleCloseFavorites();
+                                                navigate('/login');
                                             } else {
-                                                setShowForm(true); // Якщо увійшов - показуємо анкету
+                                                setShowForm(true);
                                             }
-                                        }}>Прихистити</button>                                    </div>
+                                        }}>Прихистити</button>
+                                    </div>
                                 )}
                             </div>
                         ) : (
@@ -304,7 +300,6 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                                 <div className="modal-header">
                                     <h3>Анкета на прихисток</h3>
                                 </div>
-                                {/* 👇 ТУТ ТЕПЕР ВИКЛИКАЄТЬСЯ ОНОВЛЕНИЙ handleSubmit */}
                                 <form className="adoption-form" onSubmit={handleSubmit}>
 
                                     <div className="form-step">
@@ -313,7 +308,6 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                                             <input type="text" placeholder="Ім'я" value={adopterFirstName} onChange={handleFirstNameChange} required />
                                             <input type="text" placeholder="Прізвище" value={adopterLastName} onChange={handleLastNameChange} required />
                                         </div>
-                                        {/* 👇 НОВЕ ПОЛЕ ДЛЯ EMAIL 👇 */}
                                         <input
                                             type="email"
                                             placeholder="Ваш Email"
@@ -420,7 +414,7 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                 </div>
             )}
 
-            {/* БІЧНА ПАНЕЛЬ ПРОФІЛЮ АДМІНА */}
+            {/* БІЧНА ПАНЕЛЬ ПРОФІЛЮ */}
             {isAccountOpen && (
                 <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
                     <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
@@ -438,22 +432,16 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
                             <h3>Мій акаунт</h3>
 
                             <div className="drawer-links">
-                                {/* 👇 Якщо адмін - ведемо на заявки, якщо юзер - у профіль */}
-                                {userRole === 'admin' ? (
-                                    <Link to="/adoptions" className="drawer-btn" onClick={handleCloseDrawer}>
-                                        Панель заявок
-                                    </Link>
-                                ) : (
-                                    <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
-                                        Мій профіль
-                                    </Link>
-                                )}
+                                {/* ❌ Прибрано перевірку на адміна, тепер тут завжди профіль користувача */}
+                                <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
+                                    Мій профіль
+                                </Link>
 
                                 <button className="drawer-btn logout-btn" onClick={() => {
                                     logout();
                                     localStorage.removeItem('userEmail');
-                                    localStorage.removeItem('userRole'); // 👈 Очищаємо роль
-                                    setIsLoggedIn(false); // Оновлюємо стан відразу
+                                    localStorage.removeItem('userRole'); 
+                                    setIsLoggedIn(false);
                                     handleCloseDrawer();
                                     navigate('/');
                                 }}>
@@ -468,4 +456,4 @@ const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
     );
 }
 
-export default Header;
+export default UserHeader;

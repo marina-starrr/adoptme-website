@@ -1,7 +1,6 @@
-// Цей код буде у файлі AdminAdoptions.jsx для сторінки /admin/adoptions
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient';
-import './Adoptions.css'; // Можемо використовувати ті самі стилі
+import { supabase } from '../../supabaseClient';
+import '../Adoptions.css'; // Підключаємо стилі з папки pages
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);
@@ -17,7 +16,7 @@ function AdminAdoptions() {
     async function fetchApplications() {
         setLoading(true);
         const { data, error } = await supabase
-            .from('Adoptions')
+            .from('AdoptionRequests') // Перевір, щоб назва таблиці збігалася з тією, що в БД!
             .select('*')
             .order('id', { ascending: false }); 
 
@@ -28,7 +27,7 @@ function AdminAdoptions() {
 
     const handleStatusChange = async (id, newStatus) => {
         const { error } = await supabase
-            .from('Adoptions')
+            .from('AdoptionRequests')
             .update({ Status: newStatus })
             .eq('id', id);
 
@@ -44,7 +43,7 @@ function AdminAdoptions() {
     const handleDeleteApplication = async (id) => {
         if (window.confirm('Ви впевнені, що хочете видалити цю заявку?')) {
             const { error } = await supabase
-                .from('Adoptions')
+                .from('AdoptionRequests')
                 .delete()
                 .eq('id', id);
 

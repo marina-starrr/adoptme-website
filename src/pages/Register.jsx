@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext'; // 👈 Додали імпорт контексту
 import './Login.css'; // Використовуємо ті ж самі стилі, що і для входу
 
 function Register() {
@@ -7,6 +8,8 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const navigate = useNavigate();
+  
+  const { login } = useAuth(); // 👈 Беремо функцію login
 
   const handleRegister = (e) => {
     e.preventDefault();
@@ -17,8 +20,11 @@ function Register() {
     }
 
     // Для дипломної роботи робимо просту імітацію реєстрації
-    // Зберігаємо пошту в пам'ять браузера і "логінимо" користувача
     localStorage.setItem('userEmail', email);
+    localStorage.setItem('userRole', 'user'); // 👈 Вказуємо, що це звичайний юзер
+    login(); // 👈 Оновлюємо стан авторизації
+    window.dispatchEvent(new Event('authChanged')); // 👈 Миттєво оновлюємо Header
+
     alert('Реєстрація успішна! Вітаємо в родині AdoptMe 🐾');
     navigate('/profile'); // Перекидаємо в особистий кабінет
   };

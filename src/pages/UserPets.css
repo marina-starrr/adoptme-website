@@ -1,0 +1,52 @@
+/* ОСНОВНА СЕКЦІЯ ТВАРИН */
+.pets-section {
+    padding: 80px 5%;
+    background-color: transparent;
+    text-align: center;
+    flex: 1;
+    width: 100%;
+    position: relative;
+}
+
+/* ЗАГОЛОВОК НА ПЛЯМІ (BRUSH) */
+.pets-title-container {
+    width: 100%;
+    max-width: 1024px;
+    height: 142px;
+    margin: 0 auto 60px auto;
+    background-image: url('/brush2.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(24px, 5vw, 38px);
+    font-weight: 900;
+    color: var(--white);
+    position: relative;
+}
+
+/* СІТКА */
+.pet-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.pet-card-wrapper {
+    position: relative;
+    display: flex; 
+    flex-direction: column;
+}
+
+/* АДАПТИВНІСТЬ */
+@media (max-width: 1024px) {
+    .pet-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .pet-grid { grid-template-columns: 1fr; }
+    .pets-title-container { background-size: 100% 100%; height: auto; padding: 40px 20px; }
+}

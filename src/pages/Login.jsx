@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; // 👈 ДОДАЛИ ІМПОРТ КОНТЕКСТУ
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 function Login() {
@@ -9,23 +8,25 @@ function Login() {
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
-  const { login } = useAuth(); // 👈 БЕРЕМО ФУНКЦІЮ ВХОДУ З КОНТЕКСТУ
+  const { login } = useAuth();
 
   const handleLogin = (e) => {
     e.preventDefault();
 
+    // ПЕРЕВІРКА НА АДМІНІСТРАТОРА
     if (email === 'admin@mail.com' && password === 'admin123') {
       login(); 
       localStorage.setItem('userEmail', email); 
       localStorage.setItem('userRole', 'admin'); 
-      window.dispatchEvent(new Event('authChanged')); // 👈 Кажемо всьому сайту, що статус змінився
-      navigate('/adoptions');
+      window.dispatchEvent(new Event('authChanged')); // Оновлюємо стан на всьому сайті
+      navigate('/adoptions'); // Адміна кидаємо на панель заявок
     } else {
+      // ЗВИЧАЙНИЙ КОРИСТУВАЧ
       login(); 
       localStorage.setItem('userEmail', email); 
       localStorage.setItem('userRole', 'user'); 
-      window.dispatchEvent(new Event('authChanged')); // 👈 Кажемо всьому сайту, що статус змінився
-      navigate('/profile');
+      window.dispatchEvent(new Event('authChanged'));
+      navigate('/profile'); // Користувача кидаємо в його кабінет
     }
   };
 
@@ -33,7 +34,7 @@ function Login() {
     <div className="login-page page-transition">
       <div className="login-card">
         <h2>Вхід в систему 🐾</h2>
-        <p>Введіть дані для доступу до панелі керування</p>
+        <p>Введіть дані для доступу до свого акаунта</p>
 
         <form onSubmit={handleLogin}>
           <div className="input-group">
@@ -42,7 +43,7 @@ function Login() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@mail.com"
+              placeholder="ваша@пошта.com"
               required
             />
           </div>
@@ -60,6 +61,7 @@ function Login() {
 
           <button type="submit" className="login-submit-btn">Увійти</button>
         </form>
+        
         <div style={{ marginTop: '20px', textAlign: 'center' }}>
           <p>Ще немає акаунта? <Link to="/register" style={{ color: '#6d4ce4', fontWeight: 'bold' }}>Створити</Link></p>
         </div>
