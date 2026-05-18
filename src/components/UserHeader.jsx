@@ -35,28 +35,21 @@ function UserHeader() {
 
     const navigate = useNavigate();
 
-    // 👇 ДОДАЙ ЦЕЙ БЛОК у Header.jsx 👇
     useEffect(() => {
-        // Функція, яка відкриває бічну панель "Обране"
         const handleOpenFavorites = () => {
-            // 1. ОНОВЛЕНО: Обов'язково читаємо нові дані з пам'яті ПЕРЕД відкриттям!
             const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
             setFavorites(savedFavs);
             setShowForm(false);
             setIsSuccessScreen(false);
-
-            // 2. Відкриваємо панель
             setIsFavoritesOpen(true);
         };
 
-        // Слухаємо команду 'openFavorites' з будь-якого місця сайту
         window.addEventListener('openFavorites', handleOpenFavorites);
 
         return () => {
             window.removeEventListener('openFavorites', handleOpenFavorites);
         };
     }, []);
-    // 👆 КІНЕЦЬ БЛОКУ 👆
 
     const handleCloseDrawer = () => {
         setIsClosing(true);
@@ -91,7 +84,20 @@ function UserHeader() {
         setIsFavoritesOpen(true);
     };
 
-    const handleRemove = (id) => {
+    // 👇 Виправлено видалення: тепер шукаємо за UserNickname
+    const handleRemove = async (id) => {
+        const userNickname = localStorage.getItem('userNickname');
+
+        if (userNickname) {
+            const { error } = await supabase
+                .from('Favorites')
+                .delete()
+                .eq('UserNickname', userNickname)
+                .eq('PetId', id);
+
+            if (error) console.error("Помилка видалення з БД:", error.message);
+        }
+
         const newFavs = favorites.filter(pet => pet.id !== id);
         setFavorites(newFavs);
         localStorage.setItem('favorites', JSON.stringify(newFavs));
@@ -139,13 +145,12 @@ function UserHeader() {
         e.preventDefault();
 
         const petNames = favorites.map(f => f.name).join(", ");
-        const loggedInEmail = localStorage.getItem('userEmail');
 
         const adoptionData = {
             PetName: petNames,
             AdopterName: `${adopterFirstName} ${adopterLastName}`,
             AdopterPhone: adopterPhone,
-            AdopterEmail: loggedInEmail || adopterEmail,
+            AdopterEmail: adopterEmail, // 👈 Беремо пошту тільки з форми
             LivingConditions: housingType,
             HasExperience: hasExperience === 'yes',
             ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
@@ -203,7 +208,6 @@ function UserHeader() {
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
                     <li><Link to="/" className="nav-link" onClick={closeMenu}>Головна</Link></li>
                     <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
-                    {/* ❌ Звідси прибрано посилання на "Заявки", бо це меню для гостей */}
                     <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
                     <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
                     <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
@@ -235,7 +239,6 @@ function UserHeader() {
                 )}
             </div>
 
-            {/* ВІКНО ОБРАНИХ ТВАРИН ТА АНКЕТА */}
             {isFavoritesOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -292,12 +295,11 @@ function UserHeader() {
                                             Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
                                         </p>
                                         <button className="adopt-pet-btn" onClick={() => {
-                                            const userEmail = localStorage.getItem('userEmail');
-                                            // ❌ Прибрано перевірку на isAdmin
-                                            if (!userEmail) {
-                                                alert("🐾 Будь ласка, увійдіть в систему або зареєструйтесь, щоб подати заявку.");
+                                            if (!isLoggedIn) {
                                                 handleCloseFavorites();
-                                                navigate('/login');
+                                                navigate('/login', {
+                                                    state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб прихистити тваринку' }
+                                                });
                                             } else {
                                                 setShowForm(true);
                                             }
@@ -424,7 +426,6 @@ function UserHeader() {
                 </div>
             )}
 
-            {/* БІЧНА ПАНЕЛЬ ПРОФІЛЮ */}
             {isAccountOpen && (
                 <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
                     <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
@@ -434,27 +435,45 @@ function UserHeader() {
                             alt="Закрити"
                             className="drawer-close-icon"
                             onClick={handleCloseDrawer}
-                            style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px' }}
+                            style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px', zIndex: 10 }}
                         />
 
-                        <div className="drawer-content">
-                            <img src="/ava.jpg" alt="Профіль" className="drawer-avatar" />
-                            <h3>Мій акаунт</h3>
+                        <div className="drawer-content modern-drawer">
 
-                            <div className="drawer-links">
-                                {/* ❌ Прибрано перевірку на адміна, тепер тут завжди профіль користувача */}
+                            <div className="drawer-profile-header">
+                                <img src="/ava.jpg" alt="Профіль" className="drawer-avatar modern-avatar" />
+                                <h3 className="drawer-user-email">{localStorage.getItem('userNickname')}</h3>
+                            </div>
+
+                            <div className="modern-links">
                                 <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
-                                    Мій профіль
+                                    <span className="drawer-icon">👤</span> Мій профіль
                                 </Link>
+                            </div>
 
-                                <button className="drawer-btn logout-btn" onClick={() => {
-                                    logout(); // 👈 Вона сама видалить email і role з пам'яті
+                            <div className="drawer-footer">
+                                {/* 👇 Виправлена помилка синтаксису тут */}
+                                <button className="drawer-btn logout-btn modern-logout" onClick={() => {
+                                    const userNickname = localStorage.getItem('userNickname');
+                                    const currentFavorites = localStorage.getItem('favorites');
+
+                                    if (userNickname && currentFavorites) {
+                                        localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
+                                    }
+
+                                    localStorage.removeItem('favorites');
+                                    localStorage.removeItem('userNickname');
+                                    localStorage.removeItem('userRole');
+                                    window.dispatchEvent(new Event('cartUpdated'));
+
+                                    logout();
                                     handleCloseDrawer();
-                                    navigate('/');
+                                    navigate('/login');
                                 }}>
-                                    Вийти
+                                    <span className="drawer-icon">🚪</span> Вийти з акаунту
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 </div>

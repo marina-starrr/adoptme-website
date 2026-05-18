@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import '../Adoptions.css'; // Підключаємо стилі з папки pages
+import '../Adoptions.css';
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);
@@ -12,16 +12,18 @@ function AdminAdoptions() {
         fetchApplications();
     }, []);
 
-    // Адмін завантажує ВСІ заявки
     async function fetchApplications() {
         setLoading(true);
         const { data, error } = await supabase
-            .from('AdoptionRequests') // Перевір, щоб назва таблиці збігалася з тією, що в БД!
+            .from('AdoptionRequests')
             .select('*')
-            .order('id', { ascending: false }); 
+            .order('Id', { ascending: false }); // 👈 Виправлено на велику Id
 
-        if (error) console.error('Помилка завантаження заявок:', error);
-        else setApplications(data || []);
+        if (error) {
+            console.error('Помилка завантаження заявок:', error.message);
+        } else {
+            setApplications(data || []);
+        }
         setLoading(false);
     }
 
@@ -29,13 +31,13 @@ function AdminAdoptions() {
         const { error } = await supabase
             .from('AdoptionRequests')
             .update({ Status: newStatus })
-            .eq('id', id);
+            .eq('Id', id); // 👈 Виправлено на велику Id
 
         if (error) {
             alert('Помилка оновлення статусу: ' + error.message);
         } else {
             setApplications(applications.map(app => 
-                app.id === id ? { ...app, Status: newStatus } : app
+                app.Id === id ? { ...app, Status: newStatus } : app
             ));
         }
     };
@@ -45,13 +47,13 @@ function AdminAdoptions() {
             const { error } = await supabase
                 .from('AdoptionRequests')
                 .delete()
-                .eq('id', id);
+                .eq('Id', id); // 👈 Виправлено на велику Id
 
             if (!error) fetchApplications();
         }
     };
 
-    if (loading) return <div className="admin-loader">Завантаження заявок...</div>;
+    if (loading) return <div className="admin-loader" style={{textAlign: 'center', padding: '50px'}}>Завантаження заявок...</div>;
 
     return (
         <div className="admin-page page-transition">
@@ -62,12 +64,12 @@ function AdminAdoptions() {
 
             <div className="applications-list">
                 {applications.length === 0 ? (
-                    <p className="empty-msg">Заявок поки немає</p>
+                    <p className="empty-msg" style={{textAlign: 'center', color: '#888'}}>Заявок поки немає</p>
                 ) : (
                     applications.map(app => (
-                        <div key={app.id} className={`app-card-premium status-${app.Status}`}>
+                        <div key={app.Id} className={`app-card-premium status-${app.Status}`}>
                             <div className="app-card-side">
-                                <span className="app-id">#{app.id}</span>
+                                <span className="app-id">#{app.Id}</span>
                                 <div className={`status-badge ${app.Status}`}>{app.Status}</div>
                             </div>
 
@@ -79,7 +81,8 @@ function AdminAdoptions() {
                                     </div>
                                     <div className="app-info-group">
                                         <label>Заявник:</label>
-                                        <span>{app.FirstName} {app.LastName}</span>
+                                        {/* 👇 Виправлено на AdopterName */}
+                                        <span>{app.AdopterName || 'Не вказано'}</span> 
                                     </div>
                                 </div>
 
@@ -115,12 +118,12 @@ function AdminAdoptions() {
                                         <label>Встановити статус:</label>
                                         <select 
                                             value={app.Status || 'Нова'} 
-                                            onChange={(e) => handleStatusChange(app.id, e.target.value)}
+                                            onChange={(e) => handleStatusChange(app.Id, e.target.value)}
                                         >
                                             {statuses.map(s => <option key={s} value={s}>{s}</option>)}
                                         </select>
                                     </div>
-                                    <button className="delete-app-btn" onClick={() => handleDeleteApplication(app.id)}>
+                                    <button className="delete-app-btn" onClick={() => handleDeleteApplication(app.Id)}>
                                         Видалити заявку
                                     </button>
                                 </div>

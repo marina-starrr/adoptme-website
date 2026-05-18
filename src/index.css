@@ -142,3 +142,32 @@ main {
         transform: translateY(0);
     }
 }
+
+/* --- СТИЛІ ДЛЯ СПЛИВАЮЧИХ ПОВІДОМЛЕНЬ (TOAST) --- */
+/* --- СТИЛІ ДЛЯ СПЛИВАЮЧИХ ПОВІДОМЛЕНЬ (TOAST) --- */
+.custom-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffffff; /* 👈 Зробили білий фон */
+    color: #472aae;      /* 👈 Зробили фіолетовий текст */
+    border: 1px solid #eee1ff; /* Додали дуже ніжну фіолетову рамочку */
+    padding: 15px 35px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-weight: 800;
+    box-shadow: 0 10px 30px rgba(104, 71, 221, 0.2); /* 👈 Зробили тінь світлішою та м'якшою */
+    z-index: 9999;
+    animation: slideDownFade 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOutToast 0.5s ease 3s forwards;
+}
+
+@keyframes slideDownFade {
+    0% { top: -50px; opacity: 0; transform: translate(-50%, -20px); }
+    100% { top: 20px; opacity: 1; transform: translate(-50%, 0); }
+}
+
+@keyframes fadeOutToast {
+    0% { opacity: 1; top: 20px; }
+    100% { opacity: 0; top: 0px; display: none; }
+}

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '../supabaseClient'; // 👈 Додали імпорт Supabase
+import { useNavigate } from 'react-router-dom'; // 👈 Додали для переходу
+import { useAuth } from '../context/AuthContext'; // 👈 Додали для перевірки авторизації
+import { supabase } from '../supabaseClient';
 import './Reviews.css';
 
 function Reviews() {
@@ -8,12 +10,15 @@ function Reviews() {
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  const { isLoggedIn } = useAuth(); // 👈 Дізнаємося, чи увійшла людина
+  const navigate = useNavigate(); // 👈 Інструмент для перенаправлення
+
   // 1. Функція для завантаження відгуків із Supabase
   const fetchReviews = async () => {
     const { data, error } = await supabase
       .from('Reviews')
       .select('*')
-      .order('Id', { ascending: false }); // Показувати нові відгуки першими
+      .order('Id', { ascending: false });
 
     if (error) {
       console.error("Помилка завантаження відгуків:", error);
@@ -26,18 +31,33 @@ function Reviews() {
     fetchReviews();
   }, []);
 
+  // 👇 Розумна функція перехоплення кліку для неавторизованих
+  const handleInteraction = (e) => {
+    if (!isLoggedIn) {
+        e.preventDefault(); // Зупиняємо дію
+        navigate('/login', { 
+            state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб залишити відгук' } 
+        });
+    }
+  };
+
   // 2. Функція відправки нового відгуку в Supabase
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !text) return; // Захист від порожніх повідомлень
+    
+    // Зайва перевірка на випадок, якщо хтось якось обійде блокування
+    if (!isLoggedIn) {
+        handleInteraction(e);
+        return;
+    }
+
+    if (!name || !text) return; 
     
     setIsLoading(true);
 
-    // Отримуємо поточну дату у форматі ДД.ММ.РРРР
     const today = new Date();
     const formattedDate = today.toLocaleDateString('uk-UA');
 
-    // Вставляємо рядок у таблицю Reviews
     const { error } = await supabase
       .from('Reviews')
       .insert([
@@ -54,10 +74,8 @@ function Reviews() {
       console.error("Помилка збереження:", error.message);
       alert("Не вдалося відправити відгук. Спробуйте пізніше.");
     } else {
-      // Очищаємо форму
       setName(''); 
       setText('');
-      // Завантажуємо оновлений список відгуків з бази
       fetchReviews(); 
     }
   };
@@ -81,11 +99,14 @@ function Reviews() {
                         type="text" 
                         id="nickname" 
                         className="form-input" 
-                        placeholder="Вкажіть своє ім'я..." 
+                        // 👇 Динамічний плейсхолдер: підказує гостю, що треба увійти
+                        placeholder={isLoggedIn ? "Вкажіть своє ім'я..." : "Увійдіть, щоб писати..."} 
                         required 
                         maxLength="20"
                         value={name}
                         onChange={(e) => setName(e.target.value)} 
+                        onClick={handleInteraction} // 👈 Перехоплюємо клік
+                        readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
                     />
                     
                     <label htmlFor="review-text" className="form-label">Залиште відгук</label>
@@ -93,14 +114,20 @@ function Reviews() {
                         <textarea 
                             id="review-text" 
                             className="form-textarea review-text" 
-                            placeholder="Введіть текст..." 
+                            placeholder={isLoggedIn ? "Введіть текст..." : "Увійдіть, щоб писати..."} 
                             required 
                             maxLength="500"
                             value={text}
                             onChange={(e) => setText(e.target.value)}
+                            onClick={handleInteraction} // 👈 Перехоплюємо клік
+                            readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
                         ></textarea>
-                        <button type="submit" className="submit-btn" disabled={isLoading}>
-                            {/* Якщо йде завантаження, ховаємо іконку, щоб користувач не клікав двічі */}
+                        <button 
+                            type="submit" 
+                            className="submit-btn" 
+                            disabled={isLoading}
+                            onClick={handleInteraction} // 👈 Перехоплюємо клік по кнопці
+                        >
                             {isLoading ? '...' : <img src="/Send.png" alt="Відправити" />}
                         </button>
                     </div>
@@ -112,12 +139,12 @@ function Reviews() {
                 {reviews.length === 0 && <p style={{textAlign: 'center', color: 'white'}}>Поки що немає відгуків. Будьте першим!</p>}
                 
                 {reviews.map((review) => (
-                    <div className="review-card" key={review.Id}> {/* 👈 Змінено на review.Id з великої літери */}
+                    <div className="review-card" key={review.Id}> 
                         <div className="review-header">
-                            <span className="review-name">{review.Name}</span> {/* 👈 Змінено на review.Name */}
-                            <span className="review-date">{review.Date}</span> {/* 👈 Змінено на review.Date */}
+                            <span className="review-name">{review.Name}</span> 
+                            <span className="review-date">{review.Date}</span> 
                         </div>
-                        <p className="review-text">{review.Text}</p> {/* 👈 Змінено на review.Text */}
+                        <p className="review-text">{review.Text}</p> 
                     </div>
                 ))}
             </div>

@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import BackgroundPaws from '../components/BackgroundPaws'; // 👈 1. Імпортуємо наші ідеальні лапки
+import { useState, useEffect } from 'react'; 
+import { useLocation, Link } from 'react-router-dom'; // 👈 Додали useLocation та Link
+import BackgroundPaws from '../components/BackgroundPaws'; 
 import './Home.css';
 
 function Home() {
+  const location = useLocation(); // 👈 Ловимо перехід з логіну
+  const [toastMsg, setToastMsg] = useState(''); // 👈 Стан для тексту плашки
+
   const sliderPets = [
     { src: '/mars1.png', id: 1 }, 
     { src: '/bagir1.png', id: 2 },
@@ -13,6 +16,23 @@ function Home() {
   ];
   
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  // 👇 Ефект для відстеження повідомлення при вході
+  useEffect(() => {
+    if (location.state?.welcomeMsg) {
+      setToastMsg(location.state.welcomeMsg);
+
+      // Плашка зникне сама через 3 секунди
+      const timer = setTimeout(() => {
+        setToastMsg('');
+      }, 3000);
+
+      // Очищаємо історію, щоб повідомлення не вилазило знову при оновленні сторінки (F5)
+      window.history.replaceState({}, document.title);
+
+      return () => clearTimeout(timer);
+    }
+  }, [location]);
 
   // Функція для ручного або автоматичного перемикання слайдів
   const changeImage = (direction) => {
@@ -34,9 +54,16 @@ function Home() {
   }, []);
 
   return (
-    <div className="hero">
+    <div className="hero page-transition" style={{ position: 'relative' }}>
         
-        {/* 👇 2. Вмикаємо лапки для головної сторінки! */}
+        {/* 🟢 НАШЕ КРАСИВЕ СПЛИВАЮЧЕ ПОВІДОМЛЕННЯ ДЛЯ КОРИСТУВАЧА */}
+        {toastMsg && (
+            <div className="custom-toast">
+                {toastMsg}
+            </div>
+        )}
+
+        {/* 👇 Вмикаємо лапки для головної сторінки! */}
         <BackgroundPaws />
 
         <div className="hero-left">
