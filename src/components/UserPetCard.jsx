@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient'; // 👈 ОБОВ'ЯЗКОВО додали імпорт бази даних
 import './UserPetCard.css';
+import { useAuth } from '../context/AuthContext';
 
 function UserPetCard({ id, name, image, age, gender, tags }) {
     const [isFavorite, setIsFavorite] = useState(false);
+    const { userEmail } = useAuth();
 
     useEffect(() => {
         const checkFavoriteStatus = () => {
@@ -25,6 +27,8 @@ function UserPetCard({ id, name, image, age, gender, tags }) {
     const toggleFavorite = async (e) => {
         e.preventDefault();
         e.stopPropagation();
+
+        console.log("Пошта користувача:", userEmail);
 
         const userNickname = localStorage.getItem('userNickname');
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];

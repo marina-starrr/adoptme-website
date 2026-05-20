@@ -13,6 +13,10 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
+  // 👇 Нові стани для секретного запитання
+  const [secretQuestion, setSecretQuestion] = useState('Як звали вашого першого домашнього улюбленця?');
+  const [secretAnswer, setSecretAnswer] = useState('');
+
   const [toastMsg, setToastMsg] = useState(''); 
   const navigate = useNavigate();
   const { login } = useAuth(); 
@@ -22,7 +26,6 @@ function Register() {
       setTimeout(() => setToastMsg(''), 3500);
   };
 
-  // Красиве форматування телефону, яке у тебе вже було в анкеті
   const handlePhoneChange = (e) => {
     const rawDigits = e.target.value.replace(/\D/g, '');
     if (rawDigits.length === 0) { setPhone(''); return; }
@@ -41,15 +44,18 @@ function Register() {
   const handleRegister = async (e) => { 
     e.preventDefault();
     
-    // 👇 1. Додаємо перевірку на мінімальну довжину пароля
     if (password.length < 6) {
         showToast('❌ Пароль має містити мінімум 6 символів!');
         return;
     }
 
-    // 2. Перевірка на співпадіння паролів
     if (password !== confirmPassword) {
         showToast('❌ Паролі не співпадають!');
+        return;
+    }
+
+    if (!secretAnswer.trim()) {
+        showToast('❌ Будь ласка, дайте відповідь на секретне запитання!');
         return;
     }
 
@@ -63,7 +69,10 @@ function Register() {
                   LastName: lastName.trim(), 
                   Phone: phone, 
                   Email: email.trim(), 
-                  Password: password 
+                  Password: password,
+                  // 👇 Додаємо збереження запитання та відповіді (відповідь переводимо в малі літери для зручності)
+                  SecretQuestion: secretQuestion,
+                  SecretAnswer: secretAnswer.trim().toLowerCase()
                 }
             ]);
 
@@ -76,7 +85,6 @@ function Register() {
             return;
         }
 
-        // Зберігаємо НІКНЕЙМ як головний ідентифікатор сесії
         localStorage.setItem('userNickname', nickname.trim());
         localStorage.setItem('userRole', 'user'); 
         login(); 
@@ -135,8 +143,31 @@ function Register() {
             <label>Повторіть пароль</label>
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Повторіть пароль" required />
           </div>
+
+          {/* 👇 Новий блок для секретного запитання */}
+          <div className="input-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
+            <label>Секретне запитання (для відновлення пароля)</label>
+            <select 
+                value={secretQuestion} 
+                onChange={(e) => setSecretQuestion(e.target.value)}
+                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
+            >
+                <option value="Як звали вашого першого домашнього улюбленця?">Як звали вашого першого домашнього улюбленця?</option>
+                <option value="Яка ваша улюблена порода собак/котів?">Яка ваша улюблена порода собак/котів?</option>
+                <option value="Місто, у якому ви народилися?">Місто, у якому ви народилися?</option>
+                <option value="Дівоче прізвище вашої матері?">Дівоче прізвище вашої матері?</option>
+            </select>
+            
+            <input 
+                type="text" 
+                value={secretAnswer} 
+                onChange={(e) => setSecretAnswer(e.target.value)} 
+                placeholder="Ваша відповідь..." 
+                required 
+            />
+          </div>
           
-          <button type="submit" className="login-submit-btn">Зареєструватися</button>
+          <button type="submit" className="login-submit-btn" style={{ marginTop: '15px' }}>Зареєструватися</button>
         </form>
 
         <div className="register-link-container" style={{ marginTop: '15px', textAlign: 'center' }}>

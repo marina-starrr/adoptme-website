@@ -9,7 +9,7 @@ function PetDetails() {
   const [pet, setPet] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const { userRole } = useAuth(); // 👈 Дізнаємося роль поточного користувача
+const { userRole, userEmail } = useAuth();
 
   useEffect(() => {
     async function fetchPet() {

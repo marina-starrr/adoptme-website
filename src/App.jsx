@@ -17,6 +17,7 @@ import PetDetails from './pages/PetDetails';
 
 // --- СПІЛЬНІ СТОРІНКИ ---
 import Login from './pages/Login';
+import ForgotPassword from './pages/ForgotPassword';
 import Register from './pages/Register';
 
 // --- СТОРІНКИ АДМІНА ---
@@ -41,6 +42,7 @@ function App() {
             <Route path="/reviews" element={<Reviews />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/register" element={<Register />} />
 
             {/* Приватна сторінка користувача (Особистий кабінет) */}
