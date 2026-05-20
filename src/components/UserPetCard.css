@@ -12,6 +12,9 @@
     position: relative;
     transition: transform 0.3s ease;
     border: 3px solid #6847DD;
+    
+    /* 👈 ЦЕ ВАЖЛИВО: */
+    width: 100%;       /* Картка заповнить всю доступну ширину в комірці сітки */
 }
 
 .pet-card:hover {
