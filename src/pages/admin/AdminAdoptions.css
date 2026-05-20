@@ -1,0 +1,331 @@
+/* src/pages/.../AdminAdoptions.css */
+
+.admin-loader {
+    text-align: center;
+    padding: 100px;
+    font-size: 18px;
+    color: #6847DD;
+    font-weight: bold;
+}
+
+/* Контейнер списку заявок */
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Стан "Порожньо" */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f4f5fa;
+    border-radius: 16px;
+    border: 2px dashed #d1c4e9;
+    color: #888;
+}
+
+.empty-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* =========================================
+   КРАСИВІ КАРТКИ ЗАЯВОК (PREMIUM)
+   ========================================= */
+.app-card-premium {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 3px solid #6746db;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    /* Ліва смужка статусу */
+    border-left: 6px solid #ccc; 
+}
+
+.app-card-premium:hover {
+    box-shadow: 0 8px 25px rgba(74, 20, 140, 0.08);
+    transform: translateY(-2px);
+}
+
+/* Кольори статусів (ліва лінія) */
+.app-card-premium.status-new { border-left-color: #3b82f6; } /* Синій */
+.app-card-premium.status-review { border-left-color: #f59e0b; } /* Жовтий */
+.app-card-premium.status-approved { border-left-color: #10b981; } /* Зелений */
+.app-card-premium.status-rejected { border-left-color: #ef4444; } /* Червоний */
+
+/* Шапка картки */
+.app-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #ede8ff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.app-id-badge {
+    font-weight: 800;
+    color: #6746db;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+/* Бейджик статусу */
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-new .status-badge { background: #eff6ff; color: #2563eb; }
+.status-review .status-badge { background: #fef3c7; color: #d97706; }
+.status-approved .status-badge { background: #d1fae5; color: #059669; }
+.status-rejected .status-badge { background: #fee2e2; color: #dc2626; }
+
+/* Тіло картки (Інформація) */
+.app-card-body {
+    padding: 20px;
+}
+
+.app-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.info-value {
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+}
+
+.info-value.highlight {
+    color: #6847DD;
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.info-value.link {
+    color: #3b82f6;
+    text-decoration: none;
+}
+.info-value.link:hover {
+    text-decoration: underline;
+}
+
+/* Бейджи досвіду (Міні-теги) */
+.badges-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.trait-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.trait-badge.positive { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.trait-badge.negative { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+/* Коментар */
+.app-comment-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 3px solid #d1c4e9;
+}
+
+.comment-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.app-comment-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+/* Підвал картки (Дії) */
+.app-card-footer {
+    padding: 15px 20px;
+    background: #fbfbfe;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-control label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+}
+
+.custom-select-wrapper select {
+    appearance: none;
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 8px 35px 8px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 10px auto;
+}
+
+.custom-select-wrapper select:focus {
+    border-color: #6847DD;
+}
+
+.delete-app-btn {
+    background: white;
+    color: #ef4444;
+    border: 1px solid #fee2e2;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.delete-app-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+/* =========================================
+   КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК (БЕЗ <SELECT>)
+   ========================================= */
+.custom-dropdown-container {
+    position: relative;
+    width: 200px; /* Ширина нашого меню */
+}
+
+/* Кнопка на яку ми клікаємо */
+.custom-dropdown-header {
+    background-color: #f4f5fa;
+    border: 2px solid #e0e0e0;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4A148C;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    user-select: none; /* Щоб текст не виділявся при подвійному кліку */
+}
+
+.custom-dropdown-header:hover {
+    border-color: #B49DFF;
+    background-color: #f0edff;
+}
+
+/* Коли список відкритий */
+.custom-dropdown-header.open {
+    border-color: #6847DD;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.15);
+}
+
+/* Стрілочка в меню */
+.dropdown-arrow {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+    color: #6847DD;
+}
+
+.custom-dropdown-header.open .dropdown-arrow {
+    transform: rotate(180deg); /* Перевертаємо стрілочку при відкритті */
+}
+
+/* Сама менюшка з варіантами */
+.custom-dropdown-list {
+    position: absolute;
+    bottom: 100%; /* Меню буде відкриватися ВГОРУ над кнопкою */
+    left: 0;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    list-style: none;
+    padding: 8px;
+    margin: 0 0 8px 0; /* Відступ від кнопки */
+    z-index: 1000;
+    animation: fadeInDropdown 0.2s ease;
+    border: 1px solid #eee;
+}
+
+@keyframes fadeInDropdown {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Варіанти статусів всередині меню */
+.custom-dropdown-item {
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.custom-dropdown-item:hover {
+    background-color: #f0edff;
+    color: #6847DD;
+}
+
+/* Активний (обраний) статус у меню */
+.custom-dropdown-item.selected {
+    background-color: #6847DD;
+    color: white;
+}

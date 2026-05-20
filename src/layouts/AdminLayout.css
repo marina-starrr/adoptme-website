@@ -1,0 +1,282 @@
+/* src/layouts/AdminLayout.css */
+
+/* --- ГОЛОВНИЙ КОНТЕЙНЕР --- */
+.admin-layout-container {
+    min-height: 100vh;
+    background-color: #f4f5fa; /* Світло-сіро-фіолетовий фон для ідеального читання таблиць */
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* --- ЛАПКИ НА ФОНІ --- */
+.admin-layout-container::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('/lapki.png'); 
+    background-repeat: repeat;
+    opacity: 0.04; /* Залишаємо дуже ніжними */
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* --- ПРЕМІАЛЬНИЙ ТЕМНИЙ ХЕДЕР --- */
+.admin-header {
+    /* Глибокий темно-фіолетовий градієнт, майже чорний */
+    background: linear-gradient(135deg, #49109f 0%, #110229 100%);
+    height: 72px;
+    width: 100%;
+    padding: 0 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Глибока тінь */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.admin-logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    z-index: 2;
+}
+
+.admin-logo-section img {
+    height: 70px;
+    width: auto;
+}
+
+/* Текст "Панель керування" тепер ідеально білий */
+.admin-title {
+    margin: 0;
+    color: #ffffff; 
+    font-size: 1.2rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    border-left: 2px solid rgba(255, 255, 255, 0.15); /* Делікатний розділювач */
+    padding-left: 15px;
+}
+
+.admin-nav {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    z-index: 2;
+}
+
+/* --- ВКЛАДКИ (НАВІГАЦІЯ) --- */
+.admin-nav-link {
+    color: rgb(255, 255, 255); /* Напівпрозорий білий для неактивних вкладок */
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 8px 20px;
+    border-radius: 25px; /* Ідеальні капсули */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.admin-nav-link:hover {
+    background: rgba(255, 255, 255, 0.1); /* Легка підсвітка при наведенні */
+    color: #ffffff;
+}
+
+/* 🌟 АКТИВНА БІЛА ВКЛАДКА */
+.admin-nav-link.active {
+    background: #ffffff;
+    color: #21064A; /* Колір тексту стає кольором фону хедера — ідеальний контраст */
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.15);
+    font-weight: 700;
+}
+
+/* --- КНОПКА ВИХОДУ --- */
+.logout-btn {
+    background: transparent;
+    color: #ff6b6b; /* М'який червоний */
+    border: 1px solid rgba(255, 107, 107, 0.3);
+    padding: 8px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 14px;
+    margin-left: 15px;
+    transition: all 0.3s ease;
+}
+
+.logout-btn:hover {
+    background: #ff6b6b;
+    color: white;
+    border-color: #ff6b6b;
+    box-shadow: 0 4px 15px rgba(255, 107, 107, 0.25);
+}
+
+/* --- ГОЛОВНА ЗОНА КОНТЕНТУ --- */
+.admin-main {
+    flex: 1;
+    padding: 40px 5%;
+    max-width: 1500px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-20px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+
+/* =========================================
+   КАРТКИ ДЛЯ ОСНОВНОГО КОНТЕНТУ
+   ========================================= */
+
+/* Сама картка, яка піднімає контент над фоном */
+.admin-card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 35px;
+    /* М'яка тінь у фіолетових тонах, яка створює глибину */
+    box-shadow: 0 10px 40px rgba(73, 16, 159, 0.04); 
+    border: 1px solid rgba(73, 16, 159, 0.08); /* Ледь помітна рамочка */
+    margin-bottom: 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Декоративна лінія зверху кожної картки (Дуже стильна фішка!) */
+.admin-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    background: linear-gradient(90deg, #49109f, #6847DD, #B49DFF);
+}
+
+/* =========================================
+   ЗАГОЛОВКИ СТОРІНОК В АДМІНЦІ
+   ========================================= */
+.admin-page-title {
+    color: #110229; /* Найтемніший фіолетовий з твого хедера */
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 0;
+    margin-bottom: 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* Стильний квадратик-іконка біля заголовка */
+.admin-page-title-icon {
+    background: #f0edff;
+    color: #49109f;
+    width: 45px;
+    height: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 12px;
+    font-size: 22px;
+}
+
+/* =========================================
+   КРАСИВІ ТАБЛИЦІ (ДЛЯ ЗАЯВОК ТА ТВАРИН)
+   ========================================= */
+.admin-table-container {
+    width: 100%;
+    overflow-x: auto; /* Щоб таблиця не ламала дизайн на малих екранах */
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 15px;
+    color: #666680;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #f0edff;
+}
+
+.admin-table td {
+    padding: 15px;
+    border-bottom: 1px solid #f4f5fa;
+    color: #333;
+    font-size: 15px;
+    vertical-align: middle;
+}
+
+/* Ефект наведення на рядок таблиці */
+.admin-table tbody tr:hover {
+    background-color: #fcfbfe;
+    transition: background-color 0.2s ease;
+}
+
+/* --- TOAST ПОВІДОМЛЕННЯ (ОНОВЛЕНО ДЛЯ СТИЛЮ ТА ЦЕНТРУВАННЯ) --- */
+.custom-toast {
+    position: fixed !important; /* !important гарантує пріоритет */
+    top: 25px;                    /* Відступ зверху вікна browser */
+    left: 50%;                    /* Зсуваємо на центр по горизонталі */
+    transform: translateX(-50%);  /* Ідеально центруємо по осі X */
+    z-index: 99999 !important; /* Ще вищий індекс */
+    will-change: transform;    /* Оптимізація та фіксація */
+    
+    /* Додаємо стилі відображення, яких не вистачало: */
+    background: white;
+    color: #21064A;               /* Темно-фіолетовий колір тексту */
+    padding: 14px 30px;
+    border-radius: 30px;          /* Округлі капсули, як ваші кнопки */
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 10px 30px rgba(17, 2, 41, 0.15); /* Преміальна об'ємна тінь */
+    border: 2px solid #6847DD;    /* Фіолетовий контур, щоб виділялося */
+    
+    /* Підключаємо виправлену анімацію */
+    animation: toastAnimation 3.5s ease-in-out forwards;
+    
+    /* Щоб іконки та текст всередині були рівно по центру */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;          /* Забороняємо переносы тексту */
+}
+
+/* Оновлена анімація (поєднує появу, утримання, зникнення та зберігає translateX центрирування) */
+@keyframes toastAnimation {
+    0% { 
+        opacity: 0; 
+        top: -50px; 
+        transform: translateX(-50%); 
+    }
+    10% { 
+        opacity: 1; 
+        top: 25px; 
+        transform: translateX(-50%); 
+    }
+    90% { 
+        opacity: 1; 
+        top: 25px; 
+        transform: translateX(-50%); 
+    }
+    100% { 
+        opacity: 0; 
+        top: -50px; 
+        transform: translateX(-50%); 
+    }
+}

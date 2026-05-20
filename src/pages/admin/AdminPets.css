@@ -1,24 +1,54 @@
-.admin-pets-page {
-    min-height: 100vh;
-    background: #f8f9ff;
+/* Сітка карток */
+.pet-grid {
+    display: grid;
+    /* Адаптивна сітка: мінімум 250px для картки, максимум стільки, скільки влізе */
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
 }
 
-.admin-container {
+/* Картка-кнопка "Додати" */
+.add-pet-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background: #fcfbfe;
+    border: 3px dashed #d1c4e9;
+    border-radius: 20px; 
+    cursor: pointer;
+    min-height: 380px; /* Приблизно висота звичайної картки */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    color: #4a148c;
+}
+
+.add-pet-card h3 {
+    margin-top: 10px;
+    font-weight: 700;
+}
+
+.add-pet-card:hover {
+    background: #f0edff;
+    border-color: #6847DD;
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(104, 71, 221, 0.1);
+}
+
+.plus-icon {
+    font-size: 70px;
+    color: #6847DD;
+    font-weight: 300;
+    line-height: 1;
+}
+
+/* Обгортка для існуючої картки, щоб повісити кнопки редагування */
+.pet-card-wrapper {
     position: relative;
-    z-index: 2;
-    max-width: 1300px;
-    margin: 0 auto;
+    transition: transform 0.3s ease;
 }
 
-.admin-header-box {
-    margin-bottom: 50px;
-    text-align: center;
-}
-
-.admin-header-box h2 {
-    color: var(--purple-dark);
-    font-size: 36px;
-    font-weight: 800;
+.pet-card-wrapper:hover {
+    transform: translateY(-5px);
 }
 
 /* Кнопки керування поверх картки */
@@ -27,13 +57,13 @@
     top: 15px;
     right: 15px;
     display: flex;
-    gap: 10px;
+    gap: 8px;
     z-index: 10;
 }
 
 .edit-icon-btn, .delete-icon-btn {
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
     border: none;
     display: flex;
@@ -41,51 +71,54 @@
     justify-content: center;
     cursor: pointer;
     font-size: 18px;
-    transition: 0.3s;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-.edit-icon-btn { background: #6d4ce4; color: white; }
+.edit-icon-btn { background: #6847DD; color: white; }
 .delete-icon-btn { background: white; color: #ff4d4d; }
 
 .edit-icon-btn:hover { transform: scale(1.1); background: #4a148c; }
 .delete-icon-btn:hover { transform: scale(1.1); background: #ff4d4d; color: white; }
 
-/* Картка-кнопка "Додати" */
-.add-pet-card {
+/* =========================================
+   МОДАЛЬНЕ ВІКНО ДЛЯ ФОРМИ
+   ========================================= */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(17, 2, 41, 0.6); /* Темний напівпрозорий фон */
+    backdrop-filter: blur(5px);
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
-    background: white;
-    border: 3px dashed #b49dff;
-    border-radius: 20px; 
-    cursor: pointer;
-    min-height: 400px;
-    transition: all 0.3s ease;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
 }
 
-.add-pet-card:hover {
-    background: #f0ebff;
-    border-color: #6d4ce4;
-    transform: translateY(-5px);
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
-.plus-icon {
-    font-size: 70px;
-    color: #6d4ce4;
-    font-weight: 200;
-    margin-bottom: 10px;
-}
-
-/* Модальне вікно */
 .admin-modal {
     background: white;
-    padding: 35px;
-    border-radius: 25px;
-    max-width: 600px;
+    padding: 35px 40px;
+    border-radius: 24px;
+    max-width: 650px;
     width: 95%;
-    box-shadow: 0 25px 60px rgba(74, 20, 140, 0.2);
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 25px 60px rgba(17, 2, 41, 0.3);
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .modal-header {
@@ -93,60 +126,230 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
-    border-bottom: 2px solid #f0ebff;
+    border-bottom: 2px solid #f0edff;
     padding-bottom: 15px;
 }
 
-.modal-header h3 { color: #4a148c; font-size: 24px; margin: 0; }
-.close-x { background: none; border: none; font-size: 30px; cursor: pointer; color: #aaa; }
+.modal-header h3 { color: #110229; font-size: 24px; font-weight: 800; margin: 0; }
+.close-x { background: none; border: none; font-size: 32px; cursor: pointer; color: #888; line-height: 1; transition: color 0.2s; }
+.close-x:hover { color: #ff4d4d; }
 
 .admin-form { display: flex; flex-direction: column; gap: 20px; }
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.form-row .input-group {
+    flex: 1;
+}
 
 .admin-form label {
     display: block;
     font-weight: 700;
     font-size: 13px;
-    color: #6d4ce4;
+    color: #4a148c;
     margin-bottom: 8px;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .admin-form input, .admin-form select, .admin-form textarea {
     width: 100%;
-    background: #f8f6ff;
+    background: #f4f5fa;
     border: 2px solid transparent;
-    padding: 12px 15px;
+    padding: 14px 16px;
     border-radius: 12px;
     outline: none;
     font-family: inherit;
+    font-size: 15px;
+    color: #333;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
 }
 
-.admin-form input:focus, .admin-form textarea:focus {
-    border-color: #b49dff;
+.admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus {
+    border-color: #6847DD;
     background: white;
+    box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.1);
 }
 
-/* Кнопка завантаження */
+.admin-form textarea {
+    resize: vertical;
+}
+
+/* Кнопка завантаження файлу */
 .file-upload-label {
-    background: #f0ebff;
+    background: #fcfbfe;
     border: 2px dashed #b49dff;
-    padding: 15px;
+    padding: 20px;
     border-radius: 12px;
     text-align: center;
     cursor: pointer;
     font-weight: 700;
-    color: #4a148c;
+    color: #6847DD;
+    transition: all 0.2s ease;
+}
+
+.file-upload-label:hover {
+    background: #f0edff;
+    border-color: #6847DD;
+}
+
+/* Кнопки внизу форми */
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 10px;
 }
 
 .save-btn {
-    background: #6d4ce4;
+    background: linear-gradient(135deg, #6847DD 0%, #49109f 100%);
     color: white;
-    padding: 15px 30px;
+    padding: 14px 35px;
     border: none;
     border-radius: 12px;
     font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
-    box-shadow: 0 5px 15px rgba(109, 76, 228, 0.3);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.cancel-btn { background: none; border: none; color: #888; cursor: pointer; font-weight: 600; }
+.save-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(104, 71, 221, 0.4);
+}
+
+.save-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.cancel-btn { 
+    background: #f4f5fa; 
+    border: none; 
+    color: #666; 
+    padding: 14px 25px;
+    border-radius: 12px;
+    cursor: pointer; 
+    font-weight: 700; 
+    font-size: 16px;
+    transition: background 0.2s;
+}
+
+.cancel-btn:hover {
+    background: #e0e0e0;
+}
+
+/* Додай ці стилі у свій AdminPets.css */
+
+.admin-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.sort-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sort-container label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+}
+
+/* Використовуємо стилі, які ми вже прописували для випадаючого списку */
+.custom-select-wrapper {
+    background: #f4f5fa;
+    border: 2px solid #e0d4f5;
+    padding: 8px 35px 8px 15px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4A148C;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.3s ease;
+    /* Стрілочка */
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2220%22%20height%3D%2220%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M5%207.5L10%2012.5L15%207.5%22%20stroke%3D%22%234A148C%22%20stroke-width%3D%222%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    appearance: none;
+}
+
+.custom-select-wrapper:hover {
+    border-color: #6847DD;
+    background-color: #f0edff;
+}
+
+/* Нова структура сторінки */
+.admin-page-layout {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+/* Сайдбар (бічне меню) */
+.admin-sidebar {
+    width: 280px;
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.03);
+    position: sticky; /* Щоб фільтри не тікали при скролі */
+    top: 90px;
+}
+
+.sidebar-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #4A148C;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.filter-group {
+    margin-bottom: 20px;
+}
+
+.filter-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #666680;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.reset-filters-btn {
+    width: 100%;
+    background: #f4f5fa;
+    border: none;
+    padding: 10px;
+    border-radius: 10px;
+    color: #ff6b6b;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.reset-filters-btn:hover {
+    background: #ffeded;
+}
+
+/* Налаштовуємо основну зону під новий сайдбар */
+.admin-content-area {
+    flex: 1;
+}
+
+
