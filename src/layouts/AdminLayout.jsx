@@ -41,8 +41,14 @@ function AdminLayout() {
                     <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}>
                         📝 Заявки
                     </Link>
+                    <Link to="/admin/reviews" className={`admin-nav-link ${location.pathname === '/admin/reviews' ? 'active' : ''}`}>
+                        💬 Відгуки
+                    </Link>
                     <Link to="/admin/pets" className={`admin-nav-link ${location.pathname === '/admin/pets' ? 'active' : ''}`}>
                         🐾 Тварини
+                    </Link>
+                    <Link to="/admin/users" className={`admin-nav-link ${location.pathname === '/admin/users' ? 'active' : ''}`}>
+                        👥 Користувачі
                     </Link>
                     <button onClick={handleLogout} className="logout-btn">
                         Вийти з панелі

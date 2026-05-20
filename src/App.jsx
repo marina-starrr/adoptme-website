@@ -23,13 +23,15 @@ import Register from './pages/Register';
 // --- СТОРІНКИ АДМІНА ---
 import AdminPets from './pages/admin/AdminPets'; // 👈 Той код, що ми зберігали
 import AdminAdoptions from './pages/admin/AdminAdoptions'; // 👈 Той код, що ми зберігали
+import AdminReviews from './pages/admin/AdminReviews';
+import AdminUsers from './pages/admin/AdminUsers';
 
 function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          
+
           {/* =========================================
               🟢 1. КЛІЄНТСЬКА ЧАСТИНА (З Хедером і Футером)
               ========================================= */}
@@ -46,21 +48,21 @@ function App() {
             <Route path="/register" element={<Register />} />
 
             {/* Приватна сторінка користувача (Особистий кабінет) */}
-            <Route 
-              path="/profile" 
+            <Route
+              path="/profile"
               element={
                 <ProtectedRoute requireAdmin={false}>
                   <Profile />
                 </ProtectedRoute>
-              } 
+              }
             />
           </Route>
 
           {/* =========================================
               🔴 2. АДМІНІСТРАТИВНА ЧАСТИНА (Спеціальний дизайн)
               ========================================= */}
-          <Route 
-            path="/admin" 
+          <Route
+            path="/admin"
             element={
               <ProtectedRoute requireAdmin={true}>
                 <AdminLayout />
@@ -70,7 +72,11 @@ function App() {
             {/* Всі посилання починаються з /admin/... */}
             <Route path="pets" element={<AdminPets />} />
             <Route path="adoptions" element={<AdminAdoptions />} />
+            <Route path="pets/:id" element={<PetDetails />} />
+            <Route path="reviews" element={<AdminReviews />} />
+            <Route path="users" element={<AdminUsers />} />
           </Route>
+
 
         </Routes>
       </BrowserRouter>

@@ -187,3 +187,51 @@
     /* Робимо відступ від тегів до нової кнопки */
     margin-bottom: 5px; 
 }
+
+/* =========================================
+   БЕЙДЖІ СТАТУСУ ТВАРИНКИ
+   ========================================= */
+.pet-status-badge {
+    position: absolute;
+    bottom: 15px; /* Розміщуємо внизу зліва на фотографії */
+    left: 15px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    /* Ефект матового скла */
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Кольори для різних статусів (напівпрозорі, щоб було видно фон) */
+.status-looking { 
+    background: rgba(76, 175, 80, 0.85); /* Зелений */
+    color: white; 
+}
+
+.status-special { 
+    background: rgba(255, 152, 0, 0.85); /* Помаранчевий */
+    color: white; 
+}
+
+.status-treatment { 
+    background: rgba(233, 30, 99, 0.85); /* Рожевий/Червоний */
+    color: white; 
+}
+
+.status-home { 
+    background: rgba(33, 150, 243, 0.85); /* Синій */
+    color: white; 
+}
+
+.status-rainbow { 
+    background: rgba(45, 45, 45, 0.85); /* Темно-сірий */
+    color: white; 
+}

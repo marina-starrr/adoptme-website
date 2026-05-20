@@ -1,0 +1,169 @@
+.empty-state-box {
+    text-align: center;
+    padding: 60px;
+    background: #f4f5fa;
+    border-radius: 20px;
+    border: 2px dashed #d4cbf9;
+    color: #666680;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+/* Оформлення комірки з іменем та аватаркою */
+.user-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar-placeholder {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #B49DFF, #6847DD);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: bold;
+    box-shadow: 0 4px 10px rgba(104, 71, 221, 0.2);
+}
+
+.user-nickname {
+    color: #6847DD;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-top: 2px;
+}
+
+/* Бейджі ролей */
+.user-role-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-block;
+}
+
+.role-admin {
+    background-color: #ffebee;
+    color: #d32f2f;
+    border: 1px solid rgba(211, 47, 47, 0.2);
+}
+
+.role-user {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid rgba(46, 125, 50, 0.2);
+}
+
+/* Кнопка "Додати нового" */
+.add-new-btn {
+    background: #6847DD;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(104, 71, 221, 0.3);
+    transition: all 0.3s ease;
+}
+
+.add-new-btn:hover {
+    background: #49109f;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(104, 71, 221, 0.4);
+}
+
+/* Кнопки в таблиці */
+.admin-table-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.edit-icon-btn, .delete-icon-btn {
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+}
+
+.edit-icon-btn {
+    background: #f0edff;
+    color: #6847DD;
+}
+
+.edit-icon-btn:hover {
+    background: #6847DD;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.delete-icon-btn {
+    background: #ffebee;
+    color: #ef4444;
+}
+
+.delete-icon-btn:hover {
+    background: #ef4444;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+/* СТИЛІ ФОРМИ В МОДАЛЦІ (Перевикористовуємо з глобальних) */
+.admin-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.form-row {
+    display: flex;
+    gap: 15px;
+}
+
+.input-group {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-weight: 700;
+    color: #49109f;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.form-control {
+    padding: 14px 18px;
+    border: 1px solid rgba(104, 71, 221, 0.2);
+    border-radius: 12px;
+    background: #fcfbfe;
+    font-size: 15px;
+    color: #333;
+    transition: all 0.3s ease;
+    font-family: inherit;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #6847DD;
+    background: #ffffff;
+    box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.1);
+}

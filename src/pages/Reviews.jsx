@@ -34,25 +34,25 @@ function Reviews() {
   // 👇 Розумна функція перехоплення кліку для неавторизованих
   const handleInteraction = (e) => {
     if (!isLoggedIn) {
-        e.preventDefault(); // Зупиняємо дію
-        navigate('/login', { 
-            state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб залишити відгук' } 
-        });
+      e.preventDefault(); // Зупиняємо дію
+      navigate('/login', {
+        state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб залишити відгук' }
+      });
     }
   };
 
   // 2. Функція відправки нового відгуку в Supabase
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Зайва перевірка на випадок, якщо хтось якось обійде блокування
     if (!isLoggedIn) {
-        handleInteraction(e);
-        return;
+      handleInteraction(e);
+      return;
     }
 
-    if (!name || !text) return; 
-    
+    if (!name || !text) return;
+
     setIsLoading(true);
 
     const today = new Date();
@@ -61,10 +61,10 @@ function Reviews() {
     const { error } = await supabase
       .from('Reviews')
       .insert([
-        { 
-          Name: name, 
-          Text: text, 
-          Date: formattedDate 
+        {
+          Name: name,
+          Text: text,
+          Date: formattedDate
         }
       ]);
 
@@ -74,81 +74,89 @@ function Reviews() {
       console.error("Помилка збереження:", error.message);
       alert("Не вдалося відправити відгук. Спробуйте пізніше.");
     } else {
-      setName(''); 
+      setName('');
       setText('');
-      fetchReviews(); 
+      fetchReviews();
     }
   };
-  
+
   return (
     <div className="reviews-section">
-        <div className="reviews-title-container">
-            <h2>Відгуки</h2>
-            <img src="/2lapki.png" alt="Лапки" className="title-lapki" />
+      <div className="reviews-title-container">
+        <h2>Відгуки</h2>
+        <img src="/2lapki.png" alt="Лапки" className="title-lapki" />
+      </div>
+
+      <div className="reviews-content-wrapper">
+        {/* ФОРМА */}
+        <div className="review-card-container">
+          <img src="/catik.png" alt="Котик" className="cat-icon" />
+          <img src="/dogik.png" alt="Собачка" className="dog-icon" />
+
+          <form className="review-form" onSubmit={handleSubmit}>
+            <label htmlFor="nickname" className="form-label">Нікнейм</label>
+            <input
+              type="text"
+              id="nickname"
+              className="form-input"
+              // 👇 Динамічний плейсхолдер: підказує гостю, що треба увійти
+              placeholder={isLoggedIn ? "Вкажіть своє ім'я..." : "Увійдіть, щоб писати..."}
+              required
+              maxLength="20"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onClick={handleInteraction} // 👈 Перехоплюємо клік
+              readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
+            />
+
+            <label htmlFor="review-text" className="form-label">Залиште відгук</label>
+            <div className="submit-container">
+              <textarea
+                id="review-text"
+                className="form-textarea review-text"
+                placeholder={isLoggedIn ? "Введіть текст..." : "Увійдіть, щоб писати..."}
+                required
+                maxLength="500"
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                onClick={handleInteraction} // 👈 Перехоплюємо клік
+                readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
+              ></textarea>
+              <button
+                type="submit"
+                className="submit-btn"
+                disabled={isLoading}
+                onClick={handleInteraction} // 👈 Перехоплюємо клік по кнопці
+              >
+                {isLoading ? '...' : <img src="/Send.png" alt="Відправити" />}
+              </button>
+            </div>
+          </form>
         </div>
 
-        <div className="reviews-content-wrapper">
-            {/* ФОРМА */}
-            <div className="review-card-container">
-                <img src="/catik.png" alt="Котик" className="cat-icon" />
-                <img src="/dogik.png" alt="Собачка" className="dog-icon" />
+        {/* СПИСОК ВІДГУКІВ З SQL */}
+        <div className="review-card-list">
+          {reviews.length === 0 && <p style={{ textAlign: 'center', color: 'white' }}>Поки що немає відгуків. Будьте першим!</p>}
 
-                <form className="review-form" onSubmit={handleSubmit}>
-                    <label htmlFor="nickname" className="form-label">Нікнейм</label>
-                    <input 
-                        type="text" 
-                        id="nickname" 
-                        className="form-input" 
-                        // 👇 Динамічний плейсхолдер: підказує гостю, що треба увійти
-                        placeholder={isLoggedIn ? "Вкажіть своє ім'я..." : "Увійдіть, щоб писати..."} 
-                        required 
-                        maxLength="20"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)} 
-                        onClick={handleInteraction} // 👈 Перехоплюємо клік
-                        readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
-                    />
-                    
-                    <label htmlFor="review-text" className="form-label">Залиште відгук</label>
-                    <div className="submit-container">
-                        <textarea 
-                            id="review-text" 
-                            className="form-textarea review-text" 
-                            placeholder={isLoggedIn ? "Введіть текст..." : "Увійдіть, щоб писати..."} 
-                            required 
-                            maxLength="500"
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            onClick={handleInteraction} // 👈 Перехоплюємо клік
-                            readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
-                        ></textarea>
-                        <button 
-                            type="submit" 
-                            className="submit-btn" 
-                            disabled={isLoading}
-                            onClick={handleInteraction} // 👈 Перехоплюємо клік по кнопці
-                        >
-                            {isLoading ? '...' : <img src="/Send.png" alt="Відправити" />}
-                        </button>
-                    </div>
-                </form>
+          {reviews.map((review) => (
+            <div className="review-card" key={review.Id}>
+              <div className="review-header">
+                <span className="review-name">{review.Name}</span>
+                <span className="review-date">{review.Date}</span>
+              </div>
+              <p className="review-text">{review.Text}</p>
+              {review.AdminReply && (
+                <div className="admin-reply-box">
+                  <strong className="admin-reply-title">🐾 Admin</strong>
+                  <p className="admin-reply-text">
+                    {review.AdminReply}
+                  </p>
+                </div>
+              )}
             </div>
-
-            {/* СПИСОК ВІДГУКІВ З SQL */}
-            <div className="review-card-list">
-                {reviews.length === 0 && <p style={{textAlign: 'center', color: 'white'}}>Поки що немає відгуків. Будьте першим!</p>}
-                
-                {reviews.map((review) => (
-                    <div className="review-card" key={review.Id}> 
-                        <div className="review-header">
-                            <span className="review-name">{review.Name}</span> 
-                            <span className="review-date">{review.Date}</span> 
-                        </div>
-                        <p className="review-text">{review.Text}</p> 
-                    </div>
-                ))}
-            </div>
+          ))}
         </div>
+      </div>
     </div>
   );
 }

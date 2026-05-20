@@ -5,7 +5,7 @@ import { supabase } from '../supabaseClient';
 import './Login.css';
 
 function Login() {
-    const [nickname, setNickname] = useState(''); // 👈 Змінено з email на nickname
+    const [nickname, setNickname] = useState('');
     const [password, setPassword] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
@@ -25,13 +25,12 @@ function Login() {
         }
     }, [location]);
 
-    // Синхронізація кошика за Нікнеймом користувача
     const restoreAndMergeCart = async (userNickname) => {
         try {
             const { data: dbFavorites, error } = await supabase
                 .from('Favorites')
                 .select('PetId')
-                .eq('UserNickname', userNickname); // 👈 фільтр за UserNickname
+                .eq('UserNickname', userNickname);
 
             if (error) throw error;
 
@@ -79,7 +78,7 @@ function Login() {
         e.preventDefault();
 
         try {
-            // 🔍 Шукаємо користувача за індивідуальним Нікнеймом
+            // 🔍 Повертаємо ТВІЙ код: шукаємо користувача у твоїй таблиці Users
             const { data: user, error } = await supabase
                 .from('Users')
                 .select('*')
@@ -97,7 +96,7 @@ function Login() {
                 return;
             }
 
-            // Записуємо нікнейм сесії
+            // Записуємо дані сесії в LocalStorage
             localStorage.setItem('userNickname', user.Nickname);
             localStorage.setItem('userRole', user.Role);
 
@@ -137,7 +136,7 @@ function Login() {
                         />
                     </div>
 
-                    <div className="input-group" style={{ marginBottom: '5px' }}> {/* 👇 Трохи зменшили відступ знизу */}
+                    <div className="input-group" style={{ marginBottom: '5px' }}>
                         <label>Пароль</label>
                         <input
                             type="password"
@@ -148,7 +147,6 @@ function Login() {
                         />
                     </div>
 
-                    {/* 👇 НОВИЙ РЯДОК: Посилання Забули пароль */}
                     <div style={{ textAlign: 'right', marginBottom: '20px' }}>
                         <Link to="/forgot-password" style={{ color: '#6d4ce4', fontSize: '14px', textDecoration: 'none' }}>
                             Забули пароль?

@@ -22,7 +22,7 @@ function UserPets() {
       if (error) throw error;
       setPetsList(data || []);
     } catch (err) {
-      console.error("Помилка завантаження тварин:", err.message);
+      showToast("❌ Помилка завантаження: " + err.message);
     } finally {
       setLoading(false);
     }
@@ -40,6 +40,7 @@ function UserPets() {
           <div className="pet-grid">
             {petsList.map((pet) => (
               <div key={pet.Id} className="pet-card-wrapper">
+                console.log("Дані тваринки:", pet);
                 <UserPetCard
                   id={pet.Id}
                   name={pet.Name}
