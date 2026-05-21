@@ -1,13 +1,63 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
 
+// 🌟 КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК
+function CustomDropdown({ options, value, onChange, placeholder }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Закриваємо список при кліку поза ним
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="custom-dropdown-container" ref={dropdownRef}>
+      <div 
+        className={`custom-dropdown-header ${isOpen ? 'open' : ''}`} 
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span>{selectedOption ? selectedOption.label : placeholder}</span>
+        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
+      </div>
+      
+      {isOpen && (
+        <div className="custom-dropdown-list-wrapper">
+          <ul className="custom-dropdown-list">
+            {options.map((opt) => (
+              <li 
+                key={opt.value} 
+                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function AdminPets() {
   const navigate = useNavigate();
   const [petsList, setPetsList] = useState([]);
-  const [usersList, setUsersList] = useState([]); // 🌟 Список користувачів
+  const [usersList, setUsersList] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -102,8 +152,8 @@ function AdminPets() {
     Tags: '',
     Description: '',
     Status: 'Шукає дім',
-    OwnerId: null, // 🌟 Додано
-    OwnerName: ''  // 🌟 Додано
+    OwnerId: null, 
+    OwnerName: ''  
   };
 
   const [petFormData, setPetFormData] = useState(initialFormState);
@@ -115,7 +165,7 @@ function AdminPets() {
 
   useEffect(() => {
     fetchPets();
-    fetchUsers(); // 🌟 Завантажуємо користувачів
+    fetchUsers(); 
   }, []);
 
   useEffect(() => {
@@ -139,7 +189,6 @@ function AdminPets() {
     }
   }
 
-  // 🌟 Функція отримання користувачів для випадаючого списку
   async function fetchUsers() {
     const { data, error } = await supabase.from('Users').select('Id, FirstName, LastName, Nickname');
     if (!error && data) {
@@ -200,7 +249,6 @@ function AdminPets() {
 
       const dataToSave = { ...petFormData, ImageName: finalImageName };
 
-      // Якщо статус не "Вже вдома", очищаємо власника, щоб уникнути помилок
       if (dataToSave.Status !== 'Вже вдома') {
         dataToSave.OwnerId = null;
         dataToSave.OwnerName = null;
@@ -246,66 +294,96 @@ function AdminPets() {
   };
 
   return (
-    <div className="admin-main" style={{ position: 'relative' }}>
+    <div style={{ position: 'relative', width: '100%' }}>
       <div className="admin-page-layout">
 
-        {/* САЙДБАР ФІЛЬТРІВ (без змін) */}
+        {/* САЙДБАР З НОВИМИ ФІЛЬТРАМИ */}
         <aside className="admin-sidebar">
-          <h3 className="sidebar-title">🔍 Фільтри</h3>
-          <div className="filter-group">
+          <div className="sidebar-header">
+            <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
+            <button className="reset-btn" onClick={resetFilters}>Скинути</button>
+          </div>
+          
+          <div className="filter-block">
             <label>Вид тварини</label>
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
-              <option value="Всі">Всі види</option>
-              {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
-            </select>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Всі види' },
+                ...petTypes.map(type => ({ value: type, label: type }))
+              ]} 
+              value={filterType} 
+              onChange={setFilterType} 
+            />
           </div>
-          <div className="filter-group">
+
+          <div className="filter-block">
             <label>Стать</label>
-            <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
-              <option value="Всі">Всі</option>
-              <option value="Хлопчик">Хлопчик</option>
-              <option value="Дівчинка">Дівчинка</option>
-            </select>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Будь-яка' },
+                { value: 'Хлопчик', label: 'Хлопчик' },
+                { value: 'Дівчинка', label: 'Дівчинка' }
+              ]} 
+              value={filterGender} 
+              onChange={setFilterGender} 
+            />
           </div>
-          <div className="filter-group">
-            <label>Вік тварини</label>
-            <select value={filterAge} onChange={(e) => setFilterAge(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
-              <option value="Всі">Будь-який</option>
-              <option value="До 6 місяців">До 6 місяців</option>
-              <option value="Від 6 міс. до 1 року">Від 6 міс. до 1 року</option>
-              <option value="Від 1 до 3 років">Від 1 до 3 років</option>
-              <option value="Більше 3 років">Більше 3 років</option>
-            </select>
+
+          <div className="filter-block">
+            <label>Вік</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Будь-який вік' },
+                { value: 'До 6 місяців', label: 'До 6 місяців (Малюки)' },
+                { value: 'Від 6 міс. до 1 року', label: 'Від 6 міс. до 1 року' },
+                { value: 'Від 1 до 3 років', label: 'Від 1 до 3 років' },
+                { value: 'Більше 3 років', label: 'Більше 3 років' }
+              ]} 
+              value={filterAge} 
+              onChange={setFilterAge} 
+            />
           </div>
-          <div className="filter-group">
-            <label>Позначка</label>
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
-              <option value="Всі">Всі позначки</option>
-              <option value="Шукає дім">🐾 Шукає дім</option>
-              <option value="Потребує особливого догляду">❤️‍🩹 Особливий догляд</option>
-              <option value="На лікуванні">💊 На лікуванні</option>
-              <option value="Вже вдома">🏡 Вже вдома</option>
-              <option value="Не вдалось врятувати">🌈 Не вдалось врятувати</option>
-            </select>
+
+          <div className="filter-block">
+            <label>Позначка (Статус)</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Всі статуси' },
+                { value: 'Шукає дім', label: '🐾 Шукає дім' },
+                { value: 'Потребує особливого догляду', label: '❤️‍🩹 Особливий догляд' },
+                { value: 'На лікуванні', label: '💊 На лікуванні' },
+                { value: 'Вже вдома', label: '🏡 Вже вдома' },
+                { value: 'Не вдалось врятувати', label: '🌈 Не вдалось врятувати' }
+              ]} 
+              value={filterStatus} 
+              onChange={setFilterStatus} 
+            />
           </div>
-          <button className="reset-filters-btn" onClick={resetFilters}>Скинути фільтри</button>
         </aside>
 
-        {/* ОСНОВНИЙ КОНТЕНТ */}
         <div className="admin-content-area">
           <div className="admin-card">
+            
+            {/* ШАПКА З НОВИМ СОРТУВАННЯМ */}
             <div className="admin-header-box">
               <div className="admin-title-row">
                 <h2 className="admin-page-title">
                   <span className="admin-page-title-icon">🐾</span> База тварин
                 </h2>
-                <div className="sort-container">
-                  <label>Сортувати:</label>
-                  <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="custom-select-wrapper">
-                    <option value="newest">Найновіші</option>
-                    <option value="oldest">Найстаріші</option>
-                    <option value="name">За алфавітом</option>
-                  </select>
+                
+                <div className="sort-control">
+                  <span className="sort-label">Сортувати:</span>
+                  <div style={{ width: '220px' }}>
+                    <CustomDropdown 
+                      options={[
+                        { value: 'newest', label: 'Новенькі спочатку' },
+                        { value: 'oldest', label: 'Ті, що давно чекають' },
+                        { value: 'name', label: 'За алфавітом (А-Я)' }
+                      ]} 
+                      value={sortOrder} 
+                      onChange={setSortOrder} 
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -377,7 +455,6 @@ function AdminPets() {
                 </div>
               </div>
 
-              {/* 🌟 АВТОМАТИЗАЦІЯ СТАТУСУ ТА ВЛАСНИКА */}
               <div className="input-group">
                 <label>Позначка (Статус тваринки)</label>
                 <select 
@@ -385,7 +462,6 @@ function AdminPets() {
                   onChange={e => {
                     const newStatus = e.target.value;
                     let newDesc = petFormData.Description;
-                    // Автоматично ставимо історію щасливчика, якщо статус "Вже вдома" і опис порожній
                     if (newStatus === 'Вже вдома' && !newDesc) {
                       newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
                     }
@@ -401,7 +477,6 @@ function AdminPets() {
                 </select>
               </div>
 
-              {/* 🌟 ЯКЩО СТАТУС "ВЖЕ ВДОМА" - ПОКАЗУЄМО ВИБІР КОРИСТУВАЧА */}
               {petFormData.Status === 'Вже вдома' && (
                 <div className="input-group" style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
                   <label style={{ color: '#6847DD' }}>🏡 Хто прихистив тваринку? (Оберіть користувача)</label>
@@ -476,7 +551,6 @@ function AdminPets() {
         </div>
       )}
 
-      {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (Без змін) */}
       {petToDelete && (
         <div className="modal-overlay" onClick={() => setPetToDelete(null)}>
           <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>

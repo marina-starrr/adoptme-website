@@ -3,10 +3,7 @@
   display: flex;
   gap: 30px;
   align-items: flex-start;
-  width: 95%;
-  /* Обов'язково додаємо ширину */
-  max-width: 1500px;
-  /* Загальний ліміт для всієї сторінки */
+  width: 100%;
   margin: 0 auto;
 }
 
@@ -19,63 +16,172 @@
   border-radius: 20px;
   box-shadow: 0 10px 40px rgba(73, 16, 159, 0.04);
   border: 1px solid rgba(73, 16, 159, 0.08);
+  position: sticky;
+  top: 100px;
+  z-index: 10;
+  overflow: visible; /* Важливо для випадаючих списків */
+}
+
+/* Оновлена шапка сайдбару (як у користувачів) */
+.sidebar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  border-bottom: 2px dashed #f0edff;
+  padding-bottom: 15px;
+}
+
+.sidebar-title {
+  color: #110229;
+  font-size: 20px;
+  margin: 0;
+}
+
+.reset-btn {
+  background: transparent;
+  color: #ff6b6b;
+  border: none;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 0;
+}
+
+.reset-btn:hover {
+  color: #d32f2f;
+  text-decoration: underline;
+}
+
+.filter-block {
+  margin-bottom: 20px;
+}
+
+.filter-block label {
+  display: block;
+  font-weight: 700;
+  color: #4A148C;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+/* =========================================
+   КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК
+   ========================================= */
+.custom-dropdown-container {
+  position: relative;
+  width: 100%;
+  user-select: none;
+  z-index: 9999;
+}
+
+.custom-dropdown-header {
+  background: #f4f5fa;
+  border: 2px solid transparent;
+  padding: 12px 18px;
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  color: #333;
+  font-weight: 500;
+  font-size: 15px;
+  transition: all 0.3s ease;
+}
+
+.custom-dropdown-header:hover {
+  background: #f0edff;
+}
+
+.custom-dropdown-header.open {
+  border-color: #6847DD;
+  background: #ffffff;
+  box-shadow: 0 4px 15px rgba(104, 71, 221, 0.1);
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  color: #6847DD;
+  transition: transform 0.3s ease;
+}
+
+.custom-dropdown-list-wrapper {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(104, 71, 221, 0.1);
+  z-index: 10000;
+  animation: fadeInDropdown 0.2s ease-out;
+  overflow: visible;
+}
+
+.custom-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+/* Кастомний скролбар для списку */
+.custom-dropdown-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-dropdown-list::-webkit-scrollbar-thumb {
+  background: #d4cbf9;
+  border-radius: 10px;
+}
+
+.custom-dropdown-item {
+  padding: 12px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444;
+  transition: all 0.2s;
+}
+
+.custom-dropdown-item:hover {
+  background: #f4f5fa;
+  color: #6847DD;
+  font-weight: 600;
+}
+
+.custom-dropdown-item.selected {
+  background: #f0edff;
+  color: #4A148C;
+  font-weight: 700;
+}
+
+@keyframes fadeInDropdown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* ОСНОВНА ЗОНА З КАРТКАМИ */
 .admin-content-area {
   flex: 1;
-  /* Займає весь вільний простір */
   width: 100%;
-  /* Обов'язково */
   min-width: 0;
-  /* Важливо для Flexbox, щоб не розривало контент */
 }
 
 /* СІТКА КАРТОК ТВАРИН */
 .pet-grid {
   display: grid;
-  /* Використовуємо auto-fill, щоб картки були шириною 280px, а якщо місця багато - вони розтягуються */
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 25px;
   width: 100%;
-}
-
-/* Інші стилі (залиш їх як є, або просто додай ці нижче) */
-.sidebar-title {
-  color: #110229;
-  font-size: 20px;
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-.filter-group {
-  margin-bottom: 20px;
-}
-
-.filter-group label {
-  display: block;
-  font-weight: 600;
-  color: #666680;
-  margin-bottom: 8px;
-  font-size: 14px;
-}
-
-.reset-filters-btn {
-  width: 100%;
-  padding: 12px;
-  background: transparent;
-  color: #6847DD;
-  border: 2px solid #6847DD;
-  border-radius: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  margin-top: 10px;
-}
-
-.reset-filters-btn:hover {
-  background: #6847DD;
-  color: white;
 }
 
 .admin-header-box {
@@ -90,10 +196,16 @@
   gap: 15px;
 }
 
-.sort-container {
+/* ОНОВЛЕНИЙ БЛОК СОРТУВАННЯ */
+.sort-control {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+}
+
+.sort-label {
+  font-weight: 600;
+  color: #21064A;
 }
 
 .pet-card-wrapper.admin-mode {
@@ -179,13 +291,9 @@
   display: none !important;
 }
 
-/* ... (інші твої стилі модалок залишай як були, не видаляй їх) ... */
-
 /* =========================================
    НОВИЙ ДИЗАЙН МОДАЛЬНОГО ВІКНА ТА ФОРМИ
    ========================================= */
-
-/* Затемнення фону */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -193,23 +301,19 @@
   width: 100%;
   height: 100%;
   background: rgba(17, 2, 41, 0.6);
-  /* Більш глибокий темний фон */
   backdrop-filter: blur(4px);
-  /* Легке розмиття заднього фону */
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
 
-/* Саме вікно */
 .admin-modal {
   background: #ffffff;
   padding: 35px 40px;
   border-radius: 24px;
   width: 90%;
   max-width: 550px;
-  /* Трохи розширили для комфорту */
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
   max-height: 90vh;
   overflow-y: auto;
@@ -217,7 +321,6 @@
   box-sizing: border-box;
 }
 
-/* Кастомний красивий скрол для вікна */
 .admin-modal::-webkit-scrollbar {
   width: 8px;
 }
@@ -236,7 +339,6 @@
   background: #B49DFF;
 }
 
-/* Шапка вікна */
 .modal-header {
   display: flex;
   justify-content: space-between;
@@ -253,7 +355,6 @@
   font-weight: 800;
 }
 
-/* Кнопка закриття */
 .close-x {
   background: #f4f5fa;
   border: none;
@@ -276,7 +377,6 @@
   transform: rotate(90deg);
 }
 
-/* ФОРМА ТА ПОЛЯ */
 .admin-form {
   display: flex;
   flex-direction: column;
@@ -300,7 +400,6 @@
   font-size: 14px;
 }
 
-/* Універсальний стиль для інпутів, селектів і текстареї */
 .form-control {
   width: 100%;
   padding: 14px 18px;
@@ -321,7 +420,6 @@
   box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.1);
 }
 
-/* Блок "Додати інший вид" */
 .add-type-row {
   display: flex;
   gap: 10px;
@@ -347,7 +445,6 @@
   transform: scale(1.05);
 }
 
-/* Кнопка завантаження файлу */
 .file-upload-label {
   display: flex;
   justify-content: center;
@@ -372,7 +469,6 @@
   pointer-events: none;
 }
 
-/* Кнопки Дій (Скасувати / Зберегти) */
 .form-actions {
   display: flex;
   justify-content: flex-end;

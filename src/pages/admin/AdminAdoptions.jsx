@@ -9,7 +9,6 @@ function AdminAdoptions() {
     
     const [openDropdownId, setOpenDropdownId] = useState(null);
 
-    // 🌟 Додали новий статус "Передано"
     const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
     const showToast = (message) => {
@@ -39,7 +38,6 @@ function AdminAdoptions() {
     const handleStatusChange = async (id, newStatus) => {
         const app = applications.find(a => a.Id === id);
 
-        // 🌟 Тепер логіка передачі тваринки спрацьовує ТІЛЬКИ на статусі "Передано"
         if (newStatus === 'Передано' && app.Status !== 'Передано') {
             if (!window.confirm(`Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі.`)) {
                 setOpenDropdownId(null);
@@ -124,7 +122,8 @@ function AdminAdoptions() {
     if (loading) return <div className="admin-loader">Завантаження заявок...</div>;
 
     return (
-        <div className="admin-main" style={{ position: 'relative' }}>
+        // 🌟 Фіксуємо ширину для ідеального збігу з шириною картки "База тварин"
+        <div style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
             
             {toastMsg && (
                 <div className="custom-toast">
@@ -152,7 +151,6 @@ function AdminAdoptions() {
                         </div>
                     ) : (
                         applications.map(app => (
-                            // 🌟 Додано клас status-handed для візуалізації
                             <div key={app.Id} className={`app-card-premium status-${app.Status === 'Нова' ? 'new' : app.Status === 'Розглядається' ? 'review' : app.Status === 'Схвалено' ? 'approved' : app.Status === 'Передано' ? 'handed' : 'rejected'}`}>
                                 
                                 <div className="app-card-header">

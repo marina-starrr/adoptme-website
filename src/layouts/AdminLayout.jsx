@@ -52,23 +52,23 @@ function AdminLayout() {
 
                 <nav className="admin-nav">
                     <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}>
-                        📝 Заявки
+                        Заявки
                     </Link>
                     {/* 🌟 НОВА ВКЛАДКА ДЛЯ СПОВІЩЕНЬ ПРО ЛІКУВАННЯ */}
                     <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`}>
-                        🔔 Сповіщення
+                        Сповіщення
                     </Link>
                     <Link to="/admin/reviews" className={`admin-nav-link ${location.pathname === '/admin/reviews' ? 'active' : ''}`}>
-                        💬 Відгуки
+                        Відгуки
                     </Link>
                     <Link to="/admin/pets" className={`admin-nav-link ${location.pathname === '/admin/pets' ? 'active' : ''}`}>
-                        🐾 Тварини
+                        Тварини
                     </Link>
                     <Link to="/admin/users" className={`admin-nav-link ${location.pathname === '/admin/users' ? 'active' : ''}`}>
-                        👥 Користувачі
+                        Користувачі
                     </Link>
                     <Link to="/admin/happy-pets" className={`admin-nav-link ${location.pathname === '/admin/happy-pets' ? 'active' : ''}`}>
-                        🏡 Щасливчики
+                        Щасливчики
                     </Link>
 
                     <button onClick={handleLogout} className="logout-btn">

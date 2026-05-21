@@ -1,24 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom'; 
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
-import { useAuth } from '../context/AuthContext'; 
+import { useAuth } from '../context/AuthContext';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('favorites');
-  const [appFilter, setAppFilter] = useState('Всі'); 
+  const [appFilter, setAppFilter] = useState('Всі');
   const fileInputRef = useRef(null);
-  
+
   const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [favorites, setFavorites] = useState([]);
-  const [toastMsg, setToastMsg] = useState(''); 
+  const [toastMsg, setToastMsg] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   const location = useLocation();
-  const navigate = useNavigate(); 
-  const { logout } = useAuth(); 
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const [userData, setUserData] = useState({
     nickname: '',
@@ -26,7 +26,7 @@ function Profile() {
     lastName: '',
     phone: '',
     email: '',
-    avatarUrl: '/ava.jpg'
+    avatarUrl: '/ava.png'
   });
 
   const showToast = (message) => {
@@ -59,10 +59,12 @@ function Profile() {
           }));
 
           setLoadingApps(true);
+          
+          // 🌟 ВИПРАВЛЕНО: Шукаємо заявки за UserNickname, а не AdopterEmail
           const { data: appsData, error: appsError } = await supabase
             .from('AdoptionRequests')
             .select('*')
-            .eq('AdopterEmail', user.Email)
+            .eq('UserNickname', currentNickname)
             .order('Id', { ascending: false });
 
           if (!appsError && appsData) {
@@ -73,9 +75,9 @@ function Profile() {
               return {
                 ...app,
                 PetId: matchedPet?.Id,
-                PetImage: matchedPet 
-                  ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}` 
-                  : '/ava.jpg'
+                PetImage: matchedPet
+                  ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}`
+                  : '/ava.png'
               };
             });
 
@@ -102,6 +104,13 @@ function Profile() {
   useEffect(() => {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
+    }
+
+    if (location.state?.activeTab) {
+      setActiveTab(location.state.activeTab);
+    }
+
+    if (location.state) {
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -116,71 +125,71 @@ function Profile() {
     const currentNickname = localStorage.getItem('userNickname');
 
     try {
-        const { error } = await supabase
-            .from('Users')
-            .update({
-                FirstName: userData.firstName.trim(),
-                LastName: userData.lastName.trim(),
-                Phone: userData.phone.trim(),
-                Email: userData.email.trim()
-            })
-            .eq('Nickname', currentNickname);
+      const { error } = await supabase
+        .from('Users')
+        .update({
+          FirstName: userData.firstName.trim(),
+          LastName: userData.lastName.trim(),
+          Phone: userData.phone.trim(),
+          Email: userData.email.trim()
+        })
+        .eq('Nickname', currentNickname);
 
-        if (error) throw error;
-        showToast('✅ Зміни успішно збережено в базі даних! 🐾');
+      if (error) throw error;
+      showToast('✅ Зміни успішно збережено в базі даних! 🐾');
 
     } catch (err) {
-        showToast('❌ Помилка збереження: ' + err.message);
+      showToast('❌ Помилка збереження: ' + err.message);
     }
   };
 
   const handleLogout = () => {
-      const userNickname = localStorage.getItem('userNickname');
-      const currentFavorites = localStorage.getItem('favorites');
+    const userNickname = localStorage.getItem('userNickname');
+    const currentFavorites = localStorage.getItem('favorites');
 
-      if (userNickname && currentFavorites) {
-          localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
-      }
+    if (userNickname && currentFavorites) {
+      localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
+    }
 
-      localStorage.removeItem('favorites');
-      localStorage.removeItem('userNickname');
-      localStorage.removeItem('userRole');
-      window.dispatchEvent(new Event('cartUpdated'));
+    localStorage.removeItem('favorites');
+    localStorage.removeItem('userNickname');
+    localStorage.removeItem('userRole');
+    window.dispatchEvent(new Event('cartUpdated'));
 
-      logout();
-      navigate('/login', {
-          state: { welcomeMsg: '🐾 Ви успішно вийшли з акаунту' }
-      });
+    logout();
+    navigate('/login', {
+      state: { welcomeMsg: '🐾 Ви успішно вийшли з акаунту' }
+    });
   };
 
   const confirmDeleteAccount = async () => {
     const currentNickname = localStorage.getItem('userNickname');
 
     try {
-        const { error } = await supabase
-            .from('Users')
-            .delete()
-            .eq('Nickname', currentNickname);
+      const { error } = await supabase
+        .from('Users')
+        .delete()
+        .eq('Nickname', currentNickname);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        localStorage.removeItem('userNickname');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('favorites');
-        localStorage.removeItem(`favorites_${currentNickname}`);
-        localStorage.removeItem('profileAvatar');
-        
-        window.dispatchEvent(new Event('cartUpdated')); 
-        logout(); 
-        
-        setIsDeleteModalOpen(false); 
+      localStorage.removeItem('userNickname');
+      localStorage.removeItem('userRole');
+      localStorage.removeItem('favorites');
+      localStorage.removeItem(`favorites_${currentNickname}`);
+      localStorage.removeItem('profileAvatar');
 
-        navigate('/', { 
-            state: { welcomeMsg: '😢 Ваш акаунт видалено. Нам дуже шкода, повертайтесь знову!' } 
-        });
+      window.dispatchEvent(new Event('cartUpdated'));
+      logout();
+
+      setIsDeleteModalOpen(false);
+
+      navigate('/', {
+        state: { welcomeMsg: '😢 Ваш акаунт видалено. Нам дуже шкода, повертайтесь знову!' }
+      });
 
     } catch (err) {
-        showToast('❌ Помилка при видаленні: ' + err.message);
+      showToast('❌ Помилка при видаленні: ' + err.message);
     }
   };
 
@@ -201,20 +210,19 @@ function Profile() {
     }
   };
 
-  // 🌟 Логіка фільтрації заявок
   const filterTabs = ['Всі', 'Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
   const filteredApps = applications.filter(app => {
-      if (appFilter === 'Всі') return true;
-      return (app.Status || 'Нова') === appFilter;
+    if (appFilter === 'Всі') return true;
+    return (app.Status || 'Нова') === appFilter;
   });
 
   return (
     <div className="profile-page" style={{ position: 'relative' }}>
-      
+
       {toastMsg && (
-          <div className="custom-toast">
-              {toastMsg}
-          </div>
+        <div className="custom-toast">
+          {toastMsg}
+        </div>
       )}
 
       {isDeleteModalOpen && (
@@ -226,15 +234,15 @@ function Profile() {
               Ви впевнені, що хочете назавжди покинути родину <strong>AdoptMe</strong>? Усі ваші обрані тваринки та історія заявок будуть втрачені.
             </p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button 
-                className="back-to-favorites-btn" 
+              <button
+                className="back-to-favorites-btn"
                 onClick={() => setIsDeleteModalOpen(false)}
                 style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px' }}
               >
                 Скасувати
               </button>
-              <button 
-                className="adopt-pet-btn" 
+              <button
+                className="adopt-pet-btn"
                 onClick={confirmDeleteAccount}
                 style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px', background: '#d32f2f', boxShadow: '0 5px 15px rgba(211, 47, 47, 0.3)' }}
               >
@@ -248,22 +256,27 @@ function Profile() {
       <div className="profile-container">
 
         <aside className="profile-sidebar">
-          <BackgroundPaws customClass="sidebar-paws" />
 
-          <div className="profile-avatar-section" style={{ position: 'relative', zIndex: 2 }}>
+          <div className="profile-sidebar-banner">
+            <BackgroundPaws customClass="sidebar-paws" />
+          </div>
+
+          <div className="profile-avatar-section">
             <div className="avatar-wrapper" onClick={handleAvatarClick}>
-                <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
-                <div className="avatar-overlay"><span>Змінити</span></div>
+              <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
+              <div className="avatar-overlay">
+                <span className="camera-icon">📷</span>
+              </div>
             </div>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-            
+
             <h2 className="profile-name">
-                {userData.firstName ? `${userData.firstName} ${userData.lastName}` : 'Користувач'}
+              {userData.firstName ? `${userData.firstName} ${userData.lastName}` : 'Користувач'}
             </h2>
             <p className="profile-status">@{userData.nickname || 'nickname'}</p>
           </div>
 
-          <nav className="profile-nav" style={{ position: 'relative', zIndex: 2 }}>
+          <nav className="profile-nav">
             <button className={`profile-nav-btn ${activeTab === 'favorites' ? 'active' : ''}`} onClick={() => setActiveTab('favorites')}>
               🐾 Улюбленці
               {favorites.length > 0 && <span className="badge">{favorites.length}</span>}
@@ -275,7 +288,9 @@ function Profile() {
             <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
               👤 Особисті дані
             </button>
-            
+
+            <div className="nav-divider"></div>
+
             <button className="profile-nav-btn logout-nav-btn" onClick={handleLogout}>
               🚪 Вийти з акаунту
             </button>
@@ -283,7 +298,7 @@ function Profile() {
         </aside>
 
         <section className="profile-content-area">
-          
+
           {/* ВКЛАДКА 1: УЛЮБЛЕНЦІ */}
           {activeTab === 'favorites' && (
             <div className="profile-tab-content fade-in">
@@ -309,18 +324,17 @@ function Profile() {
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
               <h3>Історія заявок у притулок</h3>
-              
-              {/* 🌟 МЕНЮ ВКЛАДОК ЗАЯВОК */}
+
               <div className="app-filters-container">
-                  {filterTabs.map(tab => (
-                      <button 
-                          key={tab} 
-                          className={`app-filter-btn ${appFilter === tab ? 'active' : ''}`}
-                          onClick={() => setAppFilter(tab)}
-                      >
-                          {tab}
-                      </button>
-                  ))}
+                {filterTabs.map(tab => (
+                  <button
+                    key={tab}
+                    className={`app-filter-btn ${appFilter === tab ? 'active' : ''}`}
+                    onClick={() => setAppFilter(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
               </div>
 
               {loadingApps ? <p>Завантаження заявок...</p> : (
@@ -328,7 +342,7 @@ function Profile() {
                   {filteredApps.length === 0 ? <p className="empty-message">Заявок з таким статусом не знайдено.</p> :
                     filteredApps.map(app => (
                       <div className="application-card" key={app.Id}>
-                        
+
                         <div className="app-card-left">
                           {app.PetId ? (
                             <Link to={`/pets/${app.PetId}`}>
@@ -337,9 +351,9 @@ function Profile() {
                           ) : (
                             <img src={app.PetImage} alt="Тваринка" className="app-pet-image" />
                           )}
-                          
+
                           <div className="app-details">
-                            <h4>Тваринка: 
+                            <h4>Тваринка:
                               {app.PetId ? (
                                 <Link to={`/pets/${app.PetId}`} className="app-pet-link"><span> {app.PetName}</span></Link>
                               ) : (
@@ -352,7 +366,7 @@ function Profile() {
                         </div>
 
                         <div className={`app-status status-badge ${app.Status || 'Нова'}`}>
-                           {app.Status || 'Нова'}
+                          {app.Status || 'Нова'}
                         </div>
 
                       </div>
@@ -368,21 +382,21 @@ function Profile() {
             <div className="profile-tab-content fade-in">
               <h3>Особисті дані</h3>
               <form className="profile-form" onSubmit={handleSaveProfile}>
-                
+
                 <div className="form-group">
                   <label>Ваш Нікнейм (Ідентифікатор)</label>
-                  <input type="text" name="nickname" value={userData.nickname} readOnly style={{ background: '#f5f5f5', color: '#777' }} title="Нікнейм є унікальним і не змінюється" />
+                  <input type="text" name="nickname" value={userData.nickname} readOnly className="input-readonly" title="Нікнейм є унікальним і не змінюється" />
                 </div>
 
                 <div style={{ display: 'flex', gap: '20px' }}>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label>Ім'я</label>
-                      <input type="text" name="firstName" value={userData.firstName} onChange={handleInputChange} required />
-                    </div>
-                    <div className="form-group" style={{ flex: 1 }}>
-                      <label>Прізвище</label>
-                      <input type="text" name="lastName" value={userData.lastName} onChange={handleInputChange} required />
-                    </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Ім'я</label>
+                    <input type="text" name="firstName" value={userData.firstName} onChange={handleInputChange} required />
+                  </div>
+                  <div className="form-group" style={{ flex: 1 }}>
+                    <label>Прізвище</label>
+                    <input type="text" name="lastName" value={userData.lastName} onChange={handleInputChange} required />
+                  </div>
                 </div>
 
                 <div className="form-group">
@@ -395,30 +409,18 @@ function Profile() {
                   <input type="email" name="email" value={userData.email} onChange={handleInputChange} required />
                 </div>
 
-                <button type="submit" className="save-profile-btn">Зберегти зміни у базі даних</button>
+                <button type="submit" className="save-profile-btn">Зберегти зміни</button>
               </form>
 
-              <div style={{ marginTop: '40px', borderTop: '2px dashed #ffebee', paddingTop: '25px', textAlign: 'center' }}>
-                  {/* 👇 ОСЬ ТУТ ВИПРАВЛЕНО margin-bottom на marginBottom */}
-                  <p style={{ color: '#888', fontSize: '14px', marginBottom: '15px' }}>Небезпечна зона</p>
-                  <button 
-                    type="button" 
-                    onClick={() => setIsDeleteModalOpen(true)}
-                    style={{ 
-                        background: 'transparent', 
-                        color: '#d32f2f', 
-                        border: '2px solid #d32f2f', 
-                        padding: '12px 25px', 
-                        borderRadius: '25px', 
-                        cursor: 'pointer', 
-                        fontWeight: 'bold',
-                        transition: 'all 0.3s ease'
-                    }}
-                    onMouseOver={(e) => { e.target.style.background = '#d32f2f'; e.target.style.color = '#fff'; }}
-                    onMouseOut={(e) => { e.target.style.background = 'transparent'; e.target.style.color = '#d32f2f'; }}
-                  >
-                      🗑️ Видалити акаунт назавжди
-                  </button>
+              <div className="danger-zone">
+                <p>Небезпечна зона</p>
+                <button
+                  type="button"
+                  className="delete-account-btn"
+                  onClick={() => setIsDeleteModalOpen(true)}
+                >
+                  🗑️ Видалити акаунт назавжди
+                </button>
               </div>
 
             </div>

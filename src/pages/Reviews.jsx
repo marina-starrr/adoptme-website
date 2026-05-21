@@ -1,82 +1,183 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // 👈 Додали для переходу
-import { useAuth } from '../context/AuthContext'; // 👈 Додали для перевірки авторизації
+import { useNavigate, Link } from 'react-router-dom'; 
+import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient';
 import './Reviews.css';
 
 function Reviews() {
   const [reviews, setReviews] = useState([]);
-  const [name, setName] = useState('');
   const [text, setText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  const { isLoggedIn } = useAuth(); // 👈 Дізнаємося, чи увійшла людина
-  const navigate = useNavigate(); // 👈 Інструмент для перенаправлення
+  const [replyingToId, setReplyingToId] = useState(null);
+  const [replyText, setReplyText] = useState('');
 
-  // 1. Функція для завантаження відгуків із Supabase
+  const { isLoggedIn } = useAuth(); 
+  const navigate = useNavigate(); 
+
+  // 1. ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ВІДГУКІВ ТА АКТУАЛЬНИХ ТВАРИН
   const fetchReviews = async () => {
-    const { data, error } = await supabase
-      .from('Reviews')
-      .select('*')
-      .order('Id', { ascending: false });
+    try {
+      // Крок 1: Завантажуємо всі відгуки
+      const { data: reviewsData, error: reviewsError } = await supabase
+        .from('Reviews')
+        .select('*')
+        .order('Id', { ascending: false });
 
-    if (error) {
-      console.error("Помилка завантаження відгуків:", error);
-    } else {
-      setReviews(data);
+      if (reviewsError) throw reviewsError;
+
+      // Крок 2: Отримуємо унікальні нікнейми всіх авторів відгуків
+      const nicknames = [...new Set(reviewsData.map(r => r.UserNickname).filter(Boolean))];
+
+      if (nicknames.length > 0) {
+        // Крок 3: Знаходимо ID цих користувачів у таблиці Users
+        const { data: usersData, error: usersError } = await supabase
+          .from('Users')
+          .select('Id, Nickname')
+          .in('Nickname', nicknames);
+
+        if (!usersError && usersData) {
+          const userIds = usersData.map(u => u.Id || u.id); // Підтримка Id та id
+
+          // Крок 4: Знаходимо ВСІХ актуальних тварин для цих користувачів ("Вже вдома")
+          const { data: petsData, error: petsError } = await supabase
+            .from('Pets')
+            .select('*')
+            .in('OwnerId', userIds)
+            .eq('Status', 'Вже вдома');
+
+          if (!petsError && petsData) {
+            // Формуємо словник: { "Нікнейм": [масив актуальних тварин] }
+            const currentPetsMap = {};
+            usersData.forEach(user => {
+              const actualUserId = user.Id || user.id;
+              const userPets = petsData.filter(p => p.OwnerId === actualUserId);
+              
+              currentPetsMap[user.Nickname] = userPets.map(p => ({
+                id: p.Id || p.id,
+                image: p.ImageName
+              }));
+            });
+
+            // Крок 5: Додаємо актуальних тварин до кожного відгуку (DynamicPets)
+            const updatedReviews = reviewsData.map(review => ({
+              ...review,
+              DynamicPets: currentPetsMap[review.UserNickname] || []
+            }));
+
+            setReviews(updatedReviews);
+            return; // Успішно завершили
+          }
+        }
+      }
+      
+      // Якщо авторів немає або сталася помилка, просто виводимо відгуки без тварин
+      const fallbackReviews = reviewsData.map(review => ({ ...review, DynamicPets: [] }));
+      setReviews(fallbackReviews);
+
+    } catch (err) {
+      console.error("Помилка завантаження відгуків:", err);
     }
   };
 
   useEffect(() => {
     fetchReviews();
-  }, []);
 
-  // 👇 Розумна функція перехоплення кліку для неавторизованих
+    if (isLoggedIn) {
+        const nickname = localStorage.getItem('userNickname');
+        const avatar = localStorage.getItem('profileAvatar') || '/ava.png';
+        setCurrentUser({ nickname, avatar });
+    } else {
+        setCurrentUser(null);
+    }
+  }, [isLoggedIn]);
+
   const handleInteraction = (e) => {
     if (!isLoggedIn) {
-      e.preventDefault(); // Зупиняємо дію
+      e.preventDefault(); 
       navigate('/login', {
         state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб залишити відгук' }
       });
     }
   };
 
-  // 2. Функція відправки нового відгуку в Supabase
+  // 2. ВІДПРАВКА НОВОГО ВІДГУКУ (спрощена, бо тварини тепер підтягуються динамічно)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Зайва перевірка на випадок, якщо хтось якось обійде блокування
     if (!isLoggedIn) {
       handleInteraction(e);
       return;
     }
 
-    if (!name || !text) return;
-
+    if (!text.trim()) return;
     setIsLoading(true);
 
+    const nickname = localStorage.getItem('userNickname');
+    const avatar = localStorage.getItem('profileAvatar') || '/ava.png';
     const today = new Date();
     const formattedDate = today.toLocaleDateString('uk-UA');
 
-    const { error } = await supabase
-      .from('Reviews')
-      .insert([
-        {
-          Name: name,
-          Text: text,
-          Date: formattedDate
-        }
-      ]);
+    try {
+        const { error } = await supabase.from('Reviews').insert([{
+            Name: nickname, 
+            UserNickname: nickname,
+            UserAvatar: avatar,
+            AdoptedPets: [], // Більше не зберігаємо сюди тварин жорстко
+            Text: text,
+            Date: formattedDate,
+            UserReplies: [] 
+        }]);
 
-    setIsLoading(false);
+        if (error) throw error;
 
-    if (error) {
-      console.error("Помилка збереження:", error.message);
-      alert("Не вдалося відправити відгук. Спробуйте пізніше.");
-    } else {
-      setName('');
-      setText('');
-      fetchReviews();
+        setText('');
+        fetchReviews(); // Оновлюємо сторінку, і нові/старі тварини підтягнуться самі
+    } catch (error) {
+        console.error("Помилка збереження:", error.message);
+        alert("Не вдалося відправити відгук. Спробуйте пізніше.");
+    } finally {
+        setIsLoading(false);
+    }
+  };
+
+  const handleReplySubmit = async (reviewId, existingReplies) => {
+    if (!replyText.trim()) return;
+    setIsLoading(true);
+
+    const nickname = currentUser.nickname;
+    const avatar = currentUser.avatar;
+    const now = new Date();
+    const formattedDate = `${now.toLocaleDateString('uk-UA')} ${now.toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' })}`;
+
+    const newReply = {
+        id: Date.now().toString(),
+        author: nickname,
+        avatar: avatar,
+        text: replyText,
+        date: formattedDate
+    };
+
+    const currentReplies = Array.isArray(existingReplies) ? existingReplies : [];
+    const updatedReplies = [...currentReplies, newReply];
+
+    try {
+        const { error } = await supabase
+            .from('Reviews')
+            .update({ UserReplies: updatedReplies })
+            .eq('Id', reviewId);
+
+        if (error) throw error;
+
+        setReplyingToId(null);
+        setReplyText('');
+        fetchReviews();
+    } catch (error) {
+        console.error("Помилка збереження відповіді:", error.message);
+        alert("Не вдалося відправити відповідь.");
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -88,45 +189,39 @@ function Reviews() {
       </div>
 
       <div className="reviews-content-wrapper">
-        {/* ФОРМА */}
-        <div className="review-card-container">
+        <div className="review-write-container">
           <img src="/catik.png" alt="Котик" className="cat-icon" />
           <img src="/dogik.png" alt="Собачка" className="dog-icon" />
 
-          <form className="review-form" onSubmit={handleSubmit}>
-            <label htmlFor="nickname" className="form-label">Нікнейм</label>
-            <input
-              type="text"
-              id="nickname"
-              className="form-input"
-              // 👇 Динамічний плейсхолдер: підказує гостю, що треба увійти
-              placeholder={isLoggedIn ? "Вкажіть своє ім'я..." : "Увійдіть, щоб писати..."}
-              required
-              maxLength="20"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onClick={handleInteraction} // 👈 Перехоплюємо клік
-              readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
-            />
+          <form className="modern-review-form" onSubmit={handleSubmit}>
+            {isLoggedIn && currentUser ? (
+                <div className="current-user-badge">
+                    <img src={currentUser.avatar} alt="Ваш аватар" className="current-user-avatar" />
+                    <span>Залишити відгук як <strong>{currentUser.nickname}</strong></span>
+                </div>
+            ) : (
+                <div className="current-user-badge guest-badge">
+                    <span>👤 Ви гість. Увійдіть, щоб поділитися враженнями.</span>
+                </div>
+            )}
 
-            <label htmlFor="review-text" className="form-label">Залиште відгук</label>
             <div className="submit-container">
               <textarea
                 id="review-text"
-                className="form-textarea review-text"
-                placeholder={isLoggedIn ? "Введіть текст..." : "Увійдіть, щоб писати..."}
+                className="form-textarea"
+                placeholder={isLoggedIn ? "Поділіться своєю історією про AdoptMe..." : "Увійдіть, щоб писати..."}
                 required
                 maxLength="500"
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                onClick={handleInteraction} // 👈 Перехоплюємо клік
-                readOnly={!isLoggedIn} // 👈 Блокуємо клавіатуру для гостей
+                onClick={handleInteraction} 
+                readOnly={!isLoggedIn} 
               ></textarea>
               <button
                 type="submit"
-                className="submit-btn"
-                disabled={isLoading}
-                onClick={handleInteraction} // 👈 Перехоплюємо клік по кнопці
+                className={`submit-btn ${!text.trim() ? 'disabled' : ''}`}
+                disabled={isLoading || !isLoggedIn}
+                onClick={handleInteraction} 
               >
                 {isLoading ? '...' : <img src="/Send.png" alt="Відправити" />}
               </button>
@@ -134,25 +229,118 @@ function Reviews() {
           </form>
         </div>
 
-        {/* СПИСОК ВІДГУКІВ З SQL */}
         <div className="review-card-list">
-          {reviews.length === 0 && <p style={{ textAlign: 'center', color: 'white' }}>Поки що немає відгуків. Будьте першим!</p>}
+          {reviews.length === 0 && <p style={{ textAlign: 'center', color: 'white', fontSize: '20px' }}>Поки що немає відгуків. Будьте першим!</p>}
 
           {reviews.map((review) => (
-            <div className="review-card" key={review.Id}>
+            <div className="modern-review-card" key={review.Id}>
+              
               <div className="review-header">
-                <span className="review-name">{review.Name}</span>
-                <span className="review-date">{review.Date}</span>
+                <div className="review-author-group">
+                    <div className="avatars-cluster">
+                        <img src={review.UserAvatar || '/ava.png'} alt="Аватар" className="review-avatar" />
+                        
+                        {/* ТУТ МИ ВИКОРИСТОВУЄМО DynamicPets ЗАМІСТЬ СТАРОГО AdoptedPets */}
+                        {review.DynamicPets && review.DynamicPets.length > 0 && (
+                            <div className="pet-bubbles">
+                                {review.DynamicPets.map((petData, idx) => {
+                                    const petId = petData.id;
+                                    const petImage = petData.image;
+
+                                    const imgElement = (
+                                        <img 
+                                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${petImage}`} 
+                                            alt="Тваринка" 
+                                            className="pet-bubble-img" 
+                                            title="Переглянути анкету"
+                                        />
+                                    );
+
+                                    return petId ? (
+                                        <Link to={`/pets/${petId}`} key={idx} className="pet-bubble-link">
+                                            {imgElement}
+                                        </Link>
+                                    ) : null;
+                                })}
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="review-author-info">
+                        <span className="review-name">{review.UserNickname}</span>
+                    </div>
+                </div>
+
+                <div className="review-meta">
+                    <span className="review-date">{review.Date}</span>
+                </div>
               </div>
-              <p className="review-text">{review.Text}</p>
+
+              <div className="review-body">
+                  <p className="review-text">{review.Text}</p>
+              </div>
+
               {review.AdminReply && (
                 <div className="admin-reply-box">
-                  <strong className="admin-reply-title">🐾 Admin</strong>
+                  <strong className="admin-reply-title">🐾 Відповідь адміністрації</strong>
                   <p className="admin-reply-text">
                     {review.AdminReply}
                   </p>
                 </div>
               )}
+
+              {review.UserReplies && review.UserReplies.length > 0 && (
+                  <div className="user-replies-section">
+                      {review.UserReplies.map(reply => (
+                          <div className="user-reply-item" key={reply.id}>
+                              <img src={reply.avatar || '/ava.png'} alt="Аватар" className="user-reply-avatar" />
+                              <div className="user-reply-content">
+                                  <div className="user-reply-header">
+                                      <span className="user-reply-author">{reply.author}</span>
+                                      <span className="user-reply-date">{reply.date}</span>
+                                  </div>
+                                  <p className="user-reply-text">{reply.text}</p>
+                              </div>
+                          </div>
+                      ))}
+                  </div>
+              )}
+
+              <div className="review-actions">
+                  <button 
+                      className="reply-toggle-btn"
+                      onClick={(e) => {
+                          if(!isLoggedIn) {
+                              handleInteraction(e);
+                          } else {
+                              setReplyingToId(replyingToId === review.Id ? null : review.Id);
+                              setReplyText('');
+                          }
+                      }}
+                  >
+                      {replyingToId === review.Id ? 'Скасувати' : '💬 Відповісти'}
+                  </button>
+              </div>
+
+              {replyingToId === review.Id && (
+                  <div className="user-reply-form">
+                      <textarea
+                          className="reply-textarea"
+                          placeholder={`Відповісти ${review.UserNickname}...`}
+                          value={replyText}
+                          onChange={(e) => setReplyText(e.target.value)}
+                          maxLength="300"
+                      />
+                      <button 
+                          className="send-reply-btn"
+                          onClick={() => handleReplySubmit(review.Id, review.UserReplies)}
+                          disabled={isLoading || !replyText.trim()}
+                      >
+                          {isLoading ? '...' : 'Надіслати'}
+                      </button>
+                  </div>
+              )}
+
             </div>
           ))}
         </div>

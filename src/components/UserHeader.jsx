@@ -8,14 +8,13 @@ import { supabase } from '../supabaseClient';
 function UserHeader() {
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
-    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false); // Стан для сповіщень
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const [favorites, setFavorites] = useState([]);
-    const [notifications, setNotifications] = useState([]); // Масив сповіщень
+    const [notifications, setNotifications] = useState([]);
     const [showForm, setShowForm] = useState(false);
 
     const { isLoggedIn, logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
-    const [isClosing, setIsClosing] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isSuccessScreen, setIsSuccessScreen] = useState(false);
 
@@ -31,8 +30,9 @@ function UserHeader() {
     const [otherPetsDetails, setOtherPetsDetails] = useState('');
     const [comment, setComment] = useState('');
     const [agreeToTerms, setAgreeToTerms] = useState(false);
-    const textareaRef = useRef(null);
 
+    const textareaRef = useRef(null);
+    const dropdownRef = useRef(null); // 🌟 Ref для міні-меню
     const navigate = useNavigate();
 
     // Завантаження сповіщень
@@ -43,7 +43,7 @@ function UserHeader() {
                 .from('TreatmentNotifications')
                 .select('*')
                 .eq('UserNickname', userNickname)
-                .eq('Status', 'Оброблена'); // Шукаємо тільки ті, що адмін вже підтвердив
+                .eq('Status', 'Оброблена');
 
             if (!error && data) {
                 setNotifications(data);
@@ -73,13 +73,16 @@ function UserHeader() {
         };
     }, []);
 
-    const handleCloseDrawer = () => {
-        setIsClosing(true);
-        setTimeout(() => {
-            setIsAccountOpen(false);
-            setIsClosing(false);
-        }, 300);
-    };
+    // 🌟 Закриття міні-меню при кліку поза ним
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsAccountOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
 
     const handleCloseFavorites = () => {
         setIsModalClosing(true);
@@ -133,7 +136,6 @@ function UserHeader() {
         window.dispatchEvent(new Event('cartUpdated'));
     };
 
-    // Видалення сповіщення після прочитання
     const handleDeleteNotification = async (id) => {
         const { error } = await supabase.from('TreatmentNotifications').delete().eq('Id', id);
         if (!error) {
@@ -182,13 +184,12 @@ function UserHeader() {
         e.preventDefault();
 
         const petNames = favorites.map(f => f.name).join(", ");
-        // 🌟 Додаємо масив ID тваринок та нікнейм користувача
-        const petIds = favorites.map(f => f.id); 
+        const petIds = favorites.map(f => f.id);
         const userNickname = localStorage.getItem('userNickname');
 
         const adoptionData = {
-            PetIds: petIds,             // Записуємо ID в базу
-            UserNickname: userNickname, // Записуємо нікнейм в базу
+            PetIds: petIds,
+            UserNickname: userNickname,
             PetName: petNames,
             AdopterName: `${adopterFirstName} ${adopterLastName}`,
             AdopterPhone: adopterPhone,
@@ -202,9 +203,7 @@ function UserHeader() {
             Status: 'Нова'
         };
 
-        const { error } = await supabase
-            .from('AdoptionRequests')
-            .insert([adoptionData]);
+        const { error } = await supabase.from('AdoptionRequests').insert([adoptionData]);
 
         if (!error) {
             localStorage.removeItem('favorites');
@@ -222,7 +221,7 @@ function UserHeader() {
             alert("Сталася помилка при відправці: " + error.message);
         }
     };
-    
+
     const finishAdoption = () => {
         setIsModalClosing(true);
         setTimeout(() => {
@@ -232,6 +231,25 @@ function UserHeader() {
             setIsSuccessScreen(false);
             window.location.reload();
         }, 300);
+    };
+
+    // 🌟 Функція виходу з акаунту
+    const handleLogoutClick = () => {
+        const userNickname = localStorage.getItem('userNickname');
+        const currentFavorites = localStorage.getItem('favorites');
+
+        if (userNickname && currentFavorites) {
+            localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
+        }
+
+        localStorage.removeItem('favorites');
+        localStorage.removeItem('userNickname');
+        localStorage.removeItem('userRole');
+        window.dispatchEvent(new Event('cartUpdated'));
+
+        logout();
+        setIsAccountOpen(false);
+        navigate('/login');
     };
 
     return (
@@ -266,11 +284,10 @@ function UserHeader() {
                     style={{ cursor: 'pointer', marginLeft: '15px' }}
                 />
 
-                {/* Іконка сповіщень */}
                 {isLoggedIn && (
                     <div className="notification-wrapper">
                         <img
-                            src="/notification.png" // Сюди вставиш своє фото іконки
+                            src="/notification.png"
                             alt="Сповіщення"
                             className="notification-icon"
                             onClick={() => setIsNotificationsOpen(true)}
@@ -282,13 +299,37 @@ function UserHeader() {
                 )}
 
                 {isLoggedIn ? (
-                    <img
-                        src="/avatar.png"
-                        alt="Акаунт"
-                        className="account-icon"
-                        onClick={() => setIsAccountOpen(true)}
-                        style={{ cursor: 'pointer', marginLeft: '15px', width: '30px', height: '30px' }}
-                    />
+                    // 🌟 НОВИЙ БЛОК: Аватарка з міні-меню
+                    <div className="avatar-dropdown-container" ref={dropdownRef}>
+                        <img
+                            src="/avatar.png"
+                            alt="Акаунт"
+                            className="account-icon"
+                            onClick={() => setIsAccountOpen(!isAccountOpen)}
+                        />
+
+                        {isAccountOpen && (
+                            <div className="profile-mini-menu">
+                                <div className="mini-menu-header">
+                                    <span className="mini-menu-name">@{localStorage.getItem('userNickname')}</span>
+                                </div>
+
+                                <Link to="/profile" state={{ activeTab: 'personal' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
+                                    👤 Мій профіль
+                                </Link>
+
+                                <Link to="/profile" state={{ activeTab: 'applications' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
+                                    📝 Мої заявки
+                                </Link>
+
+                                <div className="mini-menu-divider"></div>
+
+                                <button className="mini-menu-item logout-item" onClick={handleLogoutClick}>
+                                    🚪 Вийти
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 ) : (
                     <Link to="/login" className="login-nav-btn">
                         Увійти
@@ -312,17 +353,17 @@ function UserHeader() {
                                     <div key={notif.Id} className="notification-card">
                                         <p>
                                             🎉 Радісна новина! Тваринка{' '}
-                                            <Link 
-                                                to={`/pets/${notif.PetId}`} 
-                                                onClick={handleCloseNotifications} 
+                                            <Link
+                                                to={`/pets/${notif.PetId}`}
+                                                onClick={handleCloseNotifications}
                                                 className="notification-pet-link"
                                             >
                                                 {notif.PetName}
                                             </Link>{' '}
                                             успішно пройшла лікування і тепер чекає на вас!
                                         </p>
-                                        <button 
-                                            onClick={() => handleDeleteNotification(notif.Id)} 
+                                        <button
+                                            onClick={() => handleDeleteNotification(notif.Id)}
                                             className="mark-read-btn"
                                         >
                                             Зрозуміло
@@ -335,7 +376,7 @@ function UserHeader() {
                 </div>
             )}
 
-            {/* Модальне вікно для ОБРАНОГО */}
+            {/* Модальне вікно для ОБРАНОГО (Без змін) */}
             {isFavoritesOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -519,59 +560,6 @@ function UserHeader() {
                                 </form>
                             </div>
                         )}
-                    </div>
-                </div>
-            )}
-
-            {/* Бокове меню профілю */}
-            {isAccountOpen && (
-                <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
-                    <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
-
-                        <img
-                            src="/хрест.png"
-                            alt="Закрити"
-                            className="drawer-close-icon"
-                            onClick={handleCloseDrawer}
-                            style={{ cursor: 'pointer', width: '24px', height: '24px', position: 'absolute', top: '20px', right: '20px', zIndex: 10 }}
-                        />
-
-                        <div className="drawer-content modern-drawer">
-
-                            <div className="drawer-profile-header">
-                                <img src="/ava.jpg" alt="Профіль" className="drawer-avatar modern-avatar" />
-                                <h3 className="drawer-user-email">{localStorage.getItem('userNickname')}</h3>
-                            </div>
-
-                            <div className="modern-links">
-                                <Link to="/profile" className="drawer-btn" onClick={handleCloseDrawer}>
-                                    <span className="drawer-icon">👤</span> Мій профіль
-                                </Link>
-                            </div>
-
-                            <div className="drawer-footer">
-                                <button className="drawer-btn logout-btn modern-logout" onClick={() => {
-                                    const userNickname = localStorage.getItem('userNickname');
-                                    const currentFavorites = localStorage.getItem('favorites');
-
-                                    if (userNickname && currentFavorites) {
-                                        localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
-                                    }
-
-                                    localStorage.removeItem('favorites');
-                                    localStorage.removeItem('userNickname');
-                                    localStorage.removeItem('userRole');
-                                    window.dispatchEvent(new Event('cartUpdated'));
-
-                                    logout();
-                                    handleCloseDrawer();
-                                    navigate('/login');
-                                }}>
-                                    <span className="drawer-icon">🚪</span> Вийти з акаунту
-                                </button>
-                            </div>
-
-                        </div>
                     </div>
                 </div>
             )}

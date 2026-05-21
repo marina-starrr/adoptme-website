@@ -79,6 +79,98 @@
     filter: invert(100%);
 }
 
+.account-icon {
+    width: 30px;
+    height: 30px;
+    margin-left: 15px;
+    cursor: pointer;
+    transition: filter 0.3s ease;
+}
+
+.account-icon:hover {
+    filter: invert(100%);
+}
+
+/* =========================================
+   МІНІ-МЕНЮ ПРОФІЛЮ (Dropdown)
+   ========================================= */
+.avatar-dropdown-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.profile-mini-menu {
+    position: absolute;
+    top: 55px; /* Зсув вниз під аватарку */
+    right: 0;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(33, 6, 74, 0.15);
+    width: 220px;
+    overflow: hidden;
+    z-index: 2000;
+    border: 1px solid #e0d4f5;
+    animation: dropDownAnim 0.2s ease-out forwards;
+    transform-origin: top right;
+}
+
+@keyframes dropDownAnim {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+.mini-menu-header {
+    padding: 15px;
+    background: #fdfbfe;
+    border-bottom: 1px solid #e0d4f5;
+    text-align: center;
+}
+
+.mini-menu-name {
+    font-weight: 800;
+    color: #4A148C;
+    font-size: 15px;
+}
+
+.mini-menu-item {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    text-align: left;
+    background: none;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    color: #4a5568;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.mini-menu-item:hover {
+    background-color: #f4f5fa;
+    color: #6847DD;
+    padding-left: 25px; /* Легкий ефект руху при наведенні */
+}
+
+.mini-menu-divider {
+    height: 1px;
+    background-color: #f0f0f5;
+    margin: 5px 0;
+}
+
+.logout-item {
+    color: #ef4444;
+}
+
+.logout-item:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
 /* =========================================
    МОБІЛЬНЕ МЕНЮ (ГАМБУРГЕР)
    ========================================= */
@@ -200,7 +292,6 @@
     to { opacity: 0; }
 }
 
-/* 👇 ДОДАНО: Анімація для плавного переходу всередині модального вікна */
 .fade-view {
     animation: fadeInView 0.3s ease-out forwards;
 }
@@ -210,7 +301,6 @@
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Стиль для тексту, коли обране порожнє */
 .empty-favorites-text {
     color: #000000;
     font-size: 18px;
@@ -343,7 +433,7 @@
     flex-direction: column;
     gap: 20px;
     padding: 10px 5px;
-    text-align: left; /* Вирівнюємо форму по лівому краю для зручності читання */
+    text-align: left; 
 }
 
 .form-step {
@@ -386,14 +476,14 @@
 }
 
 .form-textarea-small {
-    resize: none; /* 👇 ЗАБОРОНЯЄМО ручне розширення (було vertical) */
+    resize: none; 
     min-height: 80px;
     padding-bottom: 25px; 
-    overflow: hidden; /* 👇 Ховаємо смугу прокрутки, бо поле буде рости саме */
+    overflow: hidden; 
 }
-/* 👇 ЦЬОГО БЛОКУ НЕ ВИСТАЧАЛО 👇 */
+
 .textarea-container {
-    position: relative; /* Це утримує лічильник всередині поля */
+    position: relative; 
     width: 100%;
 }
 
@@ -412,13 +502,11 @@
     color: #6847DD; 
 }
 
-/* 👇 ДОДАНО: Стиль, коли залишок дорівнює 0 */
 .char-counter.limit-reached {
-    color: #ff4d4d !important; /* Яскраво-червоний колір попередження */
+    color: #ff4d4d !important; 
     font-weight: 700;
 }
 
-/* Радіо кнопки */
 .radio-group-container p {
     margin: 0 0 8px 0;
     font-weight: 600;
@@ -445,7 +533,6 @@
     margin-top: 5px;
 }
 
-/* Чекбокс */
 .checkbox-container {
     display: flex;
     align-items: flex-start;
@@ -468,7 +555,6 @@
     line-height: 1.4;
 }
 
-/* Кнопки форми */
 .form-actions {
     display: flex;
     justify-content: space-between;
@@ -480,153 +566,23 @@
     flex: 1;
 }
 
-/* Контейнер для однорядкових полів з лічильником */
 .input-container {
     position: relative;
     width: 100%;
 }
 
-/* Відступ всередині інпуту, щоб текст не наїжджав на лічильник */
 .input-container input[type="text"] {
     padding-right: 45px; 
 }
 
-/* Спеціальне позиціонування лічильника для однорядкового поля */
 .char-counter.input-counter {
-    bottom: auto; /* Скасовуємо відступ знизу, який був для textarea */
-    top: 50%; /* Опускаємо на 50% зверху */
-    transform: translateY(-50%); /* Ідеально центруємо по вертикалі */
+    bottom: auto; 
+    top: 50%; 
+    transform: translateY(-50%); 
 }
 
-/* Підсвітка фіолетовим при фокусі на однорядковому полі */
 .input-container input[type="text"]:focus + .char-counter {
     color: #6847DD; 
-}
-
-/* =========================================
-   БІЧНА ПАНЕЛЬ АКАУНТУ (Account Drawer)
-   ========================================= */
-.side-drawer-backdrop {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.4);
-    backdrop-filter: blur(2px);
-    z-index: 2000;
-    display: flex;
-    justify-content: flex-end;
-}
-
-.side-drawer {
-    width: 320px;
-    height: 100%;
-    /* 👇 Замінили суцільний колір на стильний плавний градієнт */
-    background: linear-gradient(135deg, #a083f9 0%, #6847DD 100%); 
-    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
-    padding: 40px 25px;
-    display: flex;
-    flex-direction: column;
-    animation: slideInRight 0.3s ease-out;
-}
-
-.drawer-links {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    margin-top: 30px;
-}
-
-.drawer-btn {
-    padding: 14px;
-    text-align: center;
-    text-decoration: none;
-    border-radius: 12px;
-    font-weight: 600;
-    transition: 0.2s;
-    border: 2px solid #4a148c;
-    background-color: #eee1ff;
-    width: 250px;   
-    display: block;
-    font-size: 16px;
-    font-family: inherit; 
-    cursor: pointer;
-}
-
-.login-btn {
-    background: #7B61FF;
-    color: white;
-}
-
-.logout-btn {
-    border: 2px solid #4a148c;
-    color: #b00b0b;
-    background-color: #fba2a2;
-    cursor: pointer;
-}
-
-@keyframes slideInRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
-}
-
-.drawer-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center; 
-    margin-top: 40px; 
-    color: white; 
-    flex-grow: 1;
-}
-
-.drawer-content h3 {
-    margin-bottom: 20px;
-    font-size: 24px;
-}
-
-.drawer-avatar {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%; 
-    object-fit: cover;
-    margin-bottom: 15px;
-    border: 3px solid white; 
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2); 
-}
-
-.side-drawer-backdrop.closing {
-    animation: fadeOut 0.3s forwards;
-}
-
-.side-drawer.closing {
-    animation: slideOutRight 0.3s forwards;
-}
-
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
-}
-
-@keyframes slideOutRight {
-    from { transform: translateX(0); }
-    to { transform: translateX(100%); }
-}
-
-.account-icon {
-    transition: filter 0.3s ease;
-}
-
-.account-icon:hover {
-    filter: invert(100%); 
-}
-
-.drawer-close-icon {
-    transition: filter 0.3s ease;
-}
-
-.drawer-close-icon:hover {
-    filter: invert(100%);
 }
 
 /* =========================================
@@ -715,10 +671,6 @@
     }
 }
 
-/* =========================================
-   ДОДАТКОВІ СТИЛІ ФОРМИ ТА ЕКРАНУ УСПІХУ
-   ========================================= */
-
 .name-inputs-row {
     display: flex;
     gap: 15px;
@@ -767,18 +719,9 @@
     margin-bottom: 10px;
 }
 
-@keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    80% { transform: scale(1.2); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* =========================================
-   СТИЛІ ДЛЯ ПОСИЛАННЯ В КАРТЦІ ТВАРИНКИ
-   ========================================= */
 .favorite-card-link {
-    text-decoration: none; /* Прибираємо підкреслення */
-    color: inherit; /* Зберігаємо чорний колір тексту */
+    text-decoration: none; 
+    color: inherit; 
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -786,7 +729,6 @@
     cursor: pointer;
 }
 
-/* Робимо так, щоб при наведенні на посилання ім'я трохи змінювало колір (необов'язково, але гарно) */
 .favorite-card-link:hover .favorite-card-name {
     color: #6847DD;
     transition: color 0.2s ease;
@@ -810,41 +752,6 @@
     color: white;
     transform: translateY(-2px);
 }
-
-/* --- НОВІ КЛАСИ ДЛЯ ІДЕАЛЬНОЇ ВІДСТАНІ --- */
-
-.modern-links {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 100%;
-    gap: 15px;
-    margin-top: 10px; /* Відступ від імені користувача */
-}
-
-.drawer-footer {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: auto; /* 👈 МАГІЯ: автоматично відштовхує кнопку в самий низ! */
-    padding-top: 25px;
-    border-top: 1px dashed rgba(255, 255, 255, 0.3); /* Легка красива лінія над кнопкою виходу */
-}
-
-.modern-logout {
-    background-color: #fff1f1 !important; /* Ніжно-червоний фон */
-    color: #d32f2f !important;
-    border: 1px solid #ffcdd2;
-}
-
-.modern-logout:hover {
-    background-color: #ffebee !important;
-    box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2) !important;
-}
-
-/* =========================================
-   СТИЛІ ДЛЯ СИСТЕМИ СПОВІЩЕНЬ
-   ========================================= */
 
 .notification-wrapper {
     position: relative;

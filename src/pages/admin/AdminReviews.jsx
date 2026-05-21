@@ -5,7 +5,7 @@ import './AdminReviews.css'; // Створимо цей файл наступн�
 function AdminReviews() {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     // Стейти для відповіді
     const [activeReplyId, setActiveReplyId] = useState(null);
     const [replyText, setReplyText] = useState('');
@@ -31,7 +31,7 @@ function AdminReviews() {
                 .from('Reviews')
                 .select('*')
                 .order('Id', { ascending: false }); // Нові зверху
-            
+
             if (error) throw error;
             setReviews(data || []);
         } catch (err) {
@@ -117,14 +117,14 @@ function AdminReviews() {
                             <div className="admin-reviews-list">
                                 {reviews.map((review) => (
                                     <div key={review.Id} className="admin-review-card">
-                                        
+
                                         <div className="admin-review-header">
                                             <div className="review-author-info">
                                                 <strong>{review.Name}</strong>
                                                 <span className="review-date-badge">{review.Date}</span>
                                             </div>
-                                            <button 
-                                                className="delete-review-btn" 
+                                            <button
+                                                className="delete-review-btn"
                                                 onClick={() => confirmDeleteClick(review.Id)}
                                                 title="Видалити відгук"
                                             >
@@ -134,11 +134,24 @@ function AdminReviews() {
 
                                         <p className="admin-review-text">{review.Text}</p>
 
-                                        {/* Блок відповіді */}
+                                        {/* Відображення відповідей користувачів для адміна */}
+                                        {review.UserReplies && review.UserReplies.length > 0 && (
+                                            <div style={{ margin: '15px 0', padding: '15px', background: '#f4f5fa', borderRadius: '12px' }}>
+                                                <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666680' }}>💬 Коментарі користувачів:</h4>
+                                                {review.UserReplies.map(reply => (
+                                                    <div key={reply.id} style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                                                        <strong style={{ color: '#4A148C' }}>@{reply.author}:</strong>
+                                                        <span style={{ color: '#444' }}>{reply.text}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Блок відповіді адміна */}
                                         <div className="admin-reply-section">
                                             {activeReplyId === review.Id ? (
                                                 <div className="reply-editor">
-                                                    <textarea 
+                                                    <textarea
                                                         className="reply-textarea"
                                                         value={replyText}
                                                         onChange={(e) => setReplyText(e.target.value)}
@@ -147,8 +160,8 @@ function AdminReviews() {
                                                     />
                                                     <div className="reply-actions">
                                                         <button className="cancel-reply-btn" onClick={() => setActiveReplyId(null)}>Скасувати</button>
-                                                        <button 
-                                                            className="save-reply-btn" 
+                                                        <button
+                                                            className="save-reply-btn"
                                                             onClick={() => handleSaveReply(review.Id)}
                                                             disabled={isSaving}
                                                         >
