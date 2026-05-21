@@ -89,7 +89,7 @@ function AdminReviews() {
     };
 
     return (
-        <div className="admin-main page-transition" style={{ position: 'relative' }}>
+        <div className="admin-main" style={{ position: 'relative' }}>
             {toastMsg && <div className="custom-toast" style={{ zIndex: 100000 }}>{toastMsg}</div>}
 
             <div className="admin-page-layout">

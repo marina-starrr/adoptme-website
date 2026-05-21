@@ -11,7 +11,7 @@
     background-color: transparent;
     overflow: hidden;
     z-index: 1;
-    flex: 1; /* Для коректного притискання футера */
+    flex: 1;
 }
 
 .hero-left {
@@ -79,7 +79,7 @@
     right: 400px;
     top: 100%;
     transform: translateY(-50%);
-    pointer-events: none; /* Щоб лапка не заважала клікати на кнопку */
+    pointer-events: none;
     animation: neon-pulse 1.2s infinite alternate; 
 }
 
@@ -146,9 +146,6 @@
     z-index: 2;
 }
 
-/* =========================================
-   СЛАЙДЕР (HERO RIGHT)
-   ========================================= */
 .image-slider {
     position: relative;
     width: 454px;
@@ -157,23 +154,22 @@
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     z-index: 5;
-    background-color: #f5f5f5; /* Легкий фон, поки картинка завантажується */
+    background-color: #f5f5f5;
 }
 
 .slider-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    position: absolute; /* Ставимо всі картинки одна на одну */
+    position: absolute;
     top: 0;
     left: 0;
-    opacity: 0; /* Робимо всі картинки невидимими */
-    transition: opacity 0.6s ease-in-out; /* 👈 МАГІЯ ПЛАВНОСТІ (0.8 секунди) */
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
 }
 
-/* Клас для поточної картинки */
 .slider-image.active {
-    opacity: 1; /* Робимо видимою тільки активну картинку */
+    opacity: 1;
 }
 
 .slider-nav {
@@ -217,6 +213,189 @@
     font-size: 18px;
     color: var(--text-color);
     z-index: 6;
+}
+
+/* =========================================
+   СЕКЦІЯ "ЩАСЛИВЧИКИ" (ІСТОРІЇ УСПІХУ)
+   ========================================= */
+.lucky-section {
+    padding: 80px 0;
+    background-color: #fdfcff; 
+    overflow: hidden; 
+    position: relative;
+    border-top: 2px dashed rgba(104, 71, 221, 0.2);
+}
+
+.lucky-title {
+    text-align: center;
+    color: #21064A;
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 50px;
+}
+
+/* КОНТЕЙНЕР ДЛЯ МАЛОЇ КІЛЬКОСТІ (По центру) */
+.lucky-static-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 30px;
+    padding: 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* КОНТЕЙНЕР ДЛЯ СТРІЧКИ (Marquee) */
+.lucky-marquee-container {
+    width: 100%;
+    overflow: hidden;
+    position: relative;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.lucky-marquee-track {
+    display: flex;
+    width: max-content;
+    animation: marquee-scroll 40s linear infinite; 
+}
+
+.lucky-marquee-track:hover {
+    animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); } 
+}
+
+/* 🌟 НОВИЙ ДИЗАЙН КАРТКИ (Instagram style) */
+.lucky-card {
+    width: 350px; 
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 20px;
+    margin: 0 15px; /* Важливо для рівномірного скролу */
+    box-shadow: 0 8px 24px rgba(104, 71, 221, 0.08), 0 2px 8px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+    border: 1px solid rgba(104, 71, 221, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lucky-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(104, 71, 221, 0.15);
+}
+
+/* БЛОК З ФОТО (СЛАЙДЕР) */
+.lucky-card-img-slider {
+    position: relative;
+    width: 100%;
+    height: 320px; 
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background-color: #f7f6fb; /* Легкий фон під час завантаження */
+}
+
+.lucky-main-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease;
+}
+
+.lucky-card:hover .lucky-main-img {
+    transform: scale(1.03); /* Легкий зум при наведенні */
+}
+
+/* Кнопки міні-слайдера */
+.mini-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    color: #4A148C;
+    border: none;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    opacity: 0;
+    transition: opacity 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.lucky-card-img-slider:hover .mini-nav {
+    opacity: 1; 
+}
+
+.mini-nav.prev { left: 10px; }
+.mini-nav.next { right: 10px; }
+
+.mini-nav:hover {
+    background: #6847DD;
+    color: white;
+}
+
+/* Крапочки під фото */
+.mini-dots {
+    position: absolute;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 6px;
+}
+
+.mini-dots .dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    transition: background 0.3s;
+}
+
+.mini-dots .dot.active {
+    background: white;
+    box-shadow: 0 0 5px rgba(0,0,0,0.3);
+}
+
+/* ІНФОРМАЦІЯ ПІД ФОТО */
+.lucky-card-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.lucky-card-info h3 {
+    margin: 0 0 12px 0;
+    color: #31155e;
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.owner-name {
+    color: #6847DD;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.lucky-review {
+    margin: 0;
+    color: #4a4a4a;
+    font-size: 15px;
+    line-height: 1.6;
+    font-style: italic;
+    background: rgba(104, 71, 221, 0.04);
+    padding: 16px;
+    border-radius: 12px;
+    border-left: 4px solid #6847DD;
 }
 
 /* =========================================
@@ -277,7 +456,10 @@
         width: 100%;
         height: 400px;
     }
-    .blinking-paw { display: none; } /* Приховуємо лапку на малих екранах */
+    .blinking-paw { display: none; }
+    .lucky-title { font-size: 28px; margin-bottom: 30px; }
+    .lucky-card { width: 300px; padding: 15px; }
+    .lucky-card-img-slider { height: 280px; }
 }
 
 @media (max-width: 480px) {
@@ -289,178 +471,4 @@
     .stat-text { font-size: 16px; }
     .image-slider { height: 300px; }
     .cta-text-right { font-size: 14px; padding: 10px; }
-}
-
-/* =========================================
-   СЕКЦІЯ "ЩАСЛИВЧИКИ" (ІСТОРІЇ УСПІХУ)
-   ========================================= */
-.lucky-section {
-    padding: 80px 0;
-    background-color: #fcfbfe; 
-    overflow: hidden; 
-    position: relative;
-    border-top: 2px dashed rgba(104, 71, 221, 0.2);
-}
-
-.lucky-title {
-    text-align: center;
-    color: #21064A;
-    font-size: 40px;
-    font-weight: 800;
-    margin-bottom: 50px;
-}
-
-.lucky-marquee-container {
-    width: 100%;
-    overflow: hidden;
-    position: relative;
-    -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-    mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
-}
-
-.lucky-marquee-track {
-    display: flex;
-    width: max-content;
-    animation: marquee-scroll 45s linear infinite; /* Зробив трохи повільніше, бо тексту багато */
-}
-
-/* Коли наводимо мишку на БУДЬ-ЯКУ частину стрічки - вона зупиняється */
-.lucky-marquee-track:hover {
-    animation-play-state: paused;
-}
-
-@keyframes marquee-scroll {
-    0% { transform: translateX(0); }
-    100% { transform: translateX(-50%); } 
-}
-
-/* 🌟 НОВИЙ ДИЗАЙН КАРТКИ (Instagram style) */
-.lucky-card {
-    width: 360px; /* Картка стала ширшою і вищою */
-    background: white;
-    border-radius: 24px;
-    padding: 20px;
-    margin: 0 20px;
-    box-shadow: 0 10px 30px rgba(104, 71, 221, 0.08);
-    display: flex;
-    flex-direction: column;
-    border: 1px solid rgba(104, 71, 221, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.lucky-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 15px 40px rgba(104, 71, 221, 0.15);
-}
-
-/* БЛОК З ФОТО (СЛАЙДЕР) */
-.lucky-card-img-slider {
-    position: relative;
-    width: 100%;
-    height: 320px; /* Високий квадратний блок для фото */
-    border-radius: 16px;
-    overflow: hidden;
-    margin-bottom: 20px;
-    background-color: #f0f0f0;
-}
-
-.lucky-main-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-/* Кнопки міні-слайдера */
-.mini-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.85);
-    color: #4A148C;
-    border: none;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    font-size: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-    opacity: 0;
-    transition: opacity 0.2s ease, background 0.2s ease;
-}
-
-.lucky-card-img-slider:hover .mini-nav {
-    opacity: 1; /* Кнопки з'являються тільки при наведенні на фото */
-}
-
-.mini-nav.prev { left: 10px; }
-.mini-nav.next { right: 10px; }
-
-.mini-nav:hover {
-    background: #6847DD;
-    color: white;
-}
-
-/* Крапочки під фото */
-.mini-dots {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 6px;
-}
-
-.mini-dots .dot {
-    width: 8px;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.5);
-    border-radius: 50%;
-    transition: background 0.3s;
-}
-
-.mini-dots .dot.active {
-    background: white;
-    box-shadow: 0 0 5px rgba(0,0,0,0.3);
-}
-
-/* ІНФОРМАЦІЯ ПІД ФОТО */
-.lucky-card-info {
-    display: flex;
-    flex-direction: column;
-}
-
-.lucky-card-info h3 {
-    margin: 0 0 10px 0;
-    color: #4A148C;
-    font-size: 22px;
-    font-weight: 800;
-}
-
-.owner-name {
-    color: #6847DD;
-    font-size: 16px;
-    font-weight: 600;
-}
-
-.lucky-review {
-    margin: 0;
-    color: #555;
-    font-size: 15px;
-    line-height: 1.6;
-    font-style: italic;
-    background: #fcfbfe;
-    padding: 15px;
-    border-radius: 12px;
-    border-left: 3px solid #6847DD;
-}
-
-/* Адаптивність для мобільних */
-@media (max-width: 768px) {
-    .lucky-title { font-size: 28px; margin-bottom: 30px; }
-    .lucky-card { width: 300px; padding: 15px; }
-    .lucky-card-img-slider { height: 280px; }
 }

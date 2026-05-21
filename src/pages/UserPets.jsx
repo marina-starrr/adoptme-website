@@ -151,7 +151,6 @@ function UserPets() {
   if (loading) return <h2 className="loading-message">Шукаємо пухнастиків... 🐾</h2>;
 
   return (
-    <div className="page-transition">
       <div className="pets-section">
         <BackgroundPaws />
         
@@ -274,7 +273,6 @@ function UserPets() {
           </div>
         </div>
       </div>
-    </div>
   );
 }
 

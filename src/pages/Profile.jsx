@@ -202,7 +202,7 @@ function Profile() {
   };
 
   return (
-    <div className="profile-page page-transition" style={{ position: 'relative' }}>
+    <div className="profile-page" style={{ position: 'relative' }}>
       
       {toastMsg && (
           <div className="custom-toast">

@@ -1,13 +1,13 @@
+// src/layouts/AdminLayout.jsx
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
-import './AdminLayout.css'; // 👈 Підключаємо CSS
+import './AdminLayout.css'; 
 
 function AdminLayout() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-
     const [toastMsg, setToastMsg] = useState('');
 
     useEffect(() => {
@@ -22,13 +22,27 @@ function AdminLayout() {
     }, [location]);
 
     const handleLogout = () => {
+        const userNickname = localStorage.getItem('userNickname');
+        const currentFavorites = localStorage.getItem('favorites');
+
+        if (userNickname && currentFavorites) {
+            localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
+        }
+
+        localStorage.removeItem('favorites');
+        localStorage.removeItem('userNickname');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('token');
+        window.dispatchEvent(new Event('cartUpdated'));
+
         logout();
-        navigate('/login');
+        navigate('/login', {
+            state: { welcomeMsg: '🐾 Ви успішно вийшли з акаунту' }
+        });
     };
 
     return (
         <div className="admin-layout-container">
-
             {toastMsg && <div className="custom-toast">{toastMsg}</div>}
 
             <header className="admin-header">
@@ -50,6 +64,11 @@ function AdminLayout() {
                     <Link to="/admin/users" className={`admin-nav-link ${location.pathname === '/admin/users' ? 'active' : ''}`}>
                         👥 Користувачі
                     </Link>
+                    {/* 🌟 НОВЕ ПОСИЛАННЯ ТУТ */}
+                    <Link to="/admin/happy-pets" className={`admin-nav-link ${location.pathname === '/admin/happy-pets' ? 'active' : ''}`}>
+                        🏡 Щасливчики
+                    </Link>
+
                     <button onClick={handleLogout} className="logout-btn">
                         Вийти з панелі
                     </button>

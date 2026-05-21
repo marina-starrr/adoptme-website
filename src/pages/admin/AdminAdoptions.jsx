@@ -77,7 +77,7 @@ function AdminAdoptions() {
     if (loading) return <div className="admin-loader">Завантаження заявок...</div>;
 
     return (
-        <div className="admin-main page-transition" style={{ position: 'relative' }}>
+        <div className="admin-main" style={{ position: 'relative' }}>
             
             {toastMsg && (
                 <div className="custom-toast">

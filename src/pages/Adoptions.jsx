@@ -55,7 +55,7 @@ function AdminAdoptions() {
     if (loading) return <div className="admin-loader">Завантаження заявок...</div>;
 
     return (
-        <div className="admin-page page-transition">
+        <div className="admin-page">
             <div className="admin-header-simple">
                 <h2>Менеджер заявок 📝</h2>
                 <p>Керування запитами на прихисток тварин</p>

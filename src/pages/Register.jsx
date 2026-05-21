@@ -100,7 +100,7 @@ function Register() {
   };
 
   return (
-    <div className="login-page page-transition" style={{ position: 'relative' }}>
+    <div className="login-page" style={{ position: 'relative' }}>
       {toastMsg && <div className="custom-toast">{toastMsg}</div>}
 
       <div className="login-card" style={{ maxWidth: '450px' }}>

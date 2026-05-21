@@ -7,6 +7,7 @@ import './AdminPets.css';
 function AdminPets() {
   const navigate = useNavigate();
   const [petsList, setPetsList] = useState([]);
+  const [usersList, setUsersList] = useState([]); // 🌟 Список користувачів
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -16,29 +17,23 @@ function AdminPets() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [sortOrder, setSortOrder] = useState('newest');
-
   const [toastMsg, setToastMsg] = useState('');
   const [petToDelete, setPetToDelete] = useState(null);
 
   const [petTypes, setPetTypes] = useState(['Кіт', 'Собака']);
   const [newType, setNewType] = useState('');
 
-  // 🌟 Стейти фільтрів (додано filterStatus)
   const [filterType, setFilterType] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
   const [filterAge, setFilterAge] = useState('Всі'); 
-  const [filterStatus, setFilterStatus] = useState('Всі'); // 👈 Стейт для нового фільтра статусу
+  const [filterStatus, setFilterStatus] = useState('Всі');
 
-  // Функція для перетворення текстового віку у число (місяці)
   const getAgeInMonths = (ageStr) => {
     if (!ageStr) return 0;
     const lowerStr = ageStr.toLowerCase();
-    
     const match = lowerStr.match(/(\d+([.,]\d+)?)/);
     if (!match) return 0;
-
     const num = parseFloat(match[0].replace(',', '.'));
-
     if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('річ') || lowerStr.includes('р.')) {
       return num * 12;
     } else if (lowerStr.includes('тиж')) {
@@ -46,38 +41,26 @@ function AdminPets() {
     } else if (lowerStr.includes('дн') || lowerStr.includes('день')) {
       return num / 30; 
     }
-
     return num;
   };
 
-  // 🌟 РОЗУМНА ФІЛЬТРАЦІЯ
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
-      // 1. Фільтр за видом
       const safePetType = pet.Type ? pet.Type.trim().toLowerCase() : '';
       const safeFilterType = filterType.trim().toLowerCase();
       const matchType = filterType === 'Всі' || safePetType === safeFilterType;
 
-      // 2. Фільтр за статтю
       const safePetGender = pet.Gender ? pet.Gender.trim().toLowerCase() : '';
       const safeFilterGender = filterGender.trim().toLowerCase();
       const matchGender = filterGender === 'Всі' || safePetGender === safeFilterGender;
 
-      // 3. Фільтр за віком
       const ageInMonths = getAgeInMonths(pet.Age);
       let matchAge = true;
+      if (filterAge === 'До 6 місяців') matchAge = ageInMonths < 6;
+      else if (filterAge === 'Від 6 міс. до 1 року') matchAge = ageInMonths >= 6 && ageInMonths <= 12;
+      else if (filterAge === 'Від 1 до 3 років') matchAge = ageInMonths > 12 && ageInMonths <= 36;
+      else if (filterAge === 'Більше 3 років') matchAge = ageInMonths > 36;
 
-      if (filterAge === 'До 6 місяців') {
-        matchAge = ageInMonths < 6;
-      } else if (filterAge === 'Від 6 міс. до 1 року') {
-        matchAge = ageInMonths >= 6 && ageInMonths <= 12;
-      } else if (filterAge === 'Від 1 до 3 років') {
-        matchAge = ageInMonths > 12 && ageInMonths <= 36;
-      } else if (filterAge === 'Більше 3 років') {
-        matchAge = ageInMonths > 36;
-      }
-
-      // 4. Фільтр за статусом (Позначкою) 👈 НОВА ЛОГІКА
       const safePetStatus = pet.Status ? pet.Status.trim().toLowerCase() : 'шукає дім';
       const safeFilterStatus = filterStatus.trim().toLowerCase();
       const matchStatus = filterStatus === 'Всі' || safePetStatus === safeFilterStatus;
@@ -85,11 +68,7 @@ function AdminPets() {
       return matchType && matchGender && matchAge && matchStatus;
     })
     .sort((a, b) => {
-      if (sortOrder === 'name') {
-        const nameA = a.Name || '';
-        const nameB = b.Name || '';
-        return nameA.localeCompare(nameB);
-      }
+      if (sortOrder === 'name') return (a.Name || '').localeCompare(b.Name || '');
       if (sortOrder === 'oldest') return a.Id - b.Id;
       return b.Id - a.Id; 
     });
@@ -98,7 +77,7 @@ function AdminPets() {
     setFilterType('Всі');
     setFilterGender('Всі');
     setFilterAge('Всі'); 
-    setFilterStatus('Всі'); // 👈 Скидаємо і фільтр статусу
+    setFilterStatus('Всі');
     setSortOrder('newest');
   };
 
@@ -122,7 +101,9 @@ function AdminPets() {
     ImageName: '',
     Tags: '',
     Description: '',
-    Status: 'Шукає дім' 
+    Status: 'Шукає дім',
+    OwnerId: null, // 🌟 Додано
+    OwnerName: ''  // 🌟 Додано
   };
 
   const [petFormData, setPetFormData] = useState(initialFormState);
@@ -134,6 +115,7 @@ function AdminPets() {
 
   useEffect(() => {
     fetchPets();
+    fetchUsers(); // 🌟 Завантажуємо користувачів
   }, []);
 
   useEffect(() => {
@@ -147,16 +129,21 @@ function AdminPets() {
   async function fetchPets() {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('Pets')
-        .select('*')
-        .order('Id', { ascending: true });
+      const { data, error } = await supabase.from('Pets').select('*').order('Id', { ascending: true });
       if (error) throw error;
       setPetsList(data || []);
     } catch (err) {
       showToast("❌ Помилка завантаження: " + err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // 🌟 Функція отримання користувачів для випадаючого списку
+  async function fetchUsers() {
+    const { data, error } = await supabase.from('Users').select('Id, FirstName, LastName, Nickname');
+    if (!error && data) {
+      setUsersList(data);
     }
   }
 
@@ -173,7 +160,9 @@ function AdminPets() {
       ImageName: pet.ImageName || '',
       Tags: pet.Tags || '',
       Description: pet.Description || '',
-      Status: pet.Status || 'Шукає дім' 
+      Status: pet.Status || 'Шукає дім',
+      OwnerId: pet.OwnerId || null,
+      OwnerName: pet.OwnerName || ''
     });
     setSelectedFile(null);
     setIsModalOpen(true);
@@ -189,11 +178,7 @@ function AdminPets() {
   const uploadImage = async (file) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('pets')
-      .upload(fileName, file);
-
+    const { error: uploadError } = await supabase.storage.from('pets').upload(fileName, file);
     if (uploadError) throw new Error('Помилка завантаження фото: ' + uploadError.message);
     return fileName;
   };
@@ -214,6 +199,12 @@ function AdminPets() {
       }
 
       const dataToSave = { ...petFormData, ImageName: finalImageName };
+
+      // Якщо статус не "Вже вдома", очищаємо власника, щоб уникнути помилок
+      if (dataToSave.Status !== 'Вже вдома') {
+        dataToSave.OwnerId = null;
+        dataToSave.OwnerName = null;
+      }
 
       if (editMode) {
         const { error } = await supabase.from('Pets').update(dataToSave).eq('Id', currentPetId);
@@ -242,11 +233,9 @@ function AdminPets() {
 
   const executeDelete = async () => {
     if (!petToDelete) return;
-
     try {
       const { error } = await supabase.from('Pets').delete().eq('Id', petToDelete);
       if (error) throw error;
-
       showToast("🗑️ Профіль успішно видалено!");
       setPetToDelete(null);
       fetchPets();
@@ -257,13 +246,12 @@ function AdminPets() {
   };
 
   return (
-    <div className="admin-main page-transition" style={{ position: 'relative' }}>
+    <div className="admin-main" style={{ position: 'relative' }}>
       <div className="admin-page-layout">
 
-        {/* САЙДБАР ФІЛЬТРІВ */}
+        {/* САЙДБАР ФІЛЬТРІВ (без змін) */}
         <aside className="admin-sidebar">
           <h3 className="sidebar-title">🔍 Фільтри</h3>
-
           <div className="filter-group">
             <label>Вид тварини</label>
             <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
@@ -271,7 +259,6 @@ function AdminPets() {
               {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </div>
-
           <div className="filter-group">
             <label>Стать</label>
             <select value={filterGender} onChange={(e) => setFilterGender(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
@@ -280,7 +267,6 @@ function AdminPets() {
               <option value="Дівчинка">Дівчинка</option>
             </select>
           </div>
-
           <div className="filter-group">
             <label>Вік тварини</label>
             <select value={filterAge} onChange={(e) => setFilterAge(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
@@ -291,8 +277,6 @@ function AdminPets() {
               <option value="Більше 3 років">Більше 3 років</option>
             </select>
           </div>
-
-          {/* 🌟 НОВИЙ ФІЛЬТР ЗА СТАТУСОМ */}
           <div className="filter-group">
             <label>Позначка</label>
             <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="custom-select-wrapper" style={{ width: '100%' }}>
@@ -304,7 +288,6 @@ function AdminPets() {
               <option value="Не вдалось врятувати">🌈 Не вдалось врятувати</option>
             </select>
           </div>
-
           <button className="reset-filters-btn" onClick={resetFilters}>Скинути фільтри</button>
         </aside>
 
@@ -334,12 +317,7 @@ function AdminPets() {
               </div>
 
               {filteredAndSortedPets.map((pet) => (
-                <div
-                  key={pet.Id}
-                  className="pet-card-wrapper admin-mode"
-                  onClick={() => navigate(`/admin/pets/${pet.Id}`)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <div key={pet.Id} className="pet-card-wrapper admin-mode" onClick={() => navigate(`/admin/pets/${pet.Id}`)} style={{ cursor: 'pointer' }}>
                   <div className="admin-card-actions">
                     <button className="edit-icon-btn" onClick={(e) => handleEditOpen(e, pet)}>✎</button>
                     <button className="delete-icon-btn" onClick={(e) => confirmDeleteClick(e, pet.Id)}>×</button>
@@ -365,7 +343,6 @@ function AdminPets() {
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => !isUploading && setIsModalOpen(false)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
-
             <div className="modal-header">
               <h3>{editMode ? "Редагування профілю" : "Новий підопічний"}</h3>
               <button className="close-x" onClick={() => setIsModalOpen(false)} title="Закрити">×</button>
@@ -381,28 +358,13 @@ function AdminPets() {
                 <div className="input-group">
                   <label>Вид тваринки</label>
                   <div className="add-type-row">
-                    <select
-                      value={petFormData.Type}
-                      onChange={e => setPetFormData({ ...petFormData, Type: e.target.value })}
-                      className="form-control"
-                    >
-                      {petTypes.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                      ))}
+                    <select value={petFormData.Type} onChange={e => setPetFormData({ ...petFormData, Type: e.target.value })} className="form-control">
+                      {petTypes.map(type => <option key={type} value={type}>{type}</option>)}
                     </select>
                   </div>
-
                   <div className="add-type-row" style={{ marginTop: '10px' }}>
-                    <input
-                      type="text"
-                      placeholder="Інший вид..."
-                      value={newType}
-                      onChange={e => setNewType(e.target.value)}
-                      className="form-control"
-                    />
-                    <button type="button" className="add-type-btn" onClick={handleAddNewType}>
-                      +
-                    </button>
+                    <input type="text" placeholder="Інший вид..." value={newType} onChange={e => setNewType(e.target.value)} className="form-control" />
+                    <button type="button" className="add-type-btn" onClick={handleAddNewType}>+</button>
                   </div>
                 </div>
 
@@ -415,11 +377,20 @@ function AdminPets() {
                 </div>
               </div>
 
+              {/* 🌟 АВТОМАТИЗАЦІЯ СТАТУСУ ТА ВЛАСНИКА */}
               <div className="input-group">
                 <label>Позначка (Статус тваринки)</label>
                 <select 
                   value={petFormData.Status} 
-                  onChange={e => setPetFormData({ ...petFormData, Status: e.target.value })} 
+                  onChange={e => {
+                    const newStatus = e.target.value;
+                    let newDesc = petFormData.Description;
+                    // Автоматично ставимо історію щасливчика, якщо статус "Вже вдома" і опис порожній
+                    if (newStatus === 'Вже вдома' && !newDesc) {
+                      newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                    }
+                    setPetFormData({ ...petFormData, Status: newStatus, Description: newDesc });
+                  }} 
                   className="form-control"
                 >
                   <option value="Шукає дім">🐾 Шукає дім</option>
@@ -430,13 +401,44 @@ function AdminPets() {
                 </select>
               </div>
 
+              {/* 🌟 ЯКЩО СТАТУС "ВЖЕ ВДОМА" - ПОКАЗУЄМО ВИБІР КОРИСТУВАЧА */}
+              {petFormData.Status === 'Вже вдома' && (
+                <div className="input-group" style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
+                  <label style={{ color: '#6847DD' }}>🏡 Хто прихистив тваринку? (Оберіть користувача)</label>
+                  <select
+                    value={petFormData.OwnerId || ''}
+                    onChange={(e) => {
+                      const selectedUserId = e.target.value;
+                      const selectedUser = usersList.find(u => u.Id.toString() === selectedUserId);
+                      setPetFormData({
+                        ...petFormData,
+                        OwnerId: selectedUserId ? parseInt(selectedUserId) : null,
+                        OwnerName: selectedUser ? `${selectedUser.FirstName} ${selectedUser.LastName}` : ''
+                      });
+                    }}
+                    className="form-control"
+                    required
+                  >
+                    <option value="">-- Виберіть користувача --</option>
+                    {usersList.map(user => (
+                      <option key={user.Id} value={user.Id}>
+                        {user.FirstName} {user.LastName} (@{user.Nickname})
+                      </option>
+                    ))}
+                  </select>
+                  <small style={{ color: '#666', marginTop: '8px', display: 'block' }}>
+                    Тваринка з'явиться на головній сторінці у розділі "Щасливчики", а також у профілі цього користувача.
+                  </small>
+                </div>
+              )}
+
               <div className="form-row">
                 <div className="input-group">
                   <label>Вік</label>
                   <input type="text" placeholder="Наприклад: 9 місяців" value={petFormData.Age} onChange={e => setPetFormData({ ...petFormData, Age: e.target.value })} className="form-control" required />
                 </div>
                 <div className="input-group">
-                  <label>Теги (через пробіл або кому)</label>
+                  <label>Теги</label>
                   <input type="text" placeholder="#добра #розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
                 </div>
               </div>
@@ -474,7 +476,7 @@ function AdminPets() {
         </div>
       )}
 
-      {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ */}
+      {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (Без змін) */}
       {petToDelete && (
         <div className="modal-overlay" onClick={() => setPetToDelete(null)}>
           <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
@@ -484,11 +486,7 @@ function AdminPets() {
             </p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
               <button className="cancel-btn" onClick={() => setPetToDelete(null)}>Скасувати</button>
-              <button
-                className="save-btn"
-                style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}
-                onClick={executeDelete}
-              >
+              <button className="save-btn" style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }} onClick={executeDelete}>
                 Так, видалити
               </button>
             </div>
