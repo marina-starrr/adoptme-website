@@ -4,11 +4,12 @@ import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
 
-// 👇 Додали проп status (за замовчуванням "Шукає дім")
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);
+    const [isNotified, setIsNotified] = useState(false);
     const { userEmail } = useAuth();
 
+    // Перевірка, чи тваринка в обраному
     useEffect(() => {
         const checkFavoriteStatus = () => {
             const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -24,6 +25,29 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         };
     }, [id]);
 
+    // Перевірка, чи користувач вже підписаний на сповіщення про лікування
+    useEffect(() => {
+        const checkNotificationStatus = async () => {
+            if (status === 'На лікуванні') {
+                const userNickname = localStorage.getItem('userNickname');
+                if (userNickname) {
+                    const { data } = await supabase
+                        .from('TreatmentNotifications')
+                        .select('Id')
+                        .eq('PetId', id)
+                        .eq('UserNickname', userNickname);
+                    
+                    if (data && data.length > 0) {
+                        setIsNotified(true);
+                    }
+                }
+            }
+        };
+        
+        checkNotificationStatus();
+    }, [id, status]);
+
+    // Логіка додавання в обране
     const toggleFavorite = async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -48,7 +72,53 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         window.dispatchEvent(new Event('cartUpdated'));
     };
 
-    // 🌟 Розумна функція для визначення стилю та іконки бейджа
+    // 🌟 Оновлена логіка підписки/відписки на сповіщення про лікування
+    const handleNotifyClick = async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const userNickname = localStorage.getItem('userNickname');
+        if (!userNickname) {
+            alert("🐾 Будь ласка, увійдіть в систему, щоб керувати сповіщеннями!");
+            return;
+        }
+
+        if (isNotified) {
+            // Якщо вже підписаний — ВІДПИСУЄМОСЯ
+            const { error } = await supabase
+                .from('TreatmentNotifications')
+                .delete()
+                .eq('PetId', id)
+                .eq('UserNickname', userNickname);
+
+            if (!error) {
+                setIsNotified(false);
+                alert(`🔕 Ви скасували підписку на сповіщення про ${name}.`);
+            } else {
+                alert("❌ Сталася помилка при відписці: " + error.message);
+            }
+        } else {
+            // Якщо не підписаний — ПІДПИСУЄМОСЯ
+            const { error } = await supabase.from('TreatmentNotifications').insert([
+                {
+                    UserNickname: userNickname,
+                    UserEmail: userEmail || null,
+                    PetId: id,
+                    PetName: name,
+                    Status: 'Нова'
+                }
+            ]);
+
+            if (!error) {
+                setIsNotified(true);
+                alert(`🔔 Дякуємо! Ви отримаєте повідомлення, коли ${name} одужає.`);
+            } else {
+                alert("❌ Сталася помилка при підписці: " + error.message);
+            }
+        }
+    };
+
+    // Визначення стилю та іконки бейджа
     const getStatusConfig = (petStatus) => {
         switch(petStatus) {
             case 'Потребує особливого догляду': return { class: 'status-special', icon: '❤️‍🩹' };
@@ -61,6 +131,10 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
     const statusConfig = getStatusConfig(status);
 
+    // Змінні для керування відображенням іконок
+    const hideIcon = status === 'Вже вдома' || status === 'Не вдалось врятувати';
+    const showBell = status === 'На лікуванні';
+
     return (
         <div className="pet-card">
             <div className="pet-card-image-container">
@@ -70,18 +144,29 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
                 <h3 className="pet-name">{name}</h3>
 
-                {/* 🌟 БЕЙДЖ СТАТУСУ */}
                 <div className={`pet-status-badge ${statusConfig.class}`}>
                     {statusConfig.icon} {status}
                 </div>
 
-                {!isAdmin && (
-                    <img
-                        src={isFavorite ? "/heart2.png" : "/heart.png"}
-                        alt="Like"
-                        className="favorite-heart"
-                        onClick={toggleFavorite}
-                    />
+                {/* Логіка відображення іконок (Сердечко / Дзвіночок / Нічого) */}
+                {!isAdmin && !hideIcon && (
+                    showBell ? (
+                        <img
+                            src={isNotified ? "/bell-active.png" : "/bell.png"}
+                            alt="Сповіщення"
+                            className="action-icon"
+                            onClick={handleNotifyClick}
+                            title={isNotified ? "Відписатися від сповіщень" : "Повідомити, коли одужає"}
+                        />
+                    ) : (
+                        <img
+                            src={isFavorite ? "/heart2.png" : "/heart.png"}
+                            alt="Like"
+                            className="action-icon"
+                            onClick={toggleFavorite}
+                            title="Додати в обране"
+                        />
+                    )
                 )}
             </div>
 

@@ -3,12 +3,14 @@
   padding: 100px;
   text-align: center;
   color: #4A148C;
+  font-size: 1.5rem;
 }
 
 .pet-details-layout {
-  padding: 100px 5%;
+  padding: 60px 5%;
   position: relative;
   z-index: 2;
+  min-height: 80vh;
 }
 
 .pet-details-layout.admin-mode {
@@ -18,6 +20,8 @@
 .pet-details-container {
   position: relative;
   z-index: 2;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 .back-link {
@@ -26,82 +30,193 @@
   font-weight: bold;
   text-decoration: none;
   font-size: 1.1rem;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
+  transition: color 0.2s;
+}
+
+.back-link:hover {
+  color: #49109f;
 }
 
 .pet-details-content {
   display: flex;
-  gap: 50px;
-  margin-top: 10px;
+  gap: 60px;
+  align-items: flex-start;
   flex-wrap: wrap;
+  width: 100%;
+  position: relative;
 }
 
-/* --- БЛОК ФОТОГРАФІЇ --- */
-.pet-image-wrapper {
+/* --- ЛІВА КОЛОНКА (ГАЛЕРЕЯ) --- */
+.pet-gallery-section {
+  flex: 1 1 350px;
+  min-width: 0;
+  max-width: 550px;
+  position: relative;
+}
+
+.main-image-wrapper {
   position: relative;
   width: 100%;
-  max-width: 500px;
-  align-self: flex-start;
+  aspect-ratio: 1 / 1;
+  border-radius: 30px;
+  overflow: hidden;
+  box-shadow: 0 20px 40px rgba(104, 71, 221, 0.15);
+  margin-bottom: 20px;
+  background: #fdfbfe;
 }
 
-.pet-image {
+.main-pet-image {
   width: 100%;
-  border-radius: 30px;
-  box-shadow: 0 15px 35px rgba(104, 71, 221, 0.2);
+  height: 100%;
   object-fit: cover;
   display: block;
 }
 
-.file-overlay-label {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  background: #6847DD;
-  color: white;
-  padding: 12px 24px;
-  border-radius: 30px;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
+/* --- ВИПРАВЛЕНИЙ БЕЙДЖ --- */
+.pet-status-badge {
+  position: absolute !important;
+  top: 20px !important;
+  left: 20px !important;
+  bottom: auto !important;
+  right: auto !important;
+  width: max-content !important;
+  height: max-content !important;
+  padding: 8px 18px !important;
+  border-radius: 20px !important;
+  font-weight: bold !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
+  z-index: 10 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  white-space: nowrap !important;
+  /* Прибрали background: white, тепер колір задається через класи статусів */
 }
 
-.file-overlay-label:hover {
-  transform: scale(1.05);
-  background: #49109f;
-}
+/* --- КОЛЬОРИ СТАТУСІВ --- */
+.status-looking { background: #EFE6FF; color: #6847DD; }
+.status-special { background: #FFEBEE; color: #D32F2F; }
+.status-treatment { background: #FFF3E0; color: #E65100; }
+.status-home { background: #E8F5E9; color: #2E7D32; }
+.status-rainbow { background: #F5F5F5; color: #616161; }
 
-/* --- ІНФОРМАЦІЙНИЙ БЛОК --- */
-.pet-info-wrapper {
-  flex: 1;
-  min-width: 300px;
-}
-
-.pet-meta-block {
-  background: white;
-  padding: 20px;
-  border-radius: 20px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  margin-bottom: 20px;
-  margin-top: 15px;
-}
-
-.pet-meta-item {
-  font-size: 1.2rem;
-  color: #333;
-  margin-bottom: 10px;
+.gallery-thumbnails {
   display: flex;
-  align-items: center;
+  gap: 15px;
+  overflow-x: auto;
+  padding-bottom: 10px;
 }
 
-.pet-meta-item:last-child {
-  margin-bottom: 0;
+.thumbnail-wrapper {
+  width: 90px;
+  height: 90px;
+  border-radius: 15px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0.6;
 }
 
-/* --- ТЕГИ --- */
+.thumbnail-wrapper.active,
+.thumbnail-wrapper:hover {
+  opacity: 1;
+  border-color: #6847DD;
+  transform: translateY(-3px);
+}
+
+.thumbnail-wrapper img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- ПРАВА КОЛОНКА (ІНФО) --- */
+.pet-info-section {
+  flex: 1.5 1 400px;
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Нові унікальні класи для заголовка, щоб уникнути конфліктів */
+.pet-profile-header {
+  position: relative;
+  width: 100%;
+  margin-bottom: 25px;
+  display: block;
+  height: auto;
+}
+
+.pet-profile-name {
+  position: relative;
+  font-size: 3.5rem;
+  color: #21064A;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.2;
+  display: block;
+  width: 100%;
+  word-wrap: break-word;
+}
+
+/* Характеристики (Сітка) */
+.pet-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  padding: 20px 15px;
+  border-radius: 24px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(104, 71, 221, 0.05);
+  border: 1px solid #f0e6ff;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  border-color: #d1bdfc;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #8b7ca6;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Заголовки секцій */
+.section-subtitle {
+  font-size: 1.4rem;
+  color: #4A148C;
+  margin-bottom: 15px;
+}
+
+/* Теги */
 .pet-tags-block {
-  margin: 20px 0;
+  margin-bottom: 30px;
 }
 
 .tags-list {
@@ -116,111 +231,136 @@
   padding: 8px 20px;
   border-radius: 25px;
   font-weight: bold;
-  font-size: 0.9rem;
-  border: 1px solid rgba(104, 71, 221, 0.3);
+  font-size: 0.95rem;
+  border: 1px solid rgba(104, 71, 221, 0.2);
 }
 
-/* --- ОПИС --- */
-.pet-desc-block {
-  margin-top: 20px;
+.pet-tag-empty {
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Опис / Історія */
+.pet-story-block {
+  margin-bottom: 35px;
+}
+
+.story-content {
+  background: #faf7ff;
+  padding: 25px;
+  border-radius: 24px;
+  border-left: 5px solid #6847DD;
 }
 
 .pet-desc-text {
   line-height: 1.8;
   font-size: 1.15rem;
   color: #444;
+  margin: 0;
+  white-space: pre-wrap;
 }
 
-/* --- КНОПКИ ДІЙ --- */
-.admin-actions-block {
-  margin-top: 40px;
-  padding: 20px;
-  background: #f0f4f8;
-  border-radius: 20px;
-  border: 1px dashed #cbd5e0;
-}
-
-.admin-actions-title {
-  color: #4a5568;
-  margin-bottom: 15px;
-  font-weight: bold;
-}
-
-.admin-buttons-row {
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.btn-cancel {
-  padding: 15px 30px;
-  background: #e2e8f0;
-  color: #4a5568;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  font-weight: bold;
-  transition: all 0.2s ease;
-}
-
-.btn-cancel:hover {
-  background: #cbd5e0;
-}
-
-.btn-save {
-  padding: 15px 35px;
-  background: #6847DD;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 8px 20px rgba(104, 71, 221, 0.3);
-  transition: all 0.2s ease;
-}
-
-.btn-save:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(104, 71, 221, 0.4);
-}
-
-.btn-edit {
-  padding: 15px 35px;
-  background: #21064A;
-  color: white;
-  border: none;
-  border-radius: 50px;
-  font-size: 1.1rem;
-  cursor: pointer;
-  font-weight: bold;
-  box-shadow: 0 8px 20px rgba(33, 6, 74, 0.3);
-  transition: all 0.2s ease;
-}
-
-.btn-edit:hover {
-  background: #110229;
+/* --- КНОПКИ ТА АДМІНКА --- */
+.action-area {
+  margin-top: 20px;
 }
 
 .btn-adopt {
-  margin-top: 40px;
-  padding: 18px 45px;
-  background: #6847DD;
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #6847DD, #9068ff);
   color: white;
   border: none;
   border-radius: 50px;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   cursor: pointer;
   font-weight: bold;
-  box-shadow: 0 8px 20px rgba(104, 71, 221, 0.4);
+  box-shadow: 0 10px 25px rgba(104, 71, 221, 0.4);
   transition: all 0.3s ease;
 }
 
 .btn-adopt:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 25px rgba(104, 71, 221, 0.5);
+  box-shadow: 0 15px 30px rgba(104, 71, 221, 0.6);
 }
+
+.admin-extra-settings {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  border: 1px dashed #cbd5e0;
+}
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.setting-row:last-child {
+  margin-bottom: 0;
+}
+
+.highlight-row {
+  background: #fff3e0;
+  padding: 10px 15px;
+  border-radius: 12px;
+  margin-top: 10px;
+}
+
+.admin-select {
+  padding: 8px 15px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e0;
+  font-size: 1rem;
+  flex: 1;
+  margin-left: 15px;
+}
+
+.admin-actions-block {
+  margin-top: 10px;
+}
+
+.admin-buttons-row {
+  display: flex;
+  gap: 15px;
+}
+
+.btn-cancel, .btn-save, .btn-edit {
+  flex: 1;
+  padding: 15px;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.1rem;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+.btn-cancel:hover { background: #cbd5e0; }
+
+.btn-save {
+  background: #10b981;
+  color: white;
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
+
+.btn-edit {
+  background: #21064A;
+  color: white;
+  box-shadow: 0 8px 20px rgba(33, 6, 74, 0.3);
+}
+
+.btn-edit:hover { background: #110229; }
 
 /* --- СТИЛІ ІНЛАЙН-РЕДАГУВАННЯ --- */
 .editable-container {
@@ -228,60 +368,43 @@
   display: flex;
   align-items: center;
   width: 100%;
-  border-radius: 8px;
-  transition: all 0.3s ease;
 }
 
 .inline-input {
   background: transparent;
-  border: 2px dashed transparent;
+  border: 2px dashed #d1bdfc;
   font-family: inherit;
   width: 100%;
-  border-radius: 8px;
-  padding: 4px 8px;
-  margin-left: -8px;
+  border-radius: 12px;
+  padding: 8px 12px;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
 
-.editable-container:hover .inline-input,
-.inline-input:focus {
-  border-color: #B49DFF;
-  background: rgba(255, 255, 255, 0.8);
-  outline: none;
+.inline-input.center-input {
+  text-align: center;
 }
 
+.editable-container:hover .inline-input,
 .inline-input:focus {
-  border-style: solid;
-  border-color: #6847DD;
-  box-shadow: 0 4px 15px rgba(104, 71, 221, 0.1);
   background: white;
+  border-color: #6847DD;
+  outline: none;
+  box-shadow: 0 4px 15px rgba(104, 71, 221, 0.1);
 }
 
 .edit-icon-hint {
   position: absolute;
-  right: 10px;
+  right: 15px;
   font-size: 18px;
-  opacity: 0;
+  opacity: 0.5;
   pointer-events: none;
-  transition: opacity 0.3s ease;
 }
 
-.editable-container:hover .edit-icon-hint,
-.inline-input:focus + .edit-icon-hint {
-  opacity: 1;
-}
-
-/* Специфічні класи для різних полів (щоб зберегти шрифти при редагуванні) */
 .input-name {
-  font-size: 3.5rem;
+  font-size: 3rem;
   color: #4A148C;
   font-weight: bold;
-}
-
-.input-info {
-  font-size: 1.2rem;
-  color: #333;
 }
 
 .input-tags {
@@ -289,9 +412,6 @@
   color: #6847DD;
   font-weight: bold;
   background: #EFE6FF;
-  border-color: rgba(104, 71, 221, 0.3);
-  border-style: dashed;
-  padding: 10px 15px;
 }
 
 .input-desc {
@@ -299,5 +419,97 @@
   line-height: 1.8;
   color: #444;
   resize: vertical;
-  min-height: 120px;
+  min-height: 150px;
+}
+
+/* Мобільна адаптація */
+@media (max-width: 768px) {
+  .pet-details-content { gap: 30px; }
+  .pet-profile-name { font-size: 2.5rem; text-align: center; }
+  .action-area { position: sticky; bottom: 20px; z-index: 100; }
+  .admin-buttons-row { flex-direction: column; }
+}
+
+/* --- ПАНЕЛЬ УПРАВЛІННЯ ФОТОГРАФІЯМИ (РЕЖИМ РЕДАГУВАННЯ) --- */
+.edit-photo-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 10px 15px;
+  border-radius: 30px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  width: max-content;
+}
+
+.photo-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 0.95rem;
+  padding: 8px 15px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+  color: #4A148C;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.photo-btn:hover {
+  background: #EFE6FF;
+  color: #6847DD;
+}
+
+.photo-btn.delete-btn {
+  color: #D32F2F;
+}
+
+.photo-btn.delete-btn:hover {
+  background: #FFEBEE;
+}
+
+/* --- НОВІ КНОПКИ ТА ПОВІДОМЛЕННЯ ДЛЯ СТАТУСІВ --- */
+
+/* Кнопка "Повідомити, коли одужає" */
+.btn-notify {
+  width: 100%;
+  padding: 20px;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  color: white;
+  border: none;
+  border-radius: 50px;
+  font-size: 1.3rem;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4);
+  transition: all 0.3s ease;
+}
+
+.btn-notify:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(245, 158, 11, 0.6);
+}
+
+/* Блок, коли усиновлення неможливе (Вже вдома / Не вдалось врятувати) */
+.status-message-block {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 20px;
+  text-align: center;
+  border: 2px dashed #cbd5e0;
+}
+
+.status-message-block p {
+  margin: 0;
+  color: #4a5568;
+  font-size: 1.15rem;
+  font-weight: 600;
+  line-height: 1.5;
 }

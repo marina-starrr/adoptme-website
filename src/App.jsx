@@ -28,6 +28,7 @@ import AdminAdoptions from './pages/admin/AdminAdoptions';
 import AdminReviews from './pages/admin/AdminReviews';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminHappyPets from './pages/admin/AdminHappyPets';
+import AdminNotifications from './pages/admin/AdminNotifications';
 
 function AppRoutes() {
   const location = useLocation();
@@ -108,6 +109,7 @@ function AppRoutes() {
             <Route path="reviews" element={<AdminReviews />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="happy-pets" element={<AdminHappyPets />} />
+            <Route path="notifications" element={<AdminNotifications />} />
           </Route>
         </Routes>
 

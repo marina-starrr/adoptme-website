@@ -55,6 +55,9 @@
 .app-card-premium.status-review { border-left-color: #f59e0b; } /* Жовтий */
 .app-card-premium.status-approved { border-left-color: #10b981; } /* Зелений */
 .app-card-premium.status-rejected { border-left-color: #ef4444; } /* Червоний */
+.app-card-premium.status-handed { border-left-color: #8b5cf6; }
+.status-handed .status-badge { background: #ede9fe; color: #7c3aed; }
+
 
 /* Шапка картки */
 .app-card-header {

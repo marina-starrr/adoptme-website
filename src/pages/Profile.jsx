@@ -7,6 +7,7 @@ import './Profile.css';
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('favorites');
+  const [appFilter, setAppFilter] = useState('Всі'); 
   const fileInputRef = useRef(null);
   
   const [applications, setApplications] = useState([]);
@@ -133,7 +134,6 @@ function Profile() {
     }
   };
 
-  // 👇 НОВА ФУНКЦІЯ ВИХОДУ (ПЕРЕНЕСЕНА З ХЕДЕРА)
   const handleLogout = () => {
       const userNickname = localStorage.getItem('userNickname');
       const currentFavorites = localStorage.getItem('favorites');
@@ -200,6 +200,13 @@ function Profile() {
       reader.readAsDataURL(file);
     }
   };
+
+  // 🌟 Логіка фільтрації заявок
+  const filterTabs = ['Всі', 'Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
+  const filteredApps = applications.filter(app => {
+      if (appFilter === 'Всі') return true;
+      return (app.Status || 'Нова') === appFilter;
+  });
 
   return (
     <div className="profile-page" style={{ position: 'relative' }}>
@@ -269,7 +276,6 @@ function Profile() {
               👤 Особисті дані
             </button>
             
-            {/* 👇 НОВА КНОПКА ВИХОДУ В ПРОФІЛІ */}
             <button className="profile-nav-btn logout-nav-btn" onClick={handleLogout}>
               🚪 Вийти з акаунту
             </button>
@@ -303,10 +309,24 @@ function Profile() {
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
               <h3>Історія заявок у притулок</h3>
+              
+              {/* 🌟 МЕНЮ ВКЛАДОК ЗАЯВОК */}
+              <div className="app-filters-container">
+                  {filterTabs.map(tab => (
+                      <button 
+                          key={tab} 
+                          className={`app-filter-btn ${appFilter === tab ? 'active' : ''}`}
+                          onClick={() => setAppFilter(tab)}
+                      >
+                          {tab}
+                      </button>
+                  ))}
+              </div>
+
               {loadingApps ? <p>Завантаження заявок...</p> : (
                 <div className="applications-list">
-                  {applications.length === 0 ? <p>Ви ще не подавали заявок.</p> :
-                    applications.map(app => (
+                  {filteredApps.length === 0 ? <p className="empty-message">Заявок з таким статусом не знайдено.</p> :
+                    filteredApps.map(app => (
                       <div className="application-card" key={app.Id}>
                         
                         <div className="app-card-left">
@@ -331,7 +351,7 @@ function Profile() {
                           </div>
                         </div>
 
-                        <div className={`app-status status-badge ${app.Status}`}>
+                        <div className={`app-status status-badge ${app.Status || 'Нова'}`}>
                            {app.Status || 'Нова'}
                         </div>
 
@@ -378,8 +398,8 @@ function Profile() {
                 <button type="submit" className="save-profile-btn">Зберегти зміни у базі даних</button>
               </form>
 
-              {/* НЕБЕЗПЕЧНА ЗОНА */}
               <div style={{ marginTop: '40px', borderTop: '2px dashed #ffebee', paddingTop: '25px', textAlign: 'center' }}>
+                  {/* 👇 ОСЬ ТУТ ВИПРАВЛЕНО margin-bottom на marginBottom */}
                   <p style={{ color: '#888', fontSize: '14px', marginBottom: '15px' }}>Небезпечна зона</p>
                   <button 
                     type="button" 

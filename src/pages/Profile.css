@@ -361,3 +361,41 @@
     color: #666;
     font-style: italic;
 }
+
+/* --- СТИЛІ ФІЛЬТРІВ (ВКЛАДОК) ДЛЯ ЗАЯВОК --- */
+.app-filters-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    flex-wrap: wrap;
+}
+
+.app-filter-btn {
+    background-color: #f4f5fa;
+    color: #555;
+    border: 1px solid #e0d4f5;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-filter-btn:hover {
+    background-color: #e0d4f5;
+    color: #4A148C;
+}
+
+.app-filter-btn.active {
+    background: linear-gradient(135deg, #6847DD, #4A148C);
+    color: white;
+    border-color: transparent;
+    box-shadow: 0 4px 10px rgba(104, 71, 221, 0.2);
+}
+
+/* --- КОЛІР ДЛЯ НОВОГО СТАТУСУ "ПЕРЕДАНО" --- */
+.status-badge.Передано { 
+    background-color: #e0d4f5; 
+    color: #4a148c; 
+} /* Фіолетовий */

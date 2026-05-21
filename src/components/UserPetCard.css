@@ -12,9 +12,7 @@
     position: relative;
     transition: transform 0.3s ease;
     border: 3px solid #6847DD;
-    
-    /* 👈 ЦЕ ВАЖЛИВО: */
-    width: 100%;       /* Картка заповнить всю доступну ширину в комірці сітки */
+    width: 100%;       
 }
 
 .pet-card:hover {
@@ -49,7 +47,8 @@
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-.favorite-heart {
+/* Універсальний клас для іконок дій (Сердечко або Дзвіночок) */
+.action-icon {
     position: absolute;
     top: 15px;
     right: 15px;
@@ -57,6 +56,15 @@
     height: 35px;
     cursor: pointer;
     z-index: 2;
+    transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.action-icon:hover {
+    transform: scale(1.1);
+}
+
+.action-icon:active {
+    transform: scale(0.9);
 }
 
 /* =========================================
@@ -72,6 +80,7 @@
     position: relative;
     padding-top: 50px;
     min-height: 120px;
+    padding-bottom: 20px; 
 }
 
 .pet-info-row {
@@ -111,6 +120,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-top: 10px;
+    margin-bottom: 5px; 
 }
 
 /* =========================================
@@ -147,7 +157,6 @@
 }
 
 @media (hover: none) {
-    /* Вимикаємо ефект підстрибування картки на пристроях з тачскріном */
     .pet-card:hover {
         transform: none;
     }
@@ -161,7 +170,7 @@
     margin-top: 15px;
     padding: 10px 0;
     background-color: var(--white, #ffffff);
-    color: #6847DD; /* Фірмовий фіолетовий колір тексту */
+    color: #6847DD; 
     text-align: center;
     border-radius: 25px;
     text-decoration: none;
@@ -173,22 +182,9 @@
 }
 
 .pet-details-btn:hover {
-    background-color: #f0ebff; /* Світло-фіолетовий відтінок при наведенні */
+    background-color: #f0ebff; 
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
-}
-
-/* =========================================
-   ДОДАТКОВІ ПРАВКИ ДЛЯ ПЛАВНОСТІ
-   ========================================= */
-.pet-card-content {
-    /* Додаємо трохи більше відступу знизу, щоб кнопка дихала */
-    padding-bottom: 20px; 
-}
-
-.pet-info-chatacter {
-    /* Робимо відступ від тегів до нової кнопки */
-    margin-bottom: 5px; 
 }
 
 /* =========================================
@@ -196,7 +192,7 @@
    ========================================= */
 .pet-status-badge {
     position: absolute;
-    bottom: 15px; /* Розміщуємо внизу зліва на фотографії */
+    bottom: 15px;
     left: 15px;
     padding: 6px 14px;
     border-radius: 20px;
@@ -207,34 +203,13 @@
     align-items: center;
     gap: 6px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-    /* Ефект матового скла */
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Кольори для різних статусів (напівпрозорі, щоб було видно фон) */
-.status-looking { 
-    background: rgba(76, 175, 80, 0.85); /* Зелений */
-    color: white; 
-}
-
-.status-special { 
-    background: rgba(255, 152, 0, 0.85); /* Помаранчевий */
-    color: white; 
-}
-
-.status-treatment { 
-    background: rgba(233, 30, 99, 0.85); /* Рожевий/Червоний */
-    color: white; 
-}
-
-.status-home { 
-    background: rgba(33, 150, 243, 0.85); /* Синій */
-    color: white; 
-}
-
-.status-rainbow { 
-    background: rgba(45, 45, 45, 0.85); /* Темно-сірий */
-    color: white; 
-}
+.status-looking { background: rgba(76, 175, 80, 0.85); color: white; }
+.status-special { background: rgba(255, 152, 0, 0.85); color: white; }
+.status-treatment { background: rgba(233, 30, 99, 0.85); color: white; }
+.status-home { background: rgba(33, 150, 243, 0.85); color: white; }
+.status-rainbow { background: rgba(45, 45, 45, 0.85); color: white; }

@@ -841,3 +841,110 @@
     background-color: #ffebee !important;
     box-shadow: 0 5px 15px rgba(211, 47, 47, 0.2) !important;
 }
+
+/* =========================================
+   СТИЛІ ДЛЯ СИСТЕМИ СПОВІЩЕНЬ
+   ========================================= */
+
+.notification-wrapper {
+    position: relative;
+    margin-left: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    width: 35px;
+    height: 35px;
+    cursor: pointer;
+    transition: filter 0.3s ease, transform 0.2s ease;
+}
+
+.notification-icon:hover {
+    filter: invert(100%);
+    transform: scale(1.05);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.notifications-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 10px 0;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.notification-card {
+    background: #fdfbfe;
+    border: 2px solid #e0d4f5;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+    transition: border-color 0.3s ease;
+}
+
+.notification-card:hover {
+    border-color: #6847DD;
+}
+
+.notification-card p {
+    margin: 0;
+    font-size: 16px;
+    color: #333;
+    line-height: 1.5;
+}
+
+.notification-pet-link {
+    color: #6847DD;
+    font-weight: 800;
+    text-decoration: none;
+    font-size: 18px;
+    background: #EFE6FF;
+    padding: 2px 8px;
+    border-radius: 8px;
+    transition: background 0.2s ease;
+}
+
+.notification-pet-link:hover {
+    background: #d1bdfc;
+    text-decoration: none;
+}
+
+.mark-read-btn {
+    align-self: flex-end;
+    background: #e0d4f5;
+    color: #4A148C;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.mark-read-btn:hover {
+    background: #d1bdfc;
+    transform: translateY(-2px);
+}

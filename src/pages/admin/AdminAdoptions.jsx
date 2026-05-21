@@ -7,10 +7,10 @@ function AdminAdoptions() {
     const [loading, setLoading] = useState(true);
     const [toastMsg, setToastMsg] = useState('');
     
-    // 👇 НОВИЙ СТАН: запам'ятовуємо, який саме список зараз відкритий
     const [openDropdownId, setOpenDropdownId] = useState(null);
 
-    const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Відхилено'];
+    // 🌟 Додали новий статус "Передано"
+    const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
     const showToast = (message) => {
         setToastMsg(message);
@@ -37,6 +37,51 @@ function AdminAdoptions() {
     }
 
     const handleStatusChange = async (id, newStatus) => {
+        const app = applications.find(a => a.Id === id);
+
+        // 🌟 Тепер логіка передачі тваринки спрацьовує ТІЛЬКИ на статусі "Передано"
+        if (newStatus === 'Передано' && app.Status !== 'Передано') {
+            if (!window.confirm(`Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі.`)) {
+                setOpenDropdownId(null);
+                return; 
+            }
+
+            try {
+                const { data: userData, error: userError } = await supabase
+                    .from('Users')
+                    .select('Id')
+                    .eq('Nickname', app.UserNickname)
+                    .single();
+
+                if (userError || !userData) {
+                    throw new Error("Користувача не знайдено в базі даних.");
+                }
+
+                const ownerId = userData.Id;
+
+                const petIds = app.PetIds || [];
+                if (petIds.length > 0) {
+                    for (const petId of petIds) {
+                        await supabase
+                            .from('Pets')
+                            .update({
+                                Status: 'Вже вдома',
+                                OwnerId: ownerId,
+                                OwnerName: app.AdopterName
+                            })
+                            .eq('Id', petId);
+                    }
+                }
+
+                showToast('🏡 Тваринку успішно закріплено за новим власником!');
+
+            } catch (err) {
+                showToast('❌ Помилка передачі тваринки: ' + err.message);
+                setOpenDropdownId(null);
+                return; 
+            }
+        }
+
         const { error } = await supabase
             .from('AdoptionRequests')
             .update({ Status: newStatus })
@@ -45,11 +90,14 @@ function AdminAdoptions() {
         if (error) {
             showToast('❌ Помилка оновлення статусу: ' + error.message);
         } else {
-            setApplications(applications.map(app => 
-                app.Id === id ? { ...app, Status: newStatus } : app
+            setApplications(applications.map(a => 
+                a.Id === id ? { ...a, Status: newStatus } : a
             ));
+            if (newStatus !== 'Передано') {
+                showToast('✅ Статус заявки успішно оновлено!');
+            }
         }
-        // Закриваємо список після вибору
+        
         setOpenDropdownId(null);
     };
 
@@ -69,7 +117,6 @@ function AdminAdoptions() {
         }
     };
 
-    // Функція для відкриття/закриття меню
     const toggleDropdown = (id) => {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
@@ -105,7 +152,8 @@ function AdminAdoptions() {
                         </div>
                     ) : (
                         applications.map(app => (
-                            <div key={app.Id} className={`app-card-premium status-${app.Status === 'Нова' ? 'new' : app.Status === 'Розглядається' ? 'review' : app.Status === 'Схвалено' ? 'approved' : 'rejected'}`}>
+                            // 🌟 Додано клас status-handed для візуалізації
+                            <div key={app.Id} className={`app-card-premium status-${app.Status === 'Нова' ? 'new' : app.Status === 'Розглядається' ? 'review' : app.Status === 'Схвалено' ? 'approved' : app.Status === 'Передано' ? 'handed' : 'rejected'}`}>
                                 
                                 <div className="app-card-header">
                                     <div className="app-id-badge">Заявка #{app.Id}</div>
@@ -120,7 +168,9 @@ function AdminAdoptions() {
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">👤 Заявник:</span>
-                                            <span className="info-value">{app.AdopterName || 'Не вказано'}</span> 
+                                            <span className="info-value">
+                                                {app.AdopterName || 'Не вказано'} <span style={{ color: '#888', fontSize: '13px' }}>@{app.UserNickname}</span>
+                                            </span> 
                                         </div>
                                         <div className="info-item">
                                             <span className="info-label">📞 Телефон:</span>
@@ -153,10 +203,7 @@ function AdminAdoptions() {
                                     <div className="status-control">
                                         <label>Змінити статус:</label>
                                         
-                                        {/* 👇 ОСЬ НАШ НОВИЙ КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК */}
                                         <div className="custom-dropdown-container">
-                                            
-                                            {/* Кнопка (Header) списку */}
                                             <div 
                                                 className={`custom-dropdown-header ${openDropdownId === app.Id ? 'open' : ''}`}
                                                 onClick={() => toggleDropdown(app.Id)}
@@ -165,7 +212,6 @@ function AdminAdoptions() {
                                                 <span className="dropdown-arrow">▼</span>
                                             </div>
 
-                                            {/* Саме меню, яке випадає */}
                                             {openDropdownId === app.Id && (
                                                 <ul className="custom-dropdown-list">
                                                     {statuses.map(s => (

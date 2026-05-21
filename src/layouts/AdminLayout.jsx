@@ -1,4 +1,3 @@
-// src/layouts/AdminLayout.jsx
 import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
@@ -55,6 +54,10 @@ function AdminLayout() {
                     <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}>
                         📝 Заявки
                     </Link>
+                    {/* 🌟 НОВА ВКЛАДКА ДЛЯ СПОВІЩЕНЬ ПРО ЛІКУВАННЯ */}
+                    <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`}>
+                        🔔 Сповіщення
+                    </Link>
                     <Link to="/admin/reviews" className={`admin-nav-link ${location.pathname === '/admin/reviews' ? 'active' : ''}`}>
                         💬 Відгуки
                     </Link>
@@ -64,7 +67,6 @@ function AdminLayout() {
                     <Link to="/admin/users" className={`admin-nav-link ${location.pathname === '/admin/users' ? 'active' : ''}`}>
                         👥 Користувачі
                     </Link>
-                    {/* 🌟 НОВЕ ПОСИЛАННЯ ТУТ */}
                     <Link to="/admin/happy-pets" className={`admin-nav-link ${location.pathname === '/admin/happy-pets' ? 'active' : ''}`}>
                         🏡 Щасливчики
                     </Link>

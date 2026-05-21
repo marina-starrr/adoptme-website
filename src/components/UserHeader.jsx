@@ -8,7 +8,9 @@ import { supabase } from '../supabaseClient';
 function UserHeader() {
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
     const [isAccountOpen, setIsAccountOpen] = useState(false);
+    const [isNotificationsOpen, setIsNotificationsOpen] = useState(false); // Стан для сповіщень
     const [favorites, setFavorites] = useState([]);
+    const [notifications, setNotifications] = useState([]); // Масив сповіщень
     const [showForm, setShowForm] = useState(false);
 
     const { isLoggedIn, logout } = useAuth();
@@ -17,13 +19,11 @@ function UserHeader() {
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isSuccessScreen, setIsSuccessScreen] = useState(false);
 
-    // Стани форми (Крок 1)
     const [adopterFirstName, setAdopterFirstName] = useState('');
     const [adopterLastName, setAdopterLastName] = useState('');
     const [adopterPhone, setAdopterPhone] = useState('');
     const [adopterEmail, setAdopterEmail] = useState('');
 
-    // Стани форми (Крок 2 та 3)
     const [housingType, setHousingType] = useState('');
     const [hasExperience, setHasExperience] = useState('no');
     const [experienceDetails, setExperienceDetails] = useState('');
@@ -34,6 +34,28 @@ function UserHeader() {
     const textareaRef = useRef(null);
 
     const navigate = useNavigate();
+
+    // Завантаження сповіщень
+    const fetchNotifications = async () => {
+        const userNickname = localStorage.getItem('userNickname');
+        if (userNickname) {
+            const { data, error } = await supabase
+                .from('TreatmentNotifications')
+                .select('*')
+                .eq('UserNickname', userNickname)
+                .eq('Status', 'Оброблена'); // Шукаємо тільки ті, що адмін вже підтвердив
+
+            if (!error && data) {
+                setNotifications(data);
+            }
+        }
+    };
+
+    useEffect(() => {
+        if (isLoggedIn) {
+            fetchNotifications();
+        }
+    }, [isLoggedIn]);
 
     useEffect(() => {
         const handleOpenFavorites = () => {
@@ -69,6 +91,14 @@ function UserHeader() {
         }, 300);
     };
 
+    const handleCloseNotifications = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setIsNotificationsOpen(false);
+            setIsModalClosing(false);
+        }, 300);
+    };
+
     const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);
     const handleLogoClick = () => {
@@ -84,7 +114,6 @@ function UserHeader() {
         setIsFavoritesOpen(true);
     };
 
-    // 👇 Виправлено видалення: тепер шукаємо за UserNickname
     const handleRemove = async (id) => {
         const userNickname = localStorage.getItem('userNickname');
 
@@ -102,6 +131,14 @@ function UserHeader() {
         setFavorites(newFavs);
         localStorage.setItem('favorites', JSON.stringify(newFavs));
         window.dispatchEvent(new Event('cartUpdated'));
+    };
+
+    // Видалення сповіщення після прочитання
+    const handleDeleteNotification = async (id) => {
+        const { error } = await supabase.from('TreatmentNotifications').delete().eq('Id', id);
+        if (!error) {
+            setNotifications(prev => prev.filter(n => n.Id !== id));
+        }
     };
 
     const handleFirstNameChange = (e) => {
@@ -145,12 +182,17 @@ function UserHeader() {
         e.preventDefault();
 
         const petNames = favorites.map(f => f.name).join(", ");
+        // 🌟 Додаємо масив ID тваринок та нікнейм користувача
+        const petIds = favorites.map(f => f.id); 
+        const userNickname = localStorage.getItem('userNickname');
 
         const adoptionData = {
+            PetIds: petIds,             // Записуємо ID в базу
+            UserNickname: userNickname, // Записуємо нікнейм в базу
             PetName: petNames,
             AdopterName: `${adopterFirstName} ${adopterLastName}`,
             AdopterPhone: adopterPhone,
-            AdopterEmail: adopterEmail, // 👈 Беремо пошту тільки з форми
+            AdopterEmail: adopterEmail,
             LivingConditions: housingType,
             HasExperience: hasExperience === 'yes',
             ExperienceDetails: hasExperience === 'yes' ? experienceDetails : '',
@@ -180,7 +222,7 @@ function UserHeader() {
             alert("Сталася помилка при відправці: " + error.message);
         }
     };
-
+    
     const finishAdoption = () => {
         setIsModalClosing(true);
         setTimeout(() => {
@@ -224,6 +266,21 @@ function UserHeader() {
                     style={{ cursor: 'pointer', marginLeft: '15px' }}
                 />
 
+                {/* Іконка сповіщень */}
+                {isLoggedIn && (
+                    <div className="notification-wrapper">
+                        <img
+                            src="/notification.png" // Сюди вставиш своє фото іконки
+                            alt="Сповіщення"
+                            className="notification-icon"
+                            onClick={() => setIsNotificationsOpen(true)}
+                        />
+                        {notifications.length > 0 && (
+                            <span className="notification-badge">{notifications.length}</span>
+                        )}
+                    </div>
+                )}
+
                 {isLoggedIn ? (
                     <img
                         src="/avatar.png"
@@ -239,6 +296,46 @@ function UserHeader() {
                 )}
             </div>
 
+            {/* Модальне вікно для СПОВІЩЕНЬ */}
+            {isNotificationsOpen && (
+                <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
+                    <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
+                        <span className="close-btn" onClick={handleCloseNotifications}>&times;</span>
+                        <div className="modal-header">
+                            <h3>Ваші сповіщення</h3>
+                        </div>
+                        <div className="notifications-container">
+                            {notifications.length === 0 ? (
+                                <p className="empty-favorites-text">У вас поки немає нових сповіщень.</p>
+                            ) : (
+                                notifications.map(notif => (
+                                    <div key={notif.Id} className="notification-card">
+                                        <p>
+                                            🎉 Радісна новина! Тваринка{' '}
+                                            <Link 
+                                                to={`/pets/${notif.PetId}`} 
+                                                onClick={handleCloseNotifications} 
+                                                className="notification-pet-link"
+                                            >
+                                                {notif.PetName}
+                                            </Link>{' '}
+                                            успішно пройшла лікування і тепер чекає на вас!
+                                        </p>
+                                        <button 
+                                            onClick={() => handleDeleteNotification(notif.Id)} 
+                                            className="mark-read-btn"
+                                        >
+                                            Зрозуміло
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Модальне вікно для ОБРАНОГО */}
             {isFavoritesOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -426,6 +523,7 @@ function UserHeader() {
                 </div>
             )}
 
+            {/* Бокове меню профілю */}
             {isAccountOpen && (
                 <div className={`side-drawer-backdrop ${isClosing ? 'closing' : ''}`} onClick={handleCloseDrawer}>
                     <div className={`side-drawer ${isClosing ? 'closing' : ''}`} onClick={(e) => e.stopPropagation()}>
@@ -452,7 +550,6 @@ function UserHeader() {
                             </div>
 
                             <div className="drawer-footer">
-                                {/* 👇 Виправлена помилка синтаксису тут */}
                                 <button className="drawer-btn logout-btn modern-logout" onClick={() => {
                                     const userNickname = localStorage.getItem('userNickname');
                                     const currentFavorites = localStorage.getItem('favorites');

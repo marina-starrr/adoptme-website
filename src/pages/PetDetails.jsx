@@ -9,17 +9,25 @@ function PetDetails() {
   const { id } = useParams();
   const location = useLocation();
   const [pet, setPet] = useState(null);
-  const [usersList, setUsersList] = useState([]); // 🌟 Список користувачів для адміна
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Стейти для inline-редагування та фото
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+  
+  const [editableImages, setEditableImages] = useState([]);
 
   const { userRole, userEmail } = useAuth();
   const isAdminPath = location.pathname.includes('/admin/');
+
+  const getDbImages = (petData) => {
+    if (!petData) return [];
+    return petData.Images && petData.Images.length > 0
+      ? petData.Images
+      : (petData.ImageName ? [petData.ImageName] : []);
+  };
 
   useEffect(() => {
     async function fetchPet() {
@@ -30,7 +38,6 @@ function PetDetails() {
     }
     fetchPet();
 
-    // 🌟 Якщо це адмін, завантажуємо список користувачів
     if (isAdminPath) {
       supabase.from('Users').select('Id, FirstName, LastName, Nickname').then(({ data }) => {
         if (data) setUsersList(data);
@@ -38,9 +45,23 @@ function PetDetails() {
     }
   }, [id, isAdminPath]);
 
+  useEffect(() => {
+    return () => {
+      editableImages.forEach(img => {
+        if (img.isNew) URL.revokeObjectURL(img.preview);
+      });
+    };
+  }, [editableImages]);
+
   const handleEditToggle = () => {
     setEditFormData(pet);
-    setSelectedFile(null);
+    const initialImgs = getDbImages(pet).map(imgName => ({
+      isNew: false,
+      name: imgName,
+      preview: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`
+    }));
+    setEditableImages(initialImgs);
+    setActiveImageIndex(0);
     setIsEditing(true);
   };
 
@@ -48,7 +69,38 @@ function PetDetails() {
     setEditFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const uploadImage = async (file) => {
+  const handleAddPhotos = (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    const newImgs = files.map(file => ({
+      isNew: true,
+      file: file,
+      preview: URL.createObjectURL(file)
+    }));
+    setEditableImages(prev => [...prev, ...newImgs]);
+  };
+
+  const handleChangeCurrentPhoto = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const newImg = {
+      isNew: true,
+      file: file,
+      preview: URL.createObjectURL(file)
+    };
+    setEditableImages(prev => {
+      const next = [...prev];
+      next[activeImageIndex] = newImg;
+      return next;
+    });
+  };
+
+  const handleDeleteCurrentPhoto = () => {
+    setEditableImages(prev => prev.filter((_, idx) => idx !== activeImageIndex));
+    setActiveImageIndex(prev => (prev > 0 ? prev - 1 : 0));
+  };
+
+  const uploadSingleImage = async (file) => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const { error } = await supabase.storage.from('pets').upload(fileName, file);
@@ -60,13 +112,19 @@ function PetDetails() {
     setIsSaving(true);
     try {
       let finalData = { ...editFormData };
-
-      if (selectedFile) {
-        const newFileName = await uploadImage(selectedFile);
-        finalData.ImageName = newFileName;
+      const finalImagesArray = [];
+      for (const img of editableImages) {
+        if (img.isNew) {
+          const uploadedFileName = await uploadSingleImage(img.file);
+          finalImagesArray.push(uploadedFileName);
+        } else {
+          finalImagesArray.push(img.name);
+        }
       }
 
-      // Якщо статус не "Вже вдома", відв'язуємо власника
+      finalData.Images = finalImagesArray;
+      finalData.ImageName = finalImagesArray.length > 0 ? finalImagesArray[0] : null;
+
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
@@ -77,7 +135,9 @@ function PetDetails() {
 
       setPet(finalData);
       setIsEditing(false);
-      setSelectedFile(null);
+      setEditableImages([]);
+      setActiveImageIndex(0);
+      alert("✅ Зміни та фото успішно збережено!");
     } catch (err) {
       alert("❌ Помилка збереження: " + err.message);
     } finally {
@@ -89,6 +149,11 @@ function PetDetails() {
     let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
     const isAlreadyFav = favorites.some(fav => fav.id === pet.Id);
 
+    const dbImgs = getDbImages(pet);
+    const imageUrl = dbImgs.length > 0 
+      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${dbImgs[0]}`
+      : null;
+
     if (!isAlreadyFav) {
       if (userEmail) {
         await supabase.from('Favorites').insert([{ UserEmail: userEmail, PetId: pet.Id }]);
@@ -98,6 +163,31 @@ function PetDetails() {
       window.dispatchEvent(new Event('cartUpdated'));
     }
     window.dispatchEvent(new Event('openFavorites'));
+  };
+
+  // 🌟 НОВА ФУНКЦІЯ ДЛЯ ЗАЛИШЕННЯ ЗАЯВКИ НА ОДУЖАННЯ
+  const handleNotifyWhenHealthyClick = async () => {
+    const userNickname = localStorage.getItem('userNickname');
+    if (!userNickname) {
+      alert("🐾 Будь ласка, увійдіть в систему, щоб підписатися на сповіщення!");
+      return;
+    }
+
+    const { error } = await supabase.from('TreatmentNotifications').insert([
+      {
+        UserNickname: userNickname,
+        UserEmail: userEmail || null,
+        PetId: pet.Id,
+        PetName: pet.Name,
+        Status: 'Нова'
+      }
+    ]);
+
+    if (!error) {
+      alert(`🔔 Дякуємо! Адміністратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
+    } else {
+      alert("❌ Сталася помилка: " + error.message);
+    }
   };
 
   const getStatusConfig = (petStatus) => {
@@ -113,178 +203,226 @@ function PetDetails() {
   if (loading) return <h2 className="loading-message">Шукаємо пухнастика... 🐾</h2>;
   if (!pet) return <h2 className="loading-message">Тваринку не знайдено 🐾</h2>;
 
-  const imageUrl = selectedFile
-    ? URL.createObjectURL(selectedFile)
-    : `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`;
-
   const currentStatus = isEditing ? editFormData.Status : pet.Status;
   const statusConfig = getStatusConfig(currentStatus || "Шукає дім");
 
+  const displayImages = isEditing 
+    ? editableImages.map(img => img.preview)
+    : getDbImages(pet).map(imgName => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`);
+
+  const safeActiveIndex = activeImageIndex >= displayImages.length ? Math.max(0, displayImages.length - 1) : activeImageIndex;
+
   return (
-      <div className={`pet-details-layout ${isAdminPath ? 'admin-mode' : ''}`}>
-        {!isAdminPath && <BackgroundPaws customClass="details-paws" />}
+    <div className={`pet-details-layout ${isAdminPath ? 'admin-mode' : ''}`}>
+      {!isAdminPath && <BackgroundPaws customClass="details-paws" />}
 
-        <div className="pet-details-container">
-          <Link to={isAdminPath ? "/admin/pets" : "/pets"} className="back-link">
-            ← Назад до списку
-          </Link>
+      <div className="pet-details-container">
+        <Link to={isAdminPath ? "/admin/pets" : "/pets"} className="back-link">
+          ← Назад до списку
+        </Link>
 
-          <div className="pet-details-content">
-
-            <div className="pet-image-wrapper">
-              <img src={imageUrl} alt={pet.Name} className="pet-image" />
-              <div className={`pet-status-badge ${statusConfig.class}`} style={{ top: '20px', bottom: 'auto', left: '20px' }}>
-                {statusConfig.icon} {currentStatus || "Шукає дім"}
+        <div className="pet-details-content">
+          <div className="pet-gallery-section">
+            <div className="main-image-wrapper">
+              {displayImages.length > 0 ? (
+                <img src={displayImages[safeActiveIndex]} alt={pet.Name} className="main-pet-image" />
+              ) : (
+                <div className="placeholder-image" style={{ padding: '100px', textAlign: 'center', background: '#f5f5f5', borderRadius: '30px' }}>Немає фото</div>
+              )}
+              
+              <div className={`pet-status-badge ${statusConfig.class}`}>
+                <span>{statusConfig.icon}</span> <span>{currentStatus || "Шукає дім"}</span>
               </div>
 
               {isEditing && (
-                <label className="file-overlay-label">
-                  📷 Змінити фото
-                  <input type="file" accept="image/*" onChange={(e) => setSelectedFile(e.target.files[0])} style={{ display: 'none' }} />
-                </label>
+                <div className="edit-photo-controls">
+                  <label className="photo-btn add-btn" title="Додати нові фото">
+                    ➕ Додати
+                    <input type="file" multiple accept="image/*" onChange={handleAddPhotos} style={{ display: 'none' }} />
+                  </label>
+                  
+                  {displayImages.length > 0 && (
+                    <>
+                      <label className="photo-btn change-btn" title="Замінити це photo">
+                        🔄 Змінити
+                        <input type="file" accept="image/*" onChange={handleChangeCurrentPhoto} style={{ display: 'none' }} />
+                      </label>
+                      <button type="button" className="photo-btn delete-btn" title="Видалити це фото" onClick={handleDeleteCurrentPhoto}>
+                        🗑️ Видалити
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
 
-            <div className="pet-info-wrapper">
+            {displayImages.length > 0 && (
+              <div className="gallery-thumbnails">
+                {displayImages.map((imgUrl, index) => (
+                  <div
+                    key={index}
+                    className={`thumbnail-wrapper ${safeActiveIndex === index ? 'active' : ''}`}
+                    onClick={() => setActiveImageIndex(index)}
+                  >
+                    <img src={imgUrl} alt={`Thumbnail ${index + 1}`} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pet-info-section">
+            <div className="pet-profile-header">
               {isEditing ? (
                 <div className="editable-container">
-                  <input value={editFormData.Name} onChange={e => handleChange('Name', e.target.value)} className="inline-input input-name" />
+                  <input value={editFormData.Name || ''} onChange={e => handleChange('Name', e.target.value)} className="inline-input input-name" />
                   <span className="edit-icon-hint">✏️</span>
                 </div>
               ) : (
-                <h1 className="input-name" style={{ margin: 0, padding: '4px 0' }}>{pet.Name}</h1>
+                <h1 className="pet-profile-name">{pet.Name}</h1>
               )}
+            </div>
 
-              <div className="pet-meta-block">
-                <div className="pet-meta-item">
-                  <strong>Вік:&nbsp;</strong>
+            <div className="pet-stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">🎂</div>
+                <div className="stat-label">Вік</div>
+                <div className="stat-value">
                   {isEditing ? (
-                    <div className="editable-container" style={{ marginLeft: '10px' }}>
-                      <input value={editFormData.Age} onChange={e => handleChange('Age', e.target.value)} className="inline-input input-info" />
-                    </div>
+                    <input value={editFormData.Age || ''} onChange={e => handleChange('Age', e.target.value)} className="inline-input center-input" />
                   ) : (
-                    <span>{pet.Age}</span>
+                    pet.Age
                   )}
                 </div>
+              </div>
 
-                <div className="pet-meta-item">
-                  <strong>Стать:&nbsp;</strong>
+              <div className="stat-card">
+                <div className="stat-icon">{pet.Gender === 'Хлопчик' ? '♂️' : '♀️'}</div>
+                <div className="stat-label">Стать</div>
+                <div className="stat-value">
                   {isEditing ? (
-                    <div className="editable-container" style={{ marginLeft: '10px' }}>
-                      <select value={editFormData.Gender} onChange={e => handleChange('Gender', e.target.value)} className="inline-input input-info">
-                        <option>Хлопчик</option>
-                        <option>Дівчинка</option>
-                      </select>
-                    </div>
+                    <select value={editFormData.Gender || 'Хлопчик'} onChange={e => handleChange('Gender', e.target.value)} className="inline-input center-input">
+                      <option>Хлопчик</option>
+                      <option>Дівчинка</option>
+                    </select>
                   ) : (
-                    <span>{pet.Gender}</span>
+                    pet.Gender
                   )}
                 </div>
-
-                {isEditing && (
-                  <div className="pet-meta-item" style={{ marginTop: '15px', borderTop: '1px dashed #e0d4f5', paddingTop: '15px' }}>
-                    <strong>Позначка:&nbsp;</strong>
-                    <div className="editable-container" style={{ marginLeft: '10px' }}>
-                      <select
-                        value={editFormData.Status || 'Шукає дім'}
-                        onChange={e => {
-                          const newStatus = e.target.value;
-                          let newDesc = editFormData.Description;
-
-                          // 🌟 АВТОМАТИЗАЦІЯ ІСТОРІЇ
-                          if (newStatus === 'Вже вдома' && (!newDesc || newDesc === pet.Description)) {
-                            newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
-                          }
-
-                          // ✅ ВИПРАВЛЕННЯ: Оновлюємо статус і опис одночасно
-                          setEditFormData(prev => ({
-                            ...prev,
-                            Status: newStatus,
-                            Description: newDesc
-                          }));
-                        }}
-                        className="inline-input input-info"
-                      >
-                        <option value="Шукає дім">Шукає дім</option>
-                        <option value="Потребує особливого догляду">Потребує особливого догляду</option>
-                        <option value="На лікуванні">На лікуванні</option>
-                        <option value="Вже вдома">Вже вдома</option>
-                        <option value="Не вдалось врятувати">Не вдалось врятувати</option>
-                      </select>
-                      <span className="edit-icon-hint" style={{ right: '5px' }}>✏️</span>
-                    </div>
-                  </div>
-                )}
-                {/* 🌟 АВТОМАТИЗАЦІЯ ВЛАСНИКА */}
-                {isEditing && editFormData.Status === 'Вже вдома' && (
-                  <div className="pet-meta-item" style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', marginTop: '10px' }}>
-                    <strong>🏡 Власник:&nbsp;</strong>
-                    <div className="editable-container" style={{ marginLeft: '10px' }}>
-                      <select
-                        value={editFormData.OwnerId || ''}
-                        onChange={e => {
-                          const sId = e.target.value;
-                          const sUser = usersList.find(u => u.Id.toString() === sId);
-                          handleChange('OwnerId', sId ? parseInt(sId) : null);
-                          handleChange('OwnerName', sUser ? `${sUser.FirstName} ${sUser.LastName}` : '');
-                        }}
-                        className="inline-input input-info"
-                        style={{ borderBottom: '1px solid #6847DD' }}
-                      >
-                        <option value="">-- Оберіть користувача --</option>
-                        {usersList.map(u => (
-                          <option key={u.Id} value={u.Id}>{u.FirstName} {u.LastName} (@{u.Nickname})</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                )}
               </div>
 
-              <div className="pet-tags-block">
-                {isEditing ? (
-                  <div className="editable-container">
-                    <input value={editFormData.Tags} onChange={e => handleChange('Tags', e.target.value)} className="inline-input input-tags" placeholder="Введіть теги через пробіл або кому..." />
-                  </div>
-                ) : (
-                  <div className="tags-list">
-                    {pet.Tags && pet.Tags.split(/[#, ]+/).filter(t => t).map(tag => (
-                      <span key={tag} className="pet-tag">#{tag.trim()}</span>
-                    ))}
-                  </div>
-                )}
+              <div className="stat-card">
+                <div className="stat-icon">🥩</div>
+                <div className="stat-label">Улюблена їжа</div>
+                <div className="stat-value">
+                  {isEditing ? (
+                    <input value={editFormData.FavoriteFood || ''} onChange={e => handleChange('FavoriteFood', e.target.value)} className="inline-input center-input" placeholder="М'яско..." />
+                  ) : (
+                    pet.FavoriteFood || "Усе смачненьке"
+                  )}
+                </div>
               </div>
+            </div>
 
-              <div className="pet-desc-block">
+            <div className="pet-tags-block">
+              <h3 className="section-subtitle">Характер:</h3>
+              {isEditing ? (
+                <div className="editable-container">
+                  <input value={editFormData.Tags || ''} onChange={e => handleChange('Tags', e.target.value)} className="inline-input input-tags" placeholder="Введіть теги через кому або пробіл..." />
+                </div>
+              ) : (
+                <div className="tags-list">
+                  {pet.Tags ? pet.Tags.split(/[#, ]+/).filter(t => t).map(tag => (
+                    <span key={tag} className="pet-tag">#{tag.trim()}</span>
+                  )) : <span className="pet-tag-empty">Немає тегів</span>}
+                </div>
+              )}
+            </div>
+
+            <div className="pet-story-block">
+              <h3 className="section-subtitle">📖 Моя історія:</h3>
+              <div className="story-content">
                 {isEditing ? (
                   <div className="editable-container">
-                    <textarea value={editFormData.Description} onChange={e => handleChange('Description', e.target.value)} className="inline-input input-desc" />
+                    <textarea value={editFormData.Description || ''} onChange={e => handleChange('Description', e.target.value)} className="inline-input input-desc" />
                   </div>
                 ) : (
                   <p className="pet-desc-text">{pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!"}</p>
                 )}
               </div>
+            </div>
 
+            {isEditing && (
+              <div className="admin-extra-settings">
+                <div className="setting-row">
+                  <label><strong>Статус:</strong></label>
+                  <select
+                    value={editFormData.Status || 'Шукає дім'}
+                    onChange={e => {
+                      const newStatus = e.target.value;
+                      let newDesc = editFormData.Description;
+                      if (newStatus === 'Вже вдома' && (!newDesc || newDesc === pet.Description)) {
+                        newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                      }
+                      setEditFormData(prev => ({ ...prev, Status: newStatus, Description: newDesc }));
+                    }}
+                    className="admin-select"
+                  >
+                    <option value="Шукає дім">Шукає дім</option>
+                    <option value="Потребує особливого догляду">Потребує особливого догляду</option>
+                    <option value="На лікуванні">На лікуванні</option>
+                    <option value="Вже вдома">Вже вдома</option>
+                    <option value="Не вдалось врятувати">Не вдалось врятувати</option>
+                  </select>
+                </div>
+
+                {editFormData.Status === 'Вже вдома' && (
+                  <div className="setting-row highlight-row">
+                    <label><strong>🏡 Власник:</strong></label>
+                    <div style={{ marginLeft: '15px', color: '#2E7D32', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                        {editFormData.OwnerName 
+                            ? `👤 ${editFormData.OwnerName}` 
+                            : "⏳ Автоматично призначиться при схваленні заявки"}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="action-area">
               {isAdminPath ? (
                 <div className="admin-actions-block">
-                  <p className="admin-actions-title">Панель адміністратора:</p>
                   {isEditing ? (
                     <div className="admin-buttons-row">
                       <button onClick={() => setIsEditing(false)} disabled={isSaving} className="btn-cancel">Скасувати</button>
                       <button onClick={handleSaveChanges} disabled={isSaving} className="btn-save">{isSaving ? '⏳ Збереження...' : '💾 Зберегти зміни'}</button>
                     </div>
                   ) : (
-                    <button onClick={handleEditToggle} className="btn-edit">✏️ Увімкнути режим редагування</button>
+                    <button onClick={handleEditToggle} className="btn-edit">✏️ Редагувати профіль</button>
                   )}
                 </div>
               ) : (
-                <button onClick={handleAdoptClick} className="btn-adopt">Подати заявку на усиновлення</button>
+                <>
+                  {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати') ? (
+                    <div className="status-message-block">
+                      <p>
+                        {currentStatus === 'Вже вдома' 
+                          ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
+                          : '🌈 На жаль, ця тваринка більше не з нами.'}
+                      </p>
+                    </div>
+                  ) : currentStatus === 'На лікуванні' ? (
+                    <button onClick={handleNotifyWhenHealthyClick} className="btn-notify"> 🔔 Повідомити, коли одужає</button>
+                  ) : (
+                    <button onClick={handleAdoptClick} className="btn-adopt">💖 Подати заявку на усиновлення</button>
+                  )}
+                </>
               )}
-
             </div>
           </div>
         </div>
       </div>
+    </div>
   );
 }
 
