@@ -78,7 +78,6 @@ function Login() {
         e.preventDefault();
 
         try {
-            // 🔍 Повертаємо ТВІЙ код: шукаємо користувача у твоїй таблиці Users
             const { data: user, error } = await supabase
                 .from('Users')
                 .select('*')
@@ -96,7 +95,6 @@ function Login() {
                 return;
             }
 
-            // Записуємо дані сесії в LocalStorage
             localStorage.setItem('userNickname', user.Nickname);
             localStorage.setItem('userRole', user.Role);
 
@@ -106,7 +104,8 @@ function Login() {
             await restoreAndMergeCart(user.Nickname);
 
             if (user.Role === 'admin') {
-                navigate('/admin/pets', { state: { welcomeMsg: 'Вітаємо в системі, Адміністраторе! 🐾' } });
+                // 🌟 ВИПРАВЛЕНО: Тепер після логіну йдемо на Заявки
+                navigate('/admin/adoptions', { state: { welcomeMsg: 'Вітаємо в системі, Адміністраторе! 🐾' } });
             } else {
                 navigate('/', { state: { welcomeMsg: 'Раді бачити вас знову! 🐾' } });
             }

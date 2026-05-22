@@ -9,6 +9,13 @@ function AdminLayout() {
     const location = useLocation();
     const [toastMsg, setToastMsg] = useState('');
 
+    // 🌟 ДОДАНО: Автоматичний перехід на "Заявки" при вході в адмінку
+    useEffect(() => {
+        if (location.pathname === '/admin' || location.pathname === '/admin/') {
+            navigate('/admin/adoptions', { replace: true });
+        }
+    }, [location.pathname, navigate]);
+
     useEffect(() => {
         if (location.state?.welcomeMsg) {
             setToastMsg(location.state.welcomeMsg);
@@ -54,7 +61,6 @@ function AdminLayout() {
                     <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}>
                         Заявки
                     </Link>
-                    {/* 🌟 НОВА ВКЛАДКА ДЛЯ СПОВІЩЕНЬ ПРО ЛІКУВАННЯ */}
                     <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`}>
                         Сповіщення
                     </Link>
