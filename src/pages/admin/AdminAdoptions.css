@@ -332,3 +332,57 @@
     background-color: #6847DD;
     color: white;
 }
+
+/* =========================================
+   ФІЛЬТРИ ДЛЯ ЗАЯВОК (Всі / Прихисток / Волонтер)
+   ========================================= */
+.admin-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f0edff;
+    padding-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background: #ffffff;
+    border: 2px solid #e0d4f5;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-weight: 700;
+    color: #666680;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.filter-btn:hover {
+    border-color: #6847DD;
+    color: #6847DD;
+    background: #faf8ff;
+}
+
+.filter-btn.active {
+    background: #6847DD;
+    color: #ffffff;
+    border-color: #6847DD;
+    box-shadow: 0 4px 15px rgba(104, 71, 221, 0.25);
+}
+
+/* =========================================
+   СПЕЦІАЛЬНІ СТИЛІ ДЛЯ КАРТОК ВОЛОНТЕРІВ
+   ========================================= */
+.app-card-premium.type-volunteer {
+    border: 2px solid #10b981; /* Зелена рамка для волонтерів */
+}
+
+.app-card-premium.type-volunteer .app-card-header {
+    background: #ecfdf5; /* Світло-зелена шапка */
+    border-bottom: 1px solid #d1fae5;
+}
+
+.app-card-premium.type-volunteer .app-id-badge {
+    color: #059669; /* Темно-зелений текст */
+}

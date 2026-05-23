@@ -3,11 +3,12 @@
    ========================================= */
 .contact-section {
     width: 100%;
-    padding: 60px 5%;
+    /* 👇 Зменшено верхній відступ (було 60px) */
+    padding: 20px 5% 60px;
     text-align: center;
-    background-color: transparent; /* 👈 ЗМІНЕНО ТУТ: прозорий фон */
+    background-color: transparent; 
     flex: 1; 
-    position: relative; /* 👈 ДОДАНО ТУТ: щоб лапки знали свої межі */
+    position: relative; 
 }
 
 /* =========================================
@@ -17,7 +18,8 @@
     position: relative;
     width: 732px;
     height: 188px;
-    margin: 0 auto 50px;
+    /* 👇 Зменшено нижній відступ (було 50px) */
+    margin: 0 auto 20px;
 }
 
 .header-brush {
@@ -31,7 +33,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: var(--white);
+    color: var(--white, #fff);
     font-size: 36px;
     font-weight: 800;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
@@ -45,9 +47,10 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-bottom: 40px;
+    /* 👇 Зменшено висоту та відступ, щоб картки підтягнулися вище */
+    margin-bottom: 15px;
     position: relative;
-    height: 150px;
+    height: 100px;
 }
 
 .contact-image {
@@ -60,7 +63,7 @@
     height: 136px;
     position: absolute;
     left: 15%;
-    top: 87%;
+    top: 55%;
     transform: translateY(-50%);
 }
 
@@ -69,7 +72,7 @@
     height: 154px;
     position: absolute;
     right: 15%;
-    top: 98%;
+    top: 72%;
     transform: translateY(-50%);
 }
 
@@ -97,7 +100,7 @@
 .inner-card {
     width: 507px;
     height: 165px;
-    background-color: var(--white);
+    background-color: var(--white, #fff);
     border-radius: 15px;
     padding: 20px 30px;
     text-align: left;
@@ -121,20 +124,57 @@
 .card-title {
     font-size: 24px;
     font-weight: 700;
-    color: var(--black);
+    color: var(--black, #000);
     margin: 0;
 }
 
 .card-info {
     font-size: 18px;
     font-weight: 600;
-    color: var(--black);
+    color: var(--black, #000);
     margin: 5px 0;
     line-height: 1.4;
 }
 
 /* =========================================
-   БЛОК ПІДТРИМКИ (QR КОД)
+   КАРТА ТА ВІДЕО (ДВІ КОЛОНКИ)
+   ========================================= */
+.location-media-container {
+    display: flex;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 60px auto;
+    align-items: stretch;
+}
+
+.media-block {
+    flex: 1;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.section-subtitle {
+    font-size: 28px;
+    font-weight: 700;
+    color: #382677;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.shelter-video {
+    width: 100%;
+    height: 350px;
+    border-radius: 15px;
+    object-fit: cover;
+    background-color: #000; /* Чорний фон, поки вантажиться відео */
+}
+
+/* =========================================
+   БЛОК ПІДТРИМКИ (QR КОД + РЕКВІЗИТИ)
    ========================================= */
 .support-block {
     margin-top: 80px;
@@ -143,10 +183,10 @@
 }
 
 .support-title {
-    font-size: 24px;
+    font-size: 32px;
     font-weight: 700;
-    color: var(--black);
-    margin-bottom: 30px;
+    color: #382677;
+    margin-bottom: 40px;
     text-align: center;
 }
 
@@ -154,17 +194,108 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 80px;
+    flex-wrap: wrap;
+    gap: 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
 }
 
 .qr-image {
     width: 250px;
     height: 250px;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.qr-hint {
+    font-size: 16px;
+    font-weight: 600;
+    color: #382677;
+}
+
+.requisites-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    min-width: 300px;
+    max-width: 450px;
+}
+
+.req-card {
+    background-color: #fff;
+    border: 2px solid #6847DD;
+    border-radius: 15px;
+    padding: 15px 20px;
+    text-align: left;
+    box-shadow: 0 4px 6px rgba(104, 71, 221, 0.1);
+    transition: transform 0.3s;
+}
+
+.req-card:hover {
+    transform: translateY(-3px);
+}
+
+.req-card h4 {
+    margin: 0 0 8px 0;
+    color: #6847DD;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.req-card p {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 1px;
+}
+
+.req-card span {
+    font-size: 13px;
+    color: #666;
 }
 
 .support-image {
     width: 288px;
     height: 288px;
+    object-fit: contain;
+}
+
+/* =========================================
+   ПОСИЛАННЯ "ЯК ЩЕ ДОПОМОГТИ"
+   ========================================= */
+.more-help-container {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.more-help-btn {
+    display: inline-block;
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 18px 45px;
+    border-radius: 30px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(104, 71, 221, 0.3);
+    transition: all 0.3s ease;
+}
+
+.more-help-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(104, 71, 221, 0.5);
+    color: white; 
 }
 
 /* =========================================
@@ -194,18 +325,18 @@
         flex-direction: column;
         gap: 20px;
         align-items: center;
+        height: auto;
     }
 }
 
 @media (max-width: 1024px) {
     .contact-header {
-        margin-bottom: 40px;
+        margin-bottom: 30px;
     }  
     .header-text {
         font-size: 32px;
     }
     .contact-images-container {
-        height: auto;
         margin-bottom: 30px;
     }    
     .contact-image.call-image,
@@ -224,17 +355,25 @@
     .inner-card {
         width: 100%;
     }
+    /* 👇 Адаптуємо карту і відео під менші екрани (тепер вони будуть одне під одним) */
+    .location-media-container {
+        flex-direction: column;
+    }
+    .support-content {
+        flex-direction: column;
+        gap: 30px;
+    }
 }
 
 @media (max-width: 768px) {
     .contact-section {
-        padding: 40px 20px;
+        padding: 20px 20px;
     } 
     .header-text {
         font-size: 28px;
     }
     .contact-header {
-        margin-bottom: 30px;
+        margin-bottom: 20px;
     }      
     .contact-card {
         min-height: 160px;
@@ -256,18 +395,19 @@
         width: 220px;
         height: 220px;
     }
-    .support-content {
-        flex-direction: column;
-        gap: 30px;
+    .requisites-box {
+        width: 100%;
     }
-    .support-title {
-        margin-left: 0;
+    .more-help-btn {
+        font-size: 18px;
+        padding: 15px 30px;
+        width: 90%;
     }
 }
 
 @media (max-width: 480px) {
     .contact-section {
-        padding: 30px 15px;
+        padding: 20px 15px;
     }      
     .header-text {
         font-size: 24px;
@@ -277,20 +417,26 @@
     }      
     .card-info {
         font-size: 14px;
-    }       
+    }        
     .card-icon {
         width: 28px;
         height: 28px;
     }
-    .support-title {
-        font-size: 20px;
+    .support-title, .section-subtitle {
+        font-size: 24px;
     }    
     .qr-image {
-        width: 150px;
-        height: 150px;
+        width: 180px;
+        height: 180px;
+    }
+    .req-card p {
+        font-size: 15px;
     }
     .support-image {
         width: 180px;
         height: 180px;
+    }
+    .media-block iframe, .shelter-video {
+        height: 250px;
     }
 }

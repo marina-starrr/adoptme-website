@@ -16,6 +16,7 @@ import Reviews from './pages/Reviews';
 import Contact from './pages/Contact';
 import Profile from './pages/Profile';
 import PetDetails from './pages/PetDetails';
+import Help from './pages/Help';
 
 // --- СПІЛЬНІ СТОРІНКИ ---
 import Login from './pages/Login';
@@ -84,6 +85,7 @@ function AppRoutes() {
             <Route path="/pets/:id" element={<PetDetails />} />
             <Route path="/about" element={<About />} />
             <Route path="/reviews" element={<Reviews />} />
+            <Route path="/help" element={<Help />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />

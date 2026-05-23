@@ -270,6 +270,8 @@ function UserHeader() {
                     <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
                     <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
                     <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
+                    {/* 👇 ДОДАНО НОВИЙ ПУНКТ МЕНЮ */}
+                    <li><Link to="/help" className="nav-link" onClick={closeMenu}>Допомога</Link></li>
                     <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
                 </ul>
             </nav>

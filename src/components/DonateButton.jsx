@@ -41,16 +41,16 @@ function DonateButton() {
                                 <div className="req-item">
                                     <label>IBAN:</label>
                                     <div className="copy-box">
-                                        <code>UA123456789012345678901234567</code>
-                                        <button onClick={() => copyToClipboard('UA123456789012345678901234567')} title="Скопіювати">📋</button>
+                                        <code>UA883052990262046400993678933</code>
+                                        <button onClick={() => copyToClipboard('UA883052990262046400993678933')} title="Скопіювати">📋</button>
                                     </div>
                                 </div>
 
                                 <div className="req-item">
                                     <label>Номер карти:</label>
                                     <div className="copy-box">
-                                        <code>4441 1111 2222 3333</code>
-                                        <button onClick={() => copyToClipboard('4441 1111 2222 3333')} title="Скопіювати">📋</button>
+                                        <code>4149 6090 4390 2669</code>
+                                        <button onClick={() => copyToClipboard('4149 6090 4390 2669')} title="Скопіювати">📋</button>
                                     </div>
                                 </div>
 
