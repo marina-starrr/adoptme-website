@@ -2,6 +2,7 @@
 import { Outlet } from 'react-router-dom';
 import UserHeader from '../components/UserHeader'; // або просто Header, якщо ти не змінювала назву файлу
 import Footer from '../components/Footer';
+import { useToast } from '../context/ToastContext';
 
 function UserLayout() {
   return (

@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws'; 
 import './Contact.css';
+import { useToast } from '../context/ToastContext';
 
 function Contact() {
   return (

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminAdoptions.css';
+import { useToast } from '../../context/ToastContext';
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);

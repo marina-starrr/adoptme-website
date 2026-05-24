@@ -1,4 +1,5 @@
 import './About.css';
+import { useToast } from '../context/ToastContext';
 
 function About() {
   return (

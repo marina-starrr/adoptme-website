@@ -1,0 +1,29 @@
+.global-toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background-color: #ffffff;
+    color: #1a1040;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 8px 25px rgba(109, 76, 228, 0.3);
+    border: 2px solid #e0d4fc;
+    
+    /* ЗМІНЕНО: Було 99999, ставимо 999999, щоб перекрити overlay */
+    z-index: 999999; 
+    
+    opacity: 0;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+}
+
+/* Клас, який додається для показу */
+.global-toast.show {
+    transform: translateX(-50%) translateY(0); /* Опускаємо на видиму частину */
+    opacity: 1;
+}

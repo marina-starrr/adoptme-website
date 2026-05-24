@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './Login.css';
+import { useToast } from '../context/ToastContext';
 
 function ForgotPassword() {
     const [step, setStep] = useState(1);

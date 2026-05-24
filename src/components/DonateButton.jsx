@@ -1,18 +1,41 @@
 import { useState } from 'react';
-import './DonateButton.css'; // 👈 Додаємо імпорт стилів
+import { useNavigate } from 'react-router-dom';
+import './DonateButton.css';
+import { useToast } from '../context/ToastContext';
 
 function DonateButton() {
     const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
+    const navigate = useNavigate(); 
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
         alert('Реквізити скопійовано!');
     };
 
+    // Закриття модалки на хрестик або клік по фону
+    const handleClose = () => {
+        setIsClosing(true);
+        setTimeout(() => {
+            setIsDonateModalOpen(false);
+            setIsClosing(false);
+        }, 300);
+    };
+
+    // 🌟 Спеціальна функція для посилання
+    const handleHelpClick = (e) => {
+        e.preventDefault(); 
+        setIsClosing(true); // 1. Спочатку плавно ховаємо модалку
+        
+        setTimeout(() => {
+            setIsDonateModalOpen(false);
+            setIsClosing(false);
+            navigate('/help'); // 2. Робимо перехід, який запустить твоє серце з App.jsx
+        }, 300);
+    };
+
     return (
         <>
-            {/* КНОПКА ПІДТРИМАТИ */}
-            {/* Додаємо твій клас support-btn, щоб зберегти розташування в хедері, та новий donate-btn-main для дизайну */}
             <button 
                 className="support-btn donate-btn-main" 
                 onClick={() => setIsDonateModalOpen(true)}
@@ -20,23 +43,20 @@ function DonateButton() {
                 Підтримати <span className="heart-icon">❤</span>
             </button>
 
-            {/* МОДАЛЬНЕ ВІКНО */}
             {isDonateModalOpen && (
-                <div className="modal-overlay" onClick={() => setIsDonateModalOpen(false)}>
-                    <div className="donate-modal" onClick={(e) => e.stopPropagation()}>
-                        <button className="close-modal" onClick={() => setIsDonateModalOpen(false)}>&times;</button>
+                <div className={`donate-special-overlay ${isClosing ? 'closing-overlay' : ''}`} onClick={handleClose}>
+                    <div className={`donate-modal ${isClosing ? 'closing-modal' : ''}`} onClick={(e) => e.stopPropagation()}>
+                        <button className="close-modal" onClick={handleClose}>&times;</button>
                         
                         <h2>Допомогти притулку 🐾</h2>
                         <p className="modal-desc">Кожна ваша гривня — це нагодований хвостик та шанс на нову родину.</p>
 
                         <div className="donate-content">
-                            {/* ЛІВА ЧАСТИНА: QR-код */}
                             <div className="qr-section">
                                 <img src="/qr.jpg" alt="QR Код для оплати" className="qr-img" />
                                 <span>Скануйте для швидкого донату</span>
                             </div>
 
-                            {/* ПРАВА ЧАСТИНА: Реквізити */}
                             <div className="requisites-section">
                                 <div className="req-item">
                                     <label>IBAN:</label>
@@ -59,6 +79,17 @@ function DonateButton() {
                                     <p>Благодійна допомога для AdoptMe</p>
                                 </div>
                             </div>
+                        </div>
+
+                        <div className="extra-help-section">
+                            {/* Використовуємо звичайний тег <a> з нашою функцією затримки */}
+                            <a 
+                                href="/help" 
+                                onClick={handleHelpClick}
+                                className="extra-help-link"
+                            >
+                                Як ще можна допомогти?
+                            </a>
                         </div>
                     </div>
                 </div>

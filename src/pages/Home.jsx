@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Home.css';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../context/ToastContext';
 
 // 🌟 МІНІ-КОМПОНЕНТ ДЛЯ КАРТКИ ЗІ СЛАЙДЕРОМ
 function LuckyCard({ pet }) {
@@ -10,18 +11,23 @@ function LuckyCard({ pet }) {
 
   const nextImg = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // 👈 Щоб клік по стрілочці не перекидав на іншу сторінку
     setImgIndex((prev) => (prev + 1) % pet.images.length);
   };
 
   const prevImg = (e) => {
     e.preventDefault();
+    e.stopPropagation(); // 👈 Щоб клік по стрілочці не перекидав на іншу сторінку
     setImgIndex((prev) => (prev - 1 + pet.images.length) % pet.images.length);
   };
 
   return (
     <div className="lucky-card">
       <div className="lucky-card-img-slider">
-        <img src={pet.images[imgIndex]} alt={pet.petName} className="lucky-main-img" />
+        {/* 🌟 ДОДАНО: Робимо фото клікабельним */}
+        <Link to={`/pets/${pet.id}`} style={{ display: 'block', width: '100%', height: '100%' }}>
+            <img src={pet.images[imgIndex]} alt={pet.petName} className="lucky-main-img" />
+        </Link>
 
         {/* Показуємо стрілочки тільки якщо фотографій більше однієї */}
         {pet.images.length > 1 && (
@@ -40,7 +46,13 @@ function LuckyCard({ pet }) {
       </div>
 
       <div className="lucky-card-info">
-        <h3>{pet.petName} <span className="owner-name">та {pet.ownerName}</span></h3>
+        <h3>
+            {/* 🌟 ДОДАНО: Робимо ім'я клікабельним */}
+            <Link to={`/pets/${pet.id}`} className="lucky-name-link">
+                {pet.petName}
+            </Link> 
+            <span className="owner-name"> та {pet.ownerName}</span>
+        </h3>
         <p className="lucky-review">"{pet.text}"</p>
       </div>
     </div>
@@ -84,7 +96,6 @@ function Home() {
 
       if (!error && data) {
         const formattedPets = data.map(pet => {
-          // Логіка з фотографіями залишається тією ж
           let images = [];
           if (pet.Images && Array.isArray(pet.Images)) {
             images = pet.Images.map(img => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${img}`);
@@ -95,7 +106,6 @@ function Home() {
           return {
             id: pet.Id,
             petName: pet.Name,
-            // 🚨 ОСЬ ТУТ ВИПРАВЛЕННЯ: Беремо ім'я з БД, а якщо його раптом немає - залишаємо заглушку
             ownerName: pet.OwnerName || "Нова сім'я",
             text: pet.Description || "Знайшов свій дім!",
             images: images

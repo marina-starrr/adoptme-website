@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
 import './PetDetails.css';
+import { useToast } from '../context/ToastContext';
 
 function PetDetails() {
   const { id } = useParams();

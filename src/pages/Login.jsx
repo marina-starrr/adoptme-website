@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext'; // ДОДАНО: Імпорт глобального повідомлення
 import { supabase } from '../supabaseClient';
 import './Login.css';
 
@@ -10,20 +11,15 @@ function Login() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const [toastMsg, setToastMsg] = useState('');
     const { login } = useAuth();
-
-    const showToast = (message) => {
-        setToastMsg(message);
-        setTimeout(() => setToastMsg(''), 3500);
-    };
+    const { showToast } = useToast(); // ДОДАНО: Використовуємо глобальну функцію
 
     useEffect(() => {
         if (location.state?.welcomeMsg) {
             showToast(location.state.welcomeMsg);
             window.history.replaceState({}, document.title);
         }
-    }, [location]);
+    }, [location, showToast]);
 
     const restoreAndMergeCart = async (userNickname) => {
         try {
@@ -104,7 +100,6 @@ function Login() {
             await restoreAndMergeCart(user.Nickname);
 
             if (user.Role === 'admin') {
-                // 🌟 ВИПРАВЛЕНО: Тепер після логіну йдемо на Заявки
                 navigate('/admin/adoptions', { state: { welcomeMsg: 'Вітаємо в системі, Адміністраторе! 🐾' } });
             } else {
                 navigate('/', { state: { welcomeMsg: 'Раді бачити вас знову! 🐾' } });
@@ -116,8 +111,8 @@ function Login() {
     };
 
     return (
-        <div className="login-page" style={{ position: 'relative' }}>
-            {toastMsg && <div className="custom-toast">{toastMsg}</div>}
+        <div className="login-page">
+            {/* ВИДАЛЕНО: {toastMsg && <div className="custom-toast">{toastMsg}</div>} */}
 
             <div className="login-card">
                 <h2>Вхід у акаунт 🐾</h2>

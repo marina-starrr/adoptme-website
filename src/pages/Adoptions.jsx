@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import './Adoptions.css'; // Можемо використовувати ті самі стилі
+import { useToast } from '../context/ToastContext';
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);

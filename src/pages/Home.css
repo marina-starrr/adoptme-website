@@ -223,6 +223,7 @@
     background-color: #fdfcff; 
     overflow: hidden; 
     position: relative;
+    /* Я прибрав звідси z-index, щоб лапки знову показувалися тут */
     border-top: 2px dashed rgba(104, 71, 221, 0.2);
 }
 
@@ -275,7 +276,7 @@
     background: #ffffff;
     border-radius: 24px;
     padding: 20px;
-    margin: 0 15px; /* Важливо для рівномірного скролу */
+    margin: 0 15px; 
     box-shadow: 0 8px 24px rgba(104, 71, 221, 0.08), 0 2px 8px rgba(0,0,0,0.04);
     display: flex;
     flex-direction: column;
@@ -296,7 +297,7 @@
     border-radius: 16px;
     overflow: hidden;
     margin-bottom: 20px;
-    background-color: #f7f6fb; /* Легкий фон під час завантаження */
+    background-color: #f7f6fb; 
 }
 
 .lucky-main-img {
@@ -308,7 +309,7 @@
 }
 
 .lucky-card:hover .lucky-main-img {
-    transform: scale(1.03); /* Легкий зум при наведенні */
+    transform: scale(1.03); 
 }
 
 /* Кнопки міні-слайдера */
@@ -471,4 +472,14 @@
     .stat-text { font-size: 16px; }
     .image-slider { height: 300px; }
     .cta-text-right { font-size: 14px; padding: 10px; }
+}
+
+/* =========================================
+   ФІКС: ХОВАЄМО ЛАПКИ ТІЛЬКИ ПІД ФУТЕР 
+   ========================================= */
+footer, 
+.footer,
+[class*="footer"] {
+    position: relative;
+    z-index: 50 !important;
 }

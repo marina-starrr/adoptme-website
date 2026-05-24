@@ -4,6 +4,7 @@ import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
+import { useToast } from '../context/ToastContext';
 
 function UserHeader() {
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);

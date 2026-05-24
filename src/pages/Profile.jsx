@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
+import { useToast } from '../context/ToastContext';
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('favorites');

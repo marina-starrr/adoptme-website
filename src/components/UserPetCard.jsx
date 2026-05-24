@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);

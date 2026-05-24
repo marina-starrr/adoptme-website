@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminUsers.css';
+import { useToast } from '../../context/ToastContext';
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);

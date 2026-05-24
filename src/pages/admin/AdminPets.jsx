@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
+import { useToast } from '../../context/ToastContext';
 
 // 🌟 КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК
 function CustomDropdown({ options, value, onChange, placeholder }) {

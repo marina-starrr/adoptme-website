@@ -3,6 +3,7 @@ import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './UserPets.css';
+import { useToast } from '../context/ToastContext';
 
 // 🌟 КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК (Без системного дизайну)
 function CustomDropdown({ options, value, onChange, placeholder }) {

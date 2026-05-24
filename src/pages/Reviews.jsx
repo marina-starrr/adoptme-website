@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient';
 import './Reviews.css';
+import { useToast } from '../context/ToastContext';
 
 function Reviews() {
   const [reviews, setReviews] = useState([]);

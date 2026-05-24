@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient'; 
-import './Login.css'; 
+import './Login.css';
+import { useToast } from '../context/ToastContext'; 
 
 function Register() {
   const [nickname, setNickname] = useState('');
@@ -13,7 +14,6 @@ function Register() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   
-  // 👇 Нові стани для секретного запитання
   const [secretQuestion, setSecretQuestion] = useState('Як звали вашого першого домашнього улюбленця?');
   const [secretAnswer, setSecretAnswer] = useState('');
 
@@ -60,32 +60,53 @@ function Register() {
     }
 
     try {
-        const { error } = await supabase
+        const cleanedNickname = nickname.trim();
+        const cleanedEmail = email.trim();
+        // 👇 Очищаємо телефон від дужок, плюсів та пробілів
+        const cleanedPhone = phone.replace(/\D/g, ''); 
+
+        // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ (використовуємо очищені дані)
+        const { data: existingUsers, error: checkError } = await supabase
+            .from('Users')
+            .select('Nickname, Email, Phone')
+            .or(`Nickname.eq.${cleanedNickname},Email.eq.${cleanedEmail},Phone.eq.${cleanedPhone}`);
+
+        if (checkError) {
+            showToast('❌ Помилка перевірки даних!');
+            return;
+        }
+
+        if (existingUsers && existingUsers.length > 0) {
+            if (existingUsers.some(u => u.Nickname === cleanedNickname)) showToast('❌ Цей Нікнейм вже зайнятий!');
+            else if (existingUsers.some(u => u.Email === cleanedEmail)) showToast('❌ Цей Email вже зареєстровано!');
+            else if (existingUsers.some(u => u.Phone === cleanedPhone)) showToast('❌ Цей номер телефону вже використовується!');
+            return; 
+        }
+
+        // 2. РЕЄСТРАЦІЯ (записуємо очищений телефон)
+        const { error: insertError } = await supabase
             .from('Users')
             .insert([
                 { 
-                  Nickname: nickname.trim(), 
+                  Nickname: cleanedNickname, 
                   FirstName: firstName.trim(), 
                   LastName: lastName.trim(), 
-                  Phone: phone, 
-                  Email: email.trim(), 
+                  Phone: cleanedPhone, // 👇 Зберігаємо тільки цифри
+                  Email: cleanedEmail, 
                   Password: password,
-                  // 👇 Додаємо збереження запитання та відповіді (відповідь переводимо в малі літери для зручності)
                   SecretQuestion: secretQuestion,
                   SecretAnswer: secretAnswer.trim().toLowerCase()
                 }
             ]);
 
-        if (error) {
-            if (error.code === '23505') {
-                showToast('🐾 Нікнейм або Email вже зайняті!');
-            } else {
-                showToast('❌ Помилка при реєстрації!');
-            }
+        if (insertError) {
+            showToast('❌ Помилка при реєстрації!');
+            console.error("Insert Error:", insertError);
             return;
         }
 
-        localStorage.setItem('userNickname', nickname.trim());
+        // 👇 КРОК 3: УСПІШНИЙ ВХІД
+        localStorage.setItem('userNickname', cleanedNickname);
         localStorage.setItem('userRole', 'user'); 
         login(); 
         window.dispatchEvent(new Event('authChanged')); 
@@ -96,6 +117,7 @@ function Register() {
 
     } catch (err) {
         showToast('❌ Сталася непередбачувана помилка!');
+        console.error(err);
     }
   };
 
@@ -144,7 +166,6 @@ function Register() {
             <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Повторіть пароль" required />
           </div>
 
-          {/* 👇 Новий блок для секретного запитання */}
           <div className="input-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
             <label>Секретне запитання (для відновлення пароля)</label>
             <select 

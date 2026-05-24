@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminHappyPets.css';
+import { useToast } from '../../context/ToastContext';
 
 function AdminHappyPets() {
     const [happyPets, setHappyPets] = useState([]);

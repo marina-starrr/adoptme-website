@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient'; // 👈 ДОДАНО ІМПОРТ SUPABASE
 import './Help.css';
+import { useToast } from '../context/ToastContext';
 
 function Help() {
   const [openFaq, setOpenFaq] = useState(null);

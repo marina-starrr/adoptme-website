@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
+import { useToast } from '../../context/ToastContext';
 
 function AdminNotifications() {
     const [notifications, setNotifications] = useState([]);
