@@ -4,7 +4,6 @@ import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
 import './PetDetails.css';
-import { useToast } from '../context/ToastContext';
 
 function PetDetails() {
   const { id } = useParams();
@@ -166,7 +165,6 @@ function PetDetails() {
     window.dispatchEvent(new Event('openFavorites'));
   };
 
-  // 🌟 НОВА ФУНКЦІЯ ДЛЯ ЗАЛИШЕННЯ ЗАЯВКИ НА ОДУЖАННЯ
   const handleNotifyWhenHealthyClick = async () => {
     const userNickname = localStorage.getItem('userNickname');
     if (!userNickname) {
@@ -313,6 +311,50 @@ function PetDetails() {
               </div>
 
               <div className="stat-card">
+                <div className="stat-icon">🧬</div>
+                <div className="stat-label">Порода</div>
+                <div className="stat-value">
+                  {isEditing ? (
+                    <input value={editFormData.Breed || ''} onChange={e => handleChange('Breed', e.target.value)} className="inline-input center-input" placeholder="Порода..." />
+                  ) : (
+                    pet.Breed || "Не вказано"
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon">📏</div>
+                <div className="stat-label">Розмір</div>
+                <div className="stat-value">
+                  {isEditing ? (
+                    <select value={editFormData.Size || 'Середній'} onChange={e => handleChange('Size', e.target.value)} className="inline-input center-input">
+                      <option>Маленький</option>
+                      <option>Середній</option>
+                      <option>Великий</option>
+                    </select>
+                  ) : (
+                    pet.Size || "Середній"
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card">
+                <div className="stat-icon">⚡</div>
+                <div className="stat-label">Енергія</div>
+                <div className="stat-value">
+                  {isEditing ? (
+                    <select value={editFormData.EnergyLevel || 'Середній'} onChange={e => handleChange('EnergyLevel', e.target.value)} className="inline-input center-input">
+                      <option>Низький</option>
+                      <option>Середній</option>
+                      <option>Високий</option>
+                    </select>
+                  ) : (
+                    pet.EnergyLevel || "Середній"
+                  )}
+                </div>
+              </div>
+
+              <div className="stat-card">
                 <div className="stat-icon">🥩</div>
                 <div className="stat-label">Улюблена їжа</div>
                 <div className="stat-value">
@@ -325,17 +367,60 @@ function PetDetails() {
               </div>
             </div>
 
+            {/* БЕЙДЖІ (Вакцинація, Дресирування, Прибуття) */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '25px' }}>
+              <div style={{ background: pet.IsVaccinated ? '#E8F5E9' : '#FFEBEE', color: pet.IsVaccinated ? '#2E7D32' : '#D32F2F', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                {isEditing ? (
+                  <>
+                    <input type="checkbox" checked={editFormData.IsVaccinated || false} onChange={e => handleChange('IsVaccinated', e.target.checked)} />
+                    Вакцинація
+                  </>
+                ) : (
+                  <>
+                    {pet.IsVaccinated ? '💉 Вакциновано' : '⚠️ Не вакциновано'}
+                  </>
+                )}
+              </div>
+              
+              <div style={{ background: '#FFF3E0', color: '#E65100', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px' }}>
+                {isEditing ? (
+                  <>
+                    <input type="checkbox" checked={editFormData.NeedsTraining || false} onChange={e => handleChange('NeedsTraining', e.target.checked)} />
+                    Потребує дресирування
+                  </>
+                ) : (
+                  pet.NeedsTraining ? '🎓 Потребує навчання' : '⭐ Слухняна(ий)'
+                )}
+              </div>
+
+              <div style={{ background: '#E3F2FD', color: '#1565C0', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px' }}>
+                {isEditing ? (
+                  <input type="date" value={editFormData.ArrivalDate || ''} onChange={e => handleChange('ArrivalDate', e.target.value)} style={{ border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold' }} />
+                ) : (
+                  `📅 У притулку з: ${pet.ArrivalDate || 'Невідомо'}`
+                )}
+              </div>
+            </div>
+
             <div className="pet-tags-block">
-              <h3 className="section-subtitle">Характер:</h3>
+              <h3 className="section-subtitle">Характер ({pet.Friendliness || 'Не вказано'}):</h3>
               {isEditing ? (
-                <div className="editable-container">
-                  <input value={editFormData.Tags || ''} onChange={e => handleChange('Tags', e.target.value)} className="inline-input input-tags" placeholder="Введіть теги через кому або пробіл..." />
-                </div>
+                <>
+                  <select value={editFormData.Friendliness || 'Дружелюбний до всіх'} onChange={e => handleChange('Friendliness', e.target.value)} className="inline-input" style={{ marginBottom: '10px' }}>
+                    <option>Дружелюбний до всіх</option>
+                    <option>Любить дітей</option>
+                    <option>Добре з іншими тваринами</option>
+                    <option>Обережний / Потребує часу</option>
+                  </select>
+                  <div className="editable-container">
+                    <input value={editFormData.Tags || ''} onChange={e => handleChange('Tags', e.target.value)} className="inline-input input-tags" placeholder="Введіть теги через кому або пробіл..." />
+                  </div>
+                </>
               ) : (
                 <div className="tags-list">
                   {pet.Tags ? pet.Tags.split(/[#, ]+/).filter(t => t).map(tag => (
                     <span key={tag} className="pet-tag">#{tag.trim()}</span>
-                  )) : <span className="pet-tag-empty">Немає тегів</span>}
+                  )) : <span className="pet-tag-empty">Немає додаткових тегів</span>}
                 </div>
               )}
             </div>
@@ -353,8 +438,24 @@ function PetDetails() {
               </div>
             </div>
 
+            {/* МЕДИЧНІ НОТАТКИ (Видимі в адмінці під час редагування, або якщо є записи) */}
+            {(pet.MedicalNotes || isEditing) && (
+              <div className="pet-story-block" style={{ marginTop: '20px' }}>
+                <h3 className="section-subtitle" style={{ color: '#D32F2F' }}>🩺 Медичні примітки:</h3>
+                <div className="story-content" style={{ borderLeftColor: '#D32F2F', background: '#FFEBEE' }}>
+                  {isEditing ? (
+                    <div className="editable-container">
+                      <textarea value={editFormData.MedicalNotes || ''} onChange={e => handleChange('MedicalNotes', e.target.value)} className="inline-input input-desc" placeholder="Медичні приписи..." />
+                    </div>
+                  ) : (
+                    <p className="pet-desc-text" style={{ color: '#C62828' }}>{pet.MedicalNotes}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
             {isEditing && (
-              <div className="admin-extra-settings">
+              <div className="admin-extra-settings" style={{ marginTop: '20px' }}>
                 <div className="setting-row">
                   <label><strong>Статус:</strong></label>
                   <select

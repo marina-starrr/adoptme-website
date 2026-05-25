@@ -2,7 +2,8 @@ import { Link } from 'react-router-dom';
 import './AdminPetCard.css';
 import { useToast } from '../context/ToastContext';
 
-function AdminPetCard({ id, name, age, gender, tags, image, onDelete }) {
+// 🌟 Додано пропс breed
+function AdminPetCard({ id, name, age, gender, breed, tags, image, onDelete }) {
     return (
         <div className="pet-card" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <img src={image} alt={name} className="pet-image" style={{ objectFit: 'cover', height: '200px', width: '100%' }} />
@@ -12,6 +13,8 @@ function AdminPetCard({ id, name, age, gender, tags, image, onDelete }) {
                 <div className="pet-info-chatacter" style={{ color: '#333', fontSize: '14px', marginBottom: '10px' }}>
                     <p style={{ margin: '3px 0' }}><strong>Вік:</strong> {age}</p>
                     <p style={{ margin: '3px 0' }}><strong>Стать:</strong> {gender}</p>
+                    {/* 🌟 Виводимо породу */}
+                    <p style={{ margin: '3px 0' }}><strong>Порода:</strong> {breed || 'Не вказано'}</p>
                 </div>
                 
                 <div className="pet-tags" style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
@@ -23,7 +26,6 @@ function AdminPetCard({ id, name, age, gender, tags, image, onDelete }) {
                 </div>
             </div>
 
-            {/* 👇 Твій збережений код для Адміна 👇 */}
             <div className="admin-pet-actions">
                 <Link to={`/admin/edit/${id}`} className="edit-pet-btn">
                     ✏️ Редагувати
@@ -34,7 +36,7 @@ function AdminPetCard({ id, name, age, gender, tags, image, onDelete }) {
                     onClick={(e) => {
                         e.preventDefault();
                         if(window.confirm(`Ви дійсно хочете видалити тваринку "${name}"?`)){
-                            onDelete(id); // Викликаємо функцію видалення, яку передасть батьківський компонент
+                            onDelete(id);
                         }
                     }}
                 >

@@ -3,14 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
-import { useToast } from '../../context/ToastContext';
 
-// 🌟 КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК
 function CustomDropdown({ options, value, onChange, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Закриваємо список при кліку поза ним
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -74,10 +71,19 @@ function AdminPets() {
   const [petTypes, setPetTypes] = useState(['Кіт', 'Собака']);
   const [newType, setNewType] = useState('');
 
+  const [petBreeds, setPetBreeds] = useState(['Безпородна', 'Не вказано']);
+  const [newBreed, setNewBreed] = useState('');
+
+  // СТЕЙТИ ФІЛЬТРІВ
   const [filterType, setFilterType] = useState('Всі');
+  const [filterBreed, setFilterBreed] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
   const [filterAge, setFilterAge] = useState('Всі'); 
   const [filterStatus, setFilterStatus] = useState('Всі');
+  const [filterSize, setFilterSize] = useState('Всі');
+  const [filterEnergy, setFilterEnergy] = useState('Всі');
+  const [filterVaccinated, setFilterVaccinated] = useState('Всі');
+  const [filterTraining, setFilterTraining] = useState('Всі');
 
   const getAgeInMonths = (ageStr) => {
     if (!ageStr) return 0;
@@ -97,13 +103,12 @@ function AdminPets() {
 
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
-      const safePetType = pet.Type ? pet.Type.trim().toLowerCase() : '';
-      const safeFilterType = filterType.trim().toLowerCase();
-      const matchType = filterType === 'Всі' || safePetType === safeFilterType;
+      const matchType = filterType === 'Всі' || (pet.Type || '').trim().toLowerCase() === filterType.trim().toLowerCase();
+      
+      const safePetBreed = pet.Breed ? pet.Breed.trim() : 'Безпородна';
+      const matchBreed = filterBreed === 'Всі' || safePetBreed === filterBreed;
 
-      const safePetGender = pet.Gender ? pet.Gender.trim().toLowerCase() : '';
-      const safeFilterGender = filterGender.trim().toLowerCase();
-      const matchGender = filterGender === 'Всі' || safePetGender === safeFilterGender;
+      const matchGender = filterGender === 'Всі' || (pet.Gender || '').trim().toLowerCase() === filterGender.trim().toLowerCase();
 
       const ageInMonths = getAgeInMonths(pet.Age);
       let matchAge = true;
@@ -112,23 +117,48 @@ function AdminPets() {
       else if (filterAge === 'Від 1 до 3 років') matchAge = ageInMonths > 12 && ageInMonths <= 36;
       else if (filterAge === 'Більше 3 років') matchAge = ageInMonths > 36;
 
-      const safePetStatus = pet.Status ? pet.Status.trim().toLowerCase() : 'шукає дім';
-      const safeFilterStatus = filterStatus.trim().toLowerCase();
-      const matchStatus = filterStatus === 'Всі' || safePetStatus === safeFilterStatus;
+      const matchStatus = filterStatus === 'Всі' || (pet.Status || 'Шукає дім').trim().toLowerCase() === filterStatus.trim().toLowerCase();
 
-      return matchType && matchGender && matchAge && matchStatus;
+      const safePetSize = pet.Size ? pet.Size.trim() : 'Середній';
+      const matchSize = filterSize === 'Всі' || safePetSize === filterSize;
+
+      const safePetEnergy = pet.EnergyLevel ? pet.EnergyLevel.trim() : 'Середній';
+      const matchEnergy = filterEnergy === 'Всі' || safePetEnergy === filterEnergy;
+
+      let matchVaccinated = true;
+      if (filterVaccinated === 'Вакциновані') matchVaccinated = pet.IsVaccinated === true;
+      else if (filterVaccinated === 'Не вакциновані') matchVaccinated = !pet.IsVaccinated;
+
+      let matchTraining = true;
+      if (filterTraining === 'Так') matchTraining = pet.NeedsTraining === true;
+      else if (filterTraining === 'Ні') matchTraining = !pet.NeedsTraining;
+
+      return matchType && matchBreed && matchGender && matchAge && matchStatus && matchSize && matchEnergy && matchVaccinated && matchTraining;
     })
     .sort((a, b) => {
       if (sortOrder === 'name') return (a.Name || '').localeCompare(b.Name || '');
-      if (sortOrder === 'oldest') return a.Id - b.Id;
-      return b.Id - a.Id; 
+      
+      if (sortOrder === 'oldest') {
+        const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
+        const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
+        return dateA - dateB;
+      }
+      
+      const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
+      const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
+      return dateB - dateA;
     });
 
   const resetFilters = () => {
     setFilterType('Всі');
+    setFilterBreed('Всі');
     setFilterGender('Всі');
     setFilterAge('Всі'); 
     setFilterStatus('Всі');
+    setFilterSize('Всі');
+    setFilterEnergy('Всі');
+    setFilterVaccinated('Всі');
+    setFilterTraining('Всі');
     setSortOrder('newest');
   };
 
@@ -144,9 +174,24 @@ function AdminPets() {
     }
   };
 
+  const handleAddNewBreed = (e) => {
+    e.preventDefault();
+    if (newBreed.trim() && !petBreeds.includes(newBreed.trim())) {
+      setPetBreeds([...petBreeds, newBreed.trim()]);
+      setPetFormData({ ...petFormData, Breed: newBreed.trim() });
+      setNewBreed('');
+      showToast("✨ Нову породу додано до списку!");
+    } else {
+      showToast("⚠️ Така порода вже існує або назва порожня");
+    }
+  };
+
+  const getTodayDate = () => new Date().toISOString().split('T')[0];
+
   const initialFormState = {
     Name: '',
     Type: 'Кіт',
+    Breed: 'Безпородна',
     Age: '',
     Gender: 'Хлопчик',
     ImageName: '',
@@ -154,7 +199,14 @@ function AdminPets() {
     Description: '',
     Status: 'Шукає дім',
     OwnerId: null, 
-    OwnerName: ''  
+    OwnerName: '',
+    ArrivalDate: getTodayDate(),
+    IsVaccinated: false,
+    MedicalNotes: '',
+    EnergyLevel: 'Середній',
+    Friendliness: 'Дружелюбний до всіх',
+    NeedsTraining: false,
+    Size: 'Середній'
   };
 
   const [petFormData, setPetFormData] = useState(initialFormState);
@@ -172,8 +224,10 @@ function AdminPets() {
   useEffect(() => {
     if (petsList.length > 0) {
       const uniqueTypes = [...new Set(petsList.map(pet => pet.Type).filter(Boolean))];
-      const combinedTypes = [...new Set(['Кіт', 'Собака', ...uniqueTypes])];
-      setPetTypes(combinedTypes);
+      setPetTypes([...new Set(['Кіт', 'Собака', ...uniqueTypes])]);
+
+      const uniqueBreeds = [...new Set(petsList.map(pet => pet.Breed).filter(Boolean))];
+      setPetBreeds([...new Set(['Безпородна', 'Не вказано', ...uniqueBreeds])]);
     }
   }, [petsList]);
 
@@ -205,6 +259,7 @@ function AdminPets() {
     setPetFormData({
       Name: pet.Name || '',
       Type: pet.Type || 'Кіт',
+      Breed: pet.Breed || 'Безпородна',
       Age: pet.Age || '',
       Gender: pet.Gender || 'Хлопчик',
       ImageName: pet.ImageName || '',
@@ -212,7 +267,14 @@ function AdminPets() {
       Description: pet.Description || '',
       Status: pet.Status || 'Шукає дім',
       OwnerId: pet.OwnerId || null,
-      OwnerName: pet.OwnerName || ''
+      OwnerName: pet.OwnerName || '',
+      ArrivalDate: pet.ArrivalDate || getTodayDate(),
+      IsVaccinated: pet.IsVaccinated || false,
+      MedicalNotes: pet.MedicalNotes || '',
+      EnergyLevel: pet.EnergyLevel || 'Середній',
+      Friendliness: pet.Friendliness || 'Дружелюбний до всіх',
+      NeedsTraining: pet.NeedsTraining || false,
+      Size: pet.Size || 'Середній'
     });
     setSelectedFile(null);
     setIsModalOpen(true);
@@ -298,8 +360,8 @@ function AdminPets() {
     <div style={{ position: 'relative', width: '100%' }}>
       <div className="admin-page-layout">
 
-        {/* САЙДБАР З НОВИМИ ФІЛЬТРАМИ */}
-        <aside className="admin-sidebar">
+        {/* САЙДБАР З ФІЛЬТРАМИ */}
+        <aside className="admin-sidebar" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
           <div className="sidebar-header">
             <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
             <button className="reset-btn" onClick={resetFilters}>Скинути</button>
@@ -317,6 +379,19 @@ function AdminPets() {
             />
           </div>
 
+          {/* НОВИЙ ФІЛЬТР: Порода */}
+          <div className="filter-block">
+            <label>Порода</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Будь-яка порода' },
+                ...petBreeds.map(breed => ({ value: breed, label: breed }))
+              ]} 
+              value={filterBreed} 
+              onChange={setFilterBreed} 
+            />
+          </div>
+
           <div className="filter-block">
             <label>Стать</label>
             <CustomDropdown 
@@ -327,6 +402,36 @@ function AdminPets() {
               ]} 
               value={filterGender} 
               onChange={setFilterGender} 
+            />
+          </div>
+
+          {/* НОВИЙ ФІЛЬТР: Розмір */}
+          <div className="filter-block">
+            <label>Розмір</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Будь-який' },
+                { value: 'Маленький', label: 'Маленький' },
+                { value: 'Середній', label: 'Середній' },
+                { value: 'Великий', label: 'Великий' }
+              ]} 
+              value={filterSize} 
+              onChange={setFilterSize} 
+            />
+          </div>
+
+          {/* НОВИЙ ФІЛЬТР: Енергія */}
+          <div className="filter-block">
+            <label>Рівень енергії</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Будь-який' },
+                { value: 'Низький', label: 'Низький' },
+                { value: 'Середній', label: 'Середній' },
+                { value: 'Високий', label: 'Високий' }
+              ]} 
+              value={filterEnergy} 
+              onChange={setFilterEnergy} 
             />
           </div>
 
@@ -342,6 +447,34 @@ function AdminPets() {
               ]} 
               value={filterAge} 
               onChange={setFilterAge} 
+            />
+          </div>
+
+          {/* НОВИЙ ФІЛЬТР: Вакцинація */}
+          <div className="filter-block">
+            <label>Вакцинація</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Не важливо' },
+                { value: 'Вакциновані', label: '💉 Вакциновані' },
+                { value: 'Не вакциновані', label: '⚠️ Не вакциновані' }
+              ]} 
+              value={filterVaccinated} 
+              onChange={setFilterVaccinated} 
+            />
+          </div>
+
+          {/* НОВИЙ ФІЛЬТР: Потребує навчання */}
+          <div className="filter-block">
+            <label>Навчання / Дресирування</label>
+            <CustomDropdown 
+              options={[
+                { value: 'Всі', label: 'Не важливо' },
+                { value: 'Так', label: 'Потребує навчання' },
+                { value: 'Ні', label: 'Слухняна(ий)' }
+              ]} 
+              value={filterTraining} 
+              onChange={setFilterTraining} 
             />
           </div>
 
@@ -365,7 +498,6 @@ function AdminPets() {
         <div className="admin-content-area">
           <div className="admin-card">
             
-            {/* ШАПКА З НОВИМ СОРТУВАННЯМ */}
             <div className="admin-header-box">
               <div className="admin-title-row">
                 <h2 className="admin-page-title">
@@ -433,6 +565,7 @@ function AdminPets() {
                 <input type="text" placeholder="Наприклад: Mars" value={petFormData.Name} onChange={e => setPetFormData({ ...petFormData, Name: e.target.value })} required />
               </div>
 
+              {/* БЛОК 1: ОСНОВНА ІНФОРМАЦІЯ */}
               <div className="form-row">
                 <div className="input-group">
                   <label>Вид тваринки</label>
@@ -448,11 +581,87 @@ function AdminPets() {
                 </div>
 
                 <div className="input-group">
+                  <label>Порода</label>
+                  <div className="add-type-row">
+                    <select value={petFormData.Breed} onChange={e => setPetFormData({ ...petFormData, Breed: e.target.value })} className="form-control">
+                      {petBreeds.map(breed => <option key={breed} value={breed}>{breed}</option>)}
+                    </select>
+                  </div>
+                  <div className="add-type-row" style={{ marginTop: '10px' }}>
+                    <input type="text" placeholder="Інша порода..." value={newBreed} onChange={e => setNewBreed(e.target.value)} className="form-control" />
+                    <button type="button" className="add-type-btn" onClick={handleAddNewBreed}>+</button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="input-group">
                   <label>Стать</label>
                   <select value={petFormData.Gender} onChange={e => setPetFormData({ ...petFormData, Gender: e.target.value })} className="form-control">
                     <option>Хлопчик</option>
                     <option>Дівчинка</option>
                   </select>
+                </div>
+
+                <div className="input-group">
+                  <label>Вік</label>
+                  <input type="text" placeholder="Наприклад: 9 місяців" value={petFormData.Age} onChange={e => setPetFormData({ ...petFormData, Age: e.target.value })} className="form-control" required />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="input-group">
+                  <label>Дата прибуття в притулок</label>
+                  <input type="date" value={petFormData.ArrivalDate} onChange={e => setPetFormData({ ...petFormData, ArrivalDate: e.target.value })} className="form-control" required />
+                </div>
+                <div className="input-group">
+                  <label>Розмір</label>
+                  <select value={petFormData.Size} onChange={e => setPetFormData({ ...petFormData, Size: e.target.value })} className="form-control">
+                    <option>Маленький</option>
+                    <option>Середній</option>
+                    <option>Великий</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* БЛОК 2: ХАРАКТЕР ТА ПОВЕДІНКА */}
+              <div className="form-row">
+                <div className="input-group">
+                  <label>Рівень енергії</label>
+                  <select value={petFormData.EnergyLevel} onChange={e => setPetFormData({ ...petFormData, EnergyLevel: e.target.value })} className="form-control">
+                    <option>Низький</option>
+                    <option>Середній</option>
+                    <option>Високий</option>
+                  </select>
+                </div>
+                <div className="input-group">
+                  <label>Дружелюбність</label>
+                  <select value={petFormData.Friendliness} onChange={e => setPetFormData({ ...petFormData, Friendliness: e.target.value })} className="form-control">
+                    <option>Дружелюбний до всіх</option>
+                    <option>Любить дітей</option>
+                    <option>Добре з іншими тваринами</option>
+                    <option>Обережний / Потребує часу</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input type="checkbox" id="needsTraining" checked={petFormData.NeedsTraining} onChange={e => setPetFormData({ ...petFormData, NeedsTraining: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                <label htmlFor="needsTraining" style={{ margin: 0, cursor: 'pointer' }}>Потребує дресирування / навчання</label>
+              </div>
+
+              {/* БЛОК 3: МЕДИЧНИЙ СТАТУС */}
+              <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: '#49109f' }}>Медичний статус</h4>
+                
+                <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                  <input type="checkbox" id="isVaccinated" checked={petFormData.IsVaccinated} onChange={e => setPetFormData({ ...petFormData, IsVaccinated: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                  <label htmlFor="isVaccinated" style={{ margin: 0, cursor: 'pointer', fontWeight: 'bold', color: '#2E7D32' }}>💉 Тваринка вакцинована</label>
+                </div>
+
+                <div className="input-group">
+                  <label>Медичні нотатки (ліки, особливості)</label>
+                  <textarea placeholder="Наприклад: Потребує гіпоалергенний корм..." value={petFormData.MedicalNotes || ''} onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })} className="form-control" rows="2"></textarea>
                 </div>
               </div>
 
@@ -502,21 +711,12 @@ function AdminPets() {
                       </option>
                     ))}
                   </select>
-                  <small style={{ color: '#666', marginTop: '8px', display: 'block' }}>
-                    Тваринка з'явиться на головній сторінці у розділі "Щасливчики", а також у профілі цього користувача.
-                  </small>
                 </div>
               )}
 
-              <div className="form-row">
-                <div className="input-group">
-                  <label>Вік</label>
-                  <input type="text" placeholder="Наприклад: 9 місяців" value={petFormData.Age} onChange={e => setPetFormData({ ...petFormData, Age: e.target.value })} className="form-control" required />
-                </div>
-                <div className="input-group">
-                  <label>Теги</label>
-                  <input type="text" placeholder="#добра #розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
-                </div>
+              <div className="input-group">
+                <label>Теги</label>
+                <input type="text" placeholder="#добра #розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
               </div>
 
               <div className="input-group">

@@ -42,7 +42,6 @@
     max-width: 1400px;
     margin: 0 auto;
     align-items: flex-start;
-    /* Щоб сайдбар не розтягувався по висоті */
 }
 
 /* =========================================
@@ -57,8 +56,22 @@
     box-shadow: 0 10px 40px rgba(104, 71, 221, 0.08);
     position: sticky;
     top: 100px;
-    /* Сайдбар їде за скролом */
     z-index: 10;
+    /* Додано обмеження висоти та скрол для великої кількості фільтрів */
+    max-height: calc(100vh - 120px);
+    overflow-y: auto;
+}
+
+/* Кастомний скролбар для сайдбару */
+.catalog-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.catalog-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+.catalog-sidebar::-webkit-scrollbar-thumb {
+    background: #d4cbf9;
+    border-radius: 10px;
 }
 
 .sidebar-header {
@@ -154,13 +167,9 @@
     border-radius: 14px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
     border: 1px solid rgba(104, 71, 221, 0.1);
-    z-index: 100;
-    animation: fadeInDropdown 0.2s ease-out;
-    overflow: hidden;
     z-index: 10000;
-    /* 👈 ДОДАЙ ЦЕ: список має бути вище контейнера */
+    animation: fadeInDropdown 0.2s ease-out;
     overflow: visible;
-    /* 👈 ВАЖЛИВО: щоб список не різався */
 }
 
 .custom-dropdown-list {
@@ -171,7 +180,6 @@
     overflow-y: auto;
 }
 
-/* Кастомний скролбар для списку */
 .custom-dropdown-list::-webkit-scrollbar {
     width: 6px;
 }
@@ -211,7 +219,6 @@
         opacity: 0;
         transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
         transform: translateY(0);
@@ -225,8 +232,8 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    width: 100%;      /* 👈 Додай це */
-    min-width: 0;     /* 👈 Це не дає елементам "виштовхувати" контейнер */
+    width: 100%;      
+    min-width: 0;     
 }
 
 .catalog-top-bar {
@@ -264,10 +271,9 @@
 /* СІТКА */
 .pet-grid {
     display: grid;
-    /* Зменшили з 280px на 250px, щоб двом карткам було легше встати поруч */
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
-    gap: 30px; /* Трохи менший відступ, щоб більше влізало */
-    width: 100%; /* Обов'язково для grid */
+    gap: 30px;
+    width: 100%;
 }
 
 .pet-card-wrapper {
@@ -331,7 +337,6 @@
         position: sticky;
         top: 100px;
         z-index: 50;
-        /* Нижче ніж 10000, тому дропдаун буде поверх */
         overflow: visible !important;
     }
 

@@ -3,14 +3,12 @@ import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './UserPets.css';
-import { useToast } from '../context/ToastContext';
 
-// 🌟 КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК (Без системного дизайну)
+// КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК
 function CustomDropdown({ options, value, onChange, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Закриваємо список при кліку поза ним
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -59,27 +57,41 @@ function UserPets() {
   const [petsList, setPetsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Стейти фільтрів та сортування
+  // Стейти для динамічних списків
   const [petTypes, setPetTypes] = useState([{ value: 'Всі', label: 'Всі види' }]);
+  const [petBreeds, setPetBreeds] = useState([{ value: 'Всі', label: 'Будь-яка порода' }]);
+
+  // Стейти фільтрів
   const [filterType, setFilterType] = useState('Всі');
+  const [filterBreed, setFilterBreed] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
   const [filterAge, setFilterAge] = useState('Всі');
   const [filterStatus, setFilterStatus] = useState('Всі');
+  const [filterSize, setFilterSize] = useState('Всі');
+  const [filterEnergy, setFilterEnergy] = useState('Всі');
+  const [filterVaccinated, setFilterVaccinated] = useState('Всі');
+  const [filterTraining, setFilterTraining] = useState('Всі');
+
   const [sortOrder, setSortOrder] = useState('newest');
 
   useEffect(() => {
     fetchPets();
   }, []);
 
-  // Збираємо унікальні види тварин для фільтра
+  // Збираємо унікальні види та породи для фільтрів
   useEffect(() => {
     if (petsList.length > 0) {
       const uniqueTypes = [...new Set(petsList.map(pet => pet.Type).filter(Boolean))];
-      const typeOptions = [
+      setPetTypes([
         { value: 'Всі', label: 'Всі види' },
         ...uniqueTypes.map(type => ({ value: type, label: type }))
-      ];
-      setPetTypes(typeOptions);
+      ]);
+
+      const uniqueBreeds = [...new Set(petsList.map(pet => pet.Breed).filter(Boolean))];
+      setPetBreeds([
+        { value: 'Всі', label: 'Будь-яка порода' },
+        ...uniqueBreeds.map(breed => ({ value: breed, label: breed }))
+      ]);
     }
   }, [petsList]);
 
@@ -112,12 +124,15 @@ function UserPets() {
     return num;
   };
 
-  // Розумна фільтрація та сортування
+  // Розумна фільтрація
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
       const safePetType = pet.Type ? pet.Type.trim().toLowerCase() : '';
       const safeFilterType = filterType.trim().toLowerCase();
       const matchType = filterType === 'Всі' || safePetType === safeFilterType;
+
+      const safePetBreed = pet.Breed ? pet.Breed.trim() : 'Безпородна';
+      const matchBreed = filterBreed === 'Всі' || safePetBreed === filterBreed;
 
       const safePetGender = pet.Gender ? pet.Gender.trim().toLowerCase() : '';
       const safeFilterGender = filterGender.trim().toLowerCase();
@@ -134,19 +149,47 @@ function UserPets() {
       const safeFilterStatus = filterStatus.trim().toLowerCase();
       const matchStatus = filterStatus === 'Всі' || safePetStatus === safeFilterStatus;
 
-      return matchType && matchGender && matchAge && matchStatus;
+      const safePetSize = pet.Size ? pet.Size.trim() : 'Середній';
+      const matchSize = filterSize === 'Всі' || safePetSize === filterSize;
+
+      const safePetEnergy = pet.EnergyLevel ? pet.EnergyLevel.trim() : 'Середній';
+      const matchEnergy = filterEnergy === 'Всі' || safePetEnergy === filterEnergy;
+
+      let matchVaccinated = true;
+      if (filterVaccinated === 'Вакциновані') matchVaccinated = pet.IsVaccinated === true;
+      else if (filterVaccinated === 'Не вакциновані') matchVaccinated = !pet.IsVaccinated;
+
+      let matchTraining = true;
+      if (filterTraining === 'Так') matchTraining = pet.NeedsTraining === true;
+      else if (filterTraining === 'Ні') matchTraining = !pet.NeedsTraining;
+
+      return matchType && matchBreed && matchGender && matchAge && matchStatus && matchSize && matchEnergy && matchVaccinated && matchTraining;
     })
     .sort((a, b) => {
       if (sortOrder === 'name') return (a.Name || '').localeCompare(b.Name || '');
-      if (sortOrder === 'oldest') return a.Id - b.Id;
-      return b.Id - a.Id; // newest
+      
+      if (sortOrder === 'oldest') {
+        const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
+        const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
+        return dateA - dateB;
+      }
+      
+      const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
+      const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
+      return dateB - dateA;
     });
 
   const resetFilters = () => {
     setFilterType('Всі');
+    setFilterBreed('Всі');
     setFilterGender('Всі');
     setFilterAge('Всі');
     setFilterStatus('Всі');
+    setFilterSize('Всі');
+    setFilterEnergy('Всі');
+    setFilterVaccinated('Всі');
+    setFilterTraining('Всі');
+    setSortOrder('newest');
   };
 
   if (loading) return <h2 className="loading-message">Шукаємо пухнастиків... 🐾</h2>;
@@ -156,10 +199,8 @@ function UserPets() {
         <BackgroundPaws />
         
         <div style={{ position: 'relative', zIndex: 2 }}>
-          {/* ВЕЛИКИЙ ЗАГОЛОВОК ЗВЕРХУ */}
           <div className="pets-title-container">Знайди свого найкращого друга</div>
 
-          {/* КОНТЕЙНЕР: САЙДБАР + КОНТЕНТ */}
           <div className="catalog-layout">
             
             {/* ⬅️ ЛІВА ПАНЕЛЬ: ФІЛЬТРИ */}
@@ -179,6 +220,15 @@ function UserPets() {
               </div>
 
               <div className="filter-block">
+                <label>Порода</label>
+                <CustomDropdown 
+                  options={petBreeds} 
+                  value={filterBreed} 
+                  onChange={setFilterBreed} 
+                />
+              </div>
+
+              <div className="filter-block">
                 <label>Стать</label>
                 <CustomDropdown 
                   options={[
@@ -188,6 +238,34 @@ function UserPets() {
                   ]} 
                   value={filterGender} 
                   onChange={setFilterGender} 
+                />
+              </div>
+
+              <div className="filter-block">
+                <label>Розмір</label>
+                <CustomDropdown 
+                  options={[
+                    { value: 'Всі', label: 'Будь-який' },
+                    { value: 'Маленький', label: 'Маленький' },
+                    { value: 'Середній', label: 'Середній' },
+                    { value: 'Великий', label: 'Великий' }
+                  ]} 
+                  value={filterSize} 
+                  onChange={setFilterSize} 
+                />
+              </div>
+
+              <div className="filter-block">
+                <label>Рівень енергії</label>
+                <CustomDropdown 
+                  options={[
+                    { value: 'Всі', label: 'Будь-який' },
+                    { value: 'Низький', label: 'Низький' },
+                    { value: 'Середній', label: 'Середній' },
+                    { value: 'Високий', label: 'Високий' }
+                  ]} 
+                  value={filterEnergy} 
+                  onChange={setFilterEnergy} 
                 />
               </div>
 
@@ -203,6 +281,32 @@ function UserPets() {
                   ]} 
                   value={filterAge} 
                   onChange={setFilterAge} 
+                />
+              </div>
+
+              <div className="filter-block">
+                <label>Вакцинація</label>
+                <CustomDropdown 
+                  options={[
+                    { value: 'Всі', label: 'Не важливо' },
+                    { value: 'Вакциновані', label: '💉 Вакциновані' },
+                    { value: 'Не вакциновані', label: '⚠️ Не вакциновані' }
+                  ]} 
+                  value={filterVaccinated} 
+                  onChange={setFilterVaccinated} 
+                />
+              </div>
+
+              <div className="filter-block">
+                <label>Навчання / Дресирування</label>
+                <CustomDropdown 
+                  options={[
+                    { value: 'Всі', label: 'Не важливо' },
+                    { value: 'Так', label: 'Потребує навчання' },
+                    { value: 'Ні', label: 'Слухняна(ий)' }
+                  ]} 
+                  value={filterTraining} 
+                  onChange={setFilterTraining} 
                 />
               </div>
 
@@ -224,7 +328,6 @@ function UserPets() {
             {/* ➡️ ПРАВА ПАНЕЛЬ: СОРТУВАННЯ + СІТКА КАРТОК */}
             <main className="catalog-main">
               
-              {/* Сортування зверху справа */}
               <div className="catalog-top-bar">
                 <div className="results-count">
                   Знайдено пухнастиків: <strong>{filteredAndSortedPets.length}</strong>
@@ -245,7 +348,6 @@ function UserPets() {
                 </div>
               </div>
 
-              {/* Сітка карток */}
               {filteredAndSortedPets.length === 0 ? (
                 <div className="empty-catalog">
                   <h3>За вашими критеріями нікого не знайдено 😔</h3>
