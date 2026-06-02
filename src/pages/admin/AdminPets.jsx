@@ -74,7 +74,6 @@ function AdminPets() {
   const [petBreeds, setPetBreeds] = useState(['Безпородна', 'Не вказано']);
   const [newBreed, setNewBreed] = useState('');
 
-  // СТЕЙТИ ФІЛЬТРІВ
   const [filterType, setFilterType] = useState('Всі');
   const [filterBreed, setFilterBreed] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
@@ -360,7 +359,6 @@ function AdminPets() {
     <div style={{ position: 'relative', width: '100%' }}>
       <div className="admin-page-layout">
 
-        {/* САЙДБАР З ФІЛЬТРАМИ */}
         <aside className="admin-sidebar" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
           <div className="sidebar-header">
             <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
@@ -379,7 +377,6 @@ function AdminPets() {
             />
           </div>
 
-          {/* НОВИЙ ФІЛЬТР: Порода */}
           <div className="filter-block">
             <label>Порода</label>
             <CustomDropdown 
@@ -405,7 +402,6 @@ function AdminPets() {
             />
           </div>
 
-          {/* НОВИЙ ФІЛЬТР: Розмір */}
           <div className="filter-block">
             <label>Розмір</label>
             <CustomDropdown 
@@ -420,7 +416,6 @@ function AdminPets() {
             />
           </div>
 
-          {/* НОВИЙ ФІЛЬТР: Енергія */}
           <div className="filter-block">
             <label>Рівень енергії</label>
             <CustomDropdown 
@@ -450,7 +445,6 @@ function AdminPets() {
             />
           </div>
 
-          {/* НОВИЙ ФІЛЬТР: Вакцинація */}
           <div className="filter-block">
             <label>Вакцинація</label>
             <CustomDropdown 
@@ -464,7 +458,6 @@ function AdminPets() {
             />
           </div>
 
-          {/* НОВИЙ ФІЛЬТР: Потребує навчання */}
           <div className="filter-block">
             <label>Навчання / Дресирування</label>
             <CustomDropdown 
@@ -550,7 +543,6 @@ function AdminPets() {
         </div>
       </div>
 
-      {/* МОДАЛЬНЕ ВІКНО ФОРМИ */}
       {isModalOpen && (
         <div className="modal-overlay" onClick={() => !isUploading && setIsModalOpen(false)}>
           <div className="admin-modal" onClick={e => e.stopPropagation()}>
@@ -565,7 +557,6 @@ function AdminPets() {
                 <input type="text" placeholder="Наприклад: Mars" value={petFormData.Name} onChange={e => setPetFormData({ ...petFormData, Name: e.target.value })} required />
               </div>
 
-              {/* БЛОК 1: ОСНОВНА ІНФОРМАЦІЯ */}
               <div className="form-row">
                 <div className="input-group">
                   <label>Вид тваринки</label>
@@ -624,7 +615,6 @@ function AdminPets() {
                 </div>
               </div>
 
-              {/* БЛОК 2: ХАРАКТЕР ТА ПОВЕДІНКА */}
               <div className="form-row">
                 <div className="input-group">
                   <label>Рівень енергії</label>
@@ -650,7 +640,6 @@ function AdminPets() {
                 <label htmlFor="needsTraining" style={{ margin: 0, cursor: 'pointer' }}>Потребує дресирування / навчання</label>
               </div>
 
-              {/* БЛОК 3: МЕДИЧНИЙ СТАТУС */}
               <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#49109f' }}>Медичний статус</h4>
                 

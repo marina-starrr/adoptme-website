@@ -11,31 +11,28 @@ function LuckyCard({ pet }) {
 
   const nextImg = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // 👈 Щоб клік по стрілочці не перекидав на іншу сторінку
+    e.stopPropagation(); 
     setImgIndex((prev) => (prev + 1) % pet.images.length);
   };
 
   const prevImg = (e) => {
     e.preventDefault();
-    e.stopPropagation(); // 👈 Щоб клік по стрілочці не перекидав на іншу сторінку
+    e.stopPropagation(); 
     setImgIndex((prev) => (prev - 1 + pet.images.length) % pet.images.length);
   };
 
   return (
     <div className="lucky-card">
       <div className="lucky-card-img-slider">
-        {/* 🌟 ДОДАНО: Робимо фото клікабельним */}
         <Link to={`/pets/${pet.id}`} style={{ display: 'block', width: '100%', height: '100%' }}>
             <img src={pet.images[imgIndex]} alt={pet.petName} className="lucky-main-img" />
         </Link>
 
-        {/* Показуємо стрілочки тільки якщо фотографій більше однієї */}
         {pet.images.length > 1 && (
           <>
             <button className="mini-nav prev" onClick={prevImg}>‹</button>
             <button className="mini-nav next" onClick={nextImg}>›</button>
 
-            {/* Крапочки-індикатори знизу фото */}
             <div className="mini-dots">
               {pet.images.map((_, i) => (
                 <span key={i} className={`dot ${i === imgIndex ? 'active' : ''}`} />
@@ -47,7 +44,6 @@ function LuckyCard({ pet }) {
 
       <div className="lucky-card-info">
         <h3>
-            {/* 🌟 ДОДАНО: Робимо ім'я клікабельним */}
             <Link to={`/pets/${pet.id}`} className="lucky-name-link">
                 {pet.petName}
             </Link> 
@@ -87,15 +83,25 @@ function Home() {
 
   useEffect(() => {
     const fetchHappyPets = async () => {
+      // 👇 ЗМІНА: Забираємо небезпечний фільтр з БД. Просимо просто тваринок "Вже вдома" (беремо з запасом 20 штук)
       const { data, error } = await supabase
         .from('Pets')
         .select('*')
         .eq('Status', 'Вже вдома')
         .order('Id', { ascending: false })
-        .limit(8);
+        .limit(20);
 
-      if (!error && data) {
-        const formattedPets = data.map(pet => {
+      if (error) {
+        console.error("Помилка завантаження щасливчиків:", error);
+        return;
+      }
+
+      if (data) {
+        // 👇 ЗМІНА: Відфільтровуємо ТІЛЬКИ ТИХ, у кого галочка явно знята (=== false)
+        // Всі старі тваринки (null) і нові з галочкою (true) пройдуть далі
+        const visiblePetsData = data.filter(pet => pet.ShowInLucky !== false).slice(0, 8);
+
+        const formattedPets = visiblePetsData.map(pet => {
           let images = [];
           if (pet.Images && Array.isArray(pet.Images)) {
             images = pet.Images.map(img => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${img}`);
@@ -201,7 +207,6 @@ function Home() {
 
           <div className="lucky-marquee-container">
             <div className="lucky-marquee-track">
-              {/* Для стабільної анімації дублюємо масив */}
               {[...happyPets, ...happyPets, ...happyPets].map((pet, index) => (
                 <LuckyCard key={`${pet.id}-${index}`} pet={pet} />
               ))}

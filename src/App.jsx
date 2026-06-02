@@ -5,12 +5,10 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
 import { ToastProvider } from './context/ToastContext';
 
-// --- ОБГОРТКИ ТА ЗАХИСТ ---
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// --- СТОРІНКИ КОРИСТУВАЧА ---
 import Home from './pages/Home';
 import UserPets from './pages/UserPets';
 import About from './pages/About';
@@ -20,12 +18,10 @@ import Profile from './pages/Profile';
 import PetDetails from './pages/PetDetails';
 import Help from './pages/Help';
 
-// --- СПІЛЬНІ СТОРІНКИ ---
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import Register from './pages/Register';
 
-// --- СТОРІНКИ АДМІНА ---
 import AdminAdoptions from './pages/admin/AdminAdoptions';
 import AdminPets from './pages/admin/AdminPets';
 import AdminReviews from './pages/admin/AdminReviews';
@@ -40,7 +36,6 @@ function AppRoutes() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  // 👇 1. ПЛАВНИЙ БІЛИЙ ФОН
   const overlayVariants = {
     initial: { opacity: 1, display: "flex" },
     animate: {
@@ -55,7 +50,6 @@ function AppRoutes() {
     }
   };
 
-  // 👇 2. СЕРЦЕ ЗБІЛЬШУЄТЬСЯ ТА ЗМЕНШУЄТЬСЯ
   const heartVariants = {
     initial: { scale: 1.8, opacity: 1 },
     animate: {
@@ -71,7 +65,6 @@ function AppRoutes() {
   };
 
   return (
-    // ПРИБРАЛИ AuthProvider та ToastProvider ЗВІДСИ
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
@@ -101,7 +94,6 @@ function AppRoutes() {
           <Route path="/admin" element={
             <ProtectedRoute requireAdmin={true}><AdminLayout /></ProtectedRoute>
           }>
-            {/* 🌟 ДОДАНО: Перенаправлення з /admin на /admin/adoptions */}
             <Route index element={<Navigate to="adoptions" replace />} />
 
             <Route path="adoptions" element={<AdminAdoptions />} />
@@ -114,7 +106,6 @@ function AppRoutes() {
           </Route>
         </Routes>
 
-        {/* --- АНІМОВАНИЙ БІЛИЙ ЕКРАН ТА СЕРЦЕ --- */}
         <motion.div
           variants={overlayVariants}
           style={{
@@ -144,7 +135,6 @@ function AppRoutes() {
 
 function App() {
   return (
-    // ВСІ ПРОВАЙДЕРИ ТУТ, НА ВЕРШИНІ
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>

@@ -9,7 +9,6 @@ function AdminAdoptions() {
     const [toastMsg, setToastMsg] = useState('');
     
     const [openDropdownId, setOpenDropdownId] = useState(null);
-    // 👇 ДОДАНО СТАН ДЛЯ ФІЛЬТРУ
     const [filterType, setFilterType] = useState('Всі'); // 'Всі', 'Прихисток', 'Волонтерство'
 
     const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
@@ -41,15 +40,15 @@ function AdminAdoptions() {
     const handleStatusChange = async (id, newStatus) => {
         const app = applications.find(a => a.Id === id);
 
+        // 1. ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "ПЕРЕДАНО" (Тваринка їде додому)
         if (newStatus === 'Передано' && app.Status !== 'Передано') {
-            // Перевіряємо чи це заявка на тваринку, чи на волонтерство
-            if (app.PetName === 'Волонтерство') {
+            if (app.PetName?.includes('Волонтерство')) {
                 showToast('❌ Статус "Передано" не застосовується для волонтерів.');
                 setOpenDropdownId(null);
                 return;
             }
 
-            if (!window.confirm(`Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі.`)) {
+            if (!window.confirm(`Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі та додасть у Щасливчики.`)) {
                 setOpenDropdownId(null);
                 return; 
             }
@@ -66,8 +65,8 @@ function AdminAdoptions() {
                 }
 
                 const ownerId = userData.Id;
-
                 const petIds = app.PetIds || [];
+                
                 if (petIds.length > 0) {
                     for (const petId of petIds) {
                         await supabase
@@ -80,7 +79,6 @@ function AdminAdoptions() {
                             .eq('Id', petId);
                     }
                 }
-
                 showToast('🏡 Тваринку успішно закріплено за новим власником!');
 
             } catch (err) {
@@ -90,6 +88,38 @@ function AdminAdoptions() {
             }
         }
 
+        // 2. 👇 НОВА ЛОГІКА: ЯКЩО СТАТУС ЗМІНЮЄТЬСЯ З "ПЕРЕДАНО" НА НИЖЧИЙ (Скасування передачі)
+        if (app.Status === 'Передано' && newStatus !== 'Передано') {
+            if (!window.confirm(`Ви дійсно хочете скасувати передачу тваринки? Її статус зміниться на "Шукає дім" і вона зникне з панелі щасливчиків.`)) {
+                setOpenDropdownId(null);
+                return; 
+            }
+
+            try {
+                const petIds = app.PetIds || [];
+                if (petIds.length > 0) {
+                    for (const petId of petIds) {
+                        await supabase
+                            .from('Pets')
+                            .update({
+                                Status: 'Шукає дім',
+                                OwnerId: null,
+                                OwnerName: null,
+                                Description: null, // Очищаємо відгук власника, якщо він був
+                                ShowInLucky: true  // Повертаємо дефолтне значення галочки
+                            })
+                            .eq('Id', petId);
+                    }
+                }
+                showToast('🔙 Тваринку повернуто до статусу "Шукає дім".');
+            } catch (err) {
+                showToast('❌ Помилка скасування передачі: ' + err.message);
+                setOpenDropdownId(null);
+                return;
+            }
+        }
+
+        // 3. ОНОВЛЕННЯ САМОЇ ЗАЯВКИ
         const { error } = await supabase
             .from('AdoptionRequests')
             .update({ Status: newStatus })
@@ -101,7 +131,8 @@ function AdminAdoptions() {
             setApplications(applications.map(a => 
                 a.Id === id ? { ...a, Status: newStatus } : a
             ));
-            if (newStatus !== 'Передано') {
+            // Показуємо базове повідомлення тільки якщо ми просто змінили проміжний статус
+            if (newStatus !== 'Передано' && app.Status !== 'Передано') {
                 showToast('✅ Статус заявки успішно оновлено!');
             }
         }
@@ -129,9 +160,8 @@ function AdminAdoptions() {
         setOpenDropdownId(openDropdownId === id ? null : id);
     };
 
-    // 👇 ЛОГІКА ФІЛЬТРАЦІЇ
     const filteredApplications = applications.filter(app => {
-        const isVolunteer = app.PetName === 'Волонтерство';
+        const isVolunteer = app.PetName?.includes('Волонтерство'); 
         if (filterType === 'Всі') return true;
         if (filterType === 'Волонтерство') return isVolunteer;
         if (filterType === 'Прихисток') return !isVolunteer;
@@ -161,7 +191,6 @@ function AdminAdoptions() {
                     </p>
                 </div>
 
-                {/* 👇 ТАБИ ФІЛЬТРАЦІЇ */}
                 <div className="admin-filters">
                     <button 
                         className={`filter-btn ${filterType === 'Всі' ? 'active' : ''}`} 
@@ -185,8 +214,15 @@ function AdminAdoptions() {
                         </div>
                     ) : (
                         filteredApplications.map(app => {
-                            // 👇 ВИЗНАЧАЄМО ЧИ ЦЕ ВОЛОНТЕР
-                            const isVolunteer = app.PetName === 'Волонтерство';
+                            const isVolunteer = app.PetName?.includes('Волонтерство');
+                            
+                            let displayPetName = app.PetName;
+                            if (isVolunteer) {
+                                const match = app.PetName.match(/\((.*?)\)/);
+                                displayPetName = match ? match[1] : 'Будь-який хвостик';
+                            } else {
+                                displayPetName = app.PetName.split(',')[0].trim();
+                            }
 
                             return (
                                 <div key={app.Id} className={`app-card-premium status-${app.Status === 'Нова' ? 'new' : app.Status === 'Розглядається' ? 'review' : app.Status === 'Схвалено' ? 'approved' : app.Status === 'Передано' ? 'handed' : 'rejected'} ${isVolunteer ? 'type-volunteer' : 'type-adoption'}`}>
@@ -201,13 +237,12 @@ function AdminAdoptions() {
                                     <div className="app-card-body">
                                         <div className="app-info-grid">
                                             
-                                            {/* Показуємо назву тварини ТІЛЬКИ якщо це прихисток */}
-                                            {!isVolunteer && (
-                                                <div className="info-item">
-                                                    <span className="info-label">🐾 Тваринка:</span>
-                                                    <span className="info-value highlight">{app.PetName}</span>
-                                                </div>
-                                            )}
+                                            <div className="info-item">
+                                                <span className="info-label">
+                                                    {isVolunteer ? '🐾 Бажана тваринка:' : '🐾 Тваринка:'}
+                                                </span>
+                                                <span className="info-value highlight">{displayPetName}</span>
+                                            </div>
                                             
                                             <div className="info-item">
                                                 <span className="info-label">👤 Заявник:</span>
@@ -222,7 +257,6 @@ function AdminAdoptions() {
                                                 <a href={`tel:${app.AdopterPhone}`} className="info-value link">{app.AdopterPhone}</a>
                                             </div>
 
-                                            {/* Показуємо умови ТІЛЬКИ якщо це прихисток */}
                                             {!isVolunteer && (
                                                 <div className="info-item">
                                                     <span className="info-label">🏠 Умови:</span>
@@ -231,7 +265,6 @@ function AdminAdoptions() {
                                             )}
                                         </div>
 
-                                        {/* Показуємо бейджі досвіду ТІЛЬКИ якщо це прихисток */}
                                         {!isVolunteer && (
                                             <div className="badges-row">
                                                 <span className={`trait-badge ${app.HasExperience ? 'positive' : 'negative'}`}>
@@ -243,11 +276,10 @@ function AdminAdoptions() {
                                             </div>
                                         )}
 
-                                        {/* Коментар / Деталі волонтерства */}
                                         {app.Reason && (
                                             <div className="app-comment-box" style={isVolunteer ? { borderLeftColor: '#10b981', backgroundColor: '#ecfdf5' } : {}}>
                                                 <span className="comment-label">{isVolunteer ? 'Деталі допомоги:' : 'Коментар:'}</span>
-                                                <p>{app.Reason}</p>
+                                                <p style={{ whiteSpace: 'pre-line' }}>{app.Reason}</p>
                                             </div>
                                         )}
                                     </div>
@@ -268,7 +300,6 @@ function AdminAdoptions() {
                                                 {openDropdownId === app.Id && (
                                                     <ul className="custom-dropdown-list">
                                                         {statuses.map(s => (
-                                                            // Приховуємо статус "Передано" для волонтерів, бо їм нікого не передають
                                                             (isVolunteer && s === 'Передано') ? null : (
                                                                 <li 
                                                                     key={s} 

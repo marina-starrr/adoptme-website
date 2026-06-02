@@ -5,9 +5,9 @@
     width: 100%;
     padding: 20px 5% 80px;
     text-align: center;
-    background-color: transparent; 
-    flex: 1; 
-    position: relative; 
+    background-color: transparent;
+    flex: 1;
+    position: relative;
 }
 
 /* =========================================
@@ -119,9 +119,9 @@
     line-height: 1.5;
 }
 
-.action-btn {
+.volunteer-action-btn {
     display: inline-block;
-    background: linear-gradient(to right, #6847DD, #382677);
+    background: linear-gradient(135deg, #6847DD, #9068ff);
     color: white;
     font-size: 18px;
     font-weight: 700;
@@ -134,7 +134,7 @@
     transition: all 0.3s ease;
 }
 
-.action-btn:hover {
+.volunteer-action-btn:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 20px rgba(104, 71, 221, 0.5);
     color: white;
@@ -264,7 +264,7 @@
 }
 
 .faq-item.active .faq-answer {
-    max-height: 250px; 
+    max-height: 250px;
     padding: 0 25px 20px;
 }
 
@@ -282,34 +282,57 @@
    ========================================= */
 .help-modal-overlay {
     position: fixed;
-    z-index: 10000; 
+    z-index: 10000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(3px); 
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: fadeInModal 0.3s ease-out forwards; 
+    animation: fadeInModal 0.3s ease-out forwards;
 }
 
 .help-modal-content {
     background-color: #fefefe;
-    padding: 30px; 
-    border-radius: 20px; 
+    padding: 30px;
+    border-radius: 20px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 500px; 
+    max-width: 500px;
     text-align: center;
     position: relative;
     animation: animatetop 0.4s forwards;
+    
+    /* 👇 НОВІ ПАРАМЕТРИ 👇 */
+    max-height: 90vh; /* Вікно не буде займати більше 90% висоти екрану */
+    overflow-y: auto; /* Якщо контент не влазить, з'явиться внутрішній скрол */
+}
+
+/* 👇 Додай це одразу після .help-modal-content, щоб скролбар був у стилі сайту 👇 */
+.help-modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+.help-modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+.help-modal-content::-webkit-scrollbar-thumb {
+    background: #d4c5f9;
+    border-radius: 10px;
 }
 
 @keyframes animatetop {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .help-modal-overlay.closing {
@@ -321,18 +344,35 @@
 }
 
 @keyframes animateclose {
-    from { transform: scale(1); opacity: 1; }
-    to { transform: scale(0.9); opacity: 0; }
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
 }
 
 @keyframes fadeInModal {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes fadeOutModal {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 .close-btn {
@@ -353,12 +393,12 @@
 .modal-header {
     padding-bottom: 15px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #eee1ff; 
+    border-bottom: 2px solid #eee1ff;
     text-align: center;
 }
 
 .modal-header h3 {
-    color: #4A148C; 
+    color: #4A148C;
     font-size: 26px;
     margin: 0;
 }
@@ -368,8 +408,15 @@
 }
 
 @keyframes fadeInView {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Форма волонтера */
@@ -384,7 +431,8 @@
     width: 100%;
 }
 
-.vol-input, .vol-select {
+.vol-input,
+.vol-select {
     width: 100%;
     padding: 14px 15px;
     border: 2px solid #e0d4f5;
@@ -398,7 +446,8 @@
     color: #333;
 }
 
-.vol-input:focus, .vol-select:focus {
+.vol-input:focus,
+.vol-select:focus {
     border-color: #6847DD;
     background-color: #fff;
 }
@@ -458,73 +507,179 @@
 }
 
 @keyframes popIn {
-    0% { transform: scale(0); opacity: 0; }
-    80% { transform: scale(1.1); opacity: 1; }
-    100% { transform: scale(1); opacity: 1; }
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    80% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* =========================================
+   УНІВЕРСАЛЬНІ КАСТОМНІ ВИПАДАЮЧІ СПИСКИ
+   ========================================= */
+.custom-dropdown {
+    position: relative;
+    width: 100%;
+}
+
+.dropdown-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    min-height: 52px;
+}
+
+/* Коли список відкривається ВНИЗ (для 1 та 2 поля) */
+.dropdown-display.open-down {
+    border-color: #6847DD;
+    background-color: #fff;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Коли список відкривається ВГОРУ (для вибору тваринки) */
+.dropdown-display.open-up {
+    border-color: #6847DD;
+    background-color: #fff;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+}
+
+.dropdown-placeholder {
+    color: #757575;
+}
+
+.dropdown-selected {
+    color: #333;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    color: #6847DD;
+    margin-left: 10px;
+}
+
+.dropdown-list {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    background-color: #fff;
+    border: 2px solid #6847DD;
+    z-index: 10;
+}
+
+/* Налаштування для списку, що падає ВНИЗ */
+.dropdown-list.down {
+    top: 100%;
+    border-top: none;
+    border-bottom-left-radius: 12px;
+    border-bottom-right-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Налаштування для списку, що підіймається ВГОРУ */
+.dropdown-list.up {
+    bottom: 100%;
+    border-bottom: none;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    border-bottom: 1px solid #f0ebff;
+    color: #333;
+    font-size: 16px;
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background-color: #faf8ff;
+}
+
+/* Кастомізація скролбару для всіх списків */
+.dropdown-list::-webkit-scrollbar {
+    width: 6px;
+}
+.dropdown-list::-webkit-scrollbar-track {
+    background: #faf8ff;
+    border-radius: 10px;
+}
+.dropdown-list::-webkit-scrollbar-thumb {
+    background: #d4c5f9;
+    border-radius: 10px;
+}
+.dropdown-list::-webkit-scrollbar-thumb:hover {
+    background: #6847DD;
+}
+
+/* Специфічні стилі для тваринок всередині універсального списку */
+.selected-pet-info,
+.pet-option-flex {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.pet-selector-img,
+.pet-option-img {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #eee;
+    border: 1px solid #e0d4f5;
+}
+
+.any-pet-text {
+    font-weight: 500;
+    color: #6847DD;
 }
 
 /* =========================================
    АДАПТИВНІСТЬ (Media Queries)
    ========================================= */
 @media (max-width: 1024px) {
-    .help-header {
-        height: auto;
-    }
-    .help-header .header-text {
-        font-size: 32px;
-    }
-    .volunteer-cards {
-        gap: 20px;
-    }
-    .vol-card {
-        width: calc(50% - 20px);
-    }
+    .help-header { height: auto; }
+    .help-header .header-text { font-size: 32px; }
+    .volunteer-cards { gap: 20px; }
+    .vol-card { width: calc(50% - 20px); }
 }
 
 @media (max-width: 768px) {
-    .help-section {
-        padding: 20px 20px 60px;
-    }
-    .help-header .header-text {
-        font-size: 28px;
-    }
-    .section-title {
-        font-size: 26px;
-    }
-    .vol-card {
-        width: 100%;
-        max-width: 400px;
-    }
-    .needs-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-    .faq-question {
-        font-size: 16px;
-        padding: 15px 20px;
-    }
-    .faq-item.active .faq-answer {
-        max-height: 300px;
-        padding: 0 20px 15px;
-    }
+    .help-section { padding: 20px 20px 60px; }
+    .help-header .header-text { font-size: 28px; }
+    .section-title { font-size: 26px; }
+    .vol-card { width: 100%; max-width: 400px; }
+    .needs-grid { grid-template-columns: 1fr 1fr; }
+    .faq-question { font-size: 16px; padding: 15px 20px; }
+    .faq-item.active .faq-answer { max-height: 300px; padding: 0 20px 15px; }
 }
 
 @media (max-width: 480px) {
-    .help-header .header-text {
-        font-size: 24px;
-    }
-    .help-intro p {
-        font-size: 16px;
-    }
-    .needs-grid {
-        grid-template-columns: 1fr;
-    }
-    .need-item {
-        padding: 20px 15px;
-    }
-    .help-modal-content {
-        padding: 20px;
-    }
-    .modal-header h3 {
-        font-size: 22px;
-    }
+    .help-header .header-text { font-size: 24px; }
+    .help-intro p { font-size: 16px; }
+    .needs-grid { grid-template-columns: 1fr; }
+    .need-item { padding: 20px 15px; }
+    .help-modal-content { padding: 20px; }
+    .modal-header h3 { font-size: 22px; }
 }

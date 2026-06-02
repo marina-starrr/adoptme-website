@@ -16,6 +16,9 @@ function Profile() {
   const [favorites, setFavorites] = useState([]);
   const [toastMsg, setToastMsg] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // Стан для відкритої заявки (модальне вікно)
+  const [selectedApp, setSelectedApp] = useState(null);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -61,7 +64,6 @@ function Profile() {
 
           setLoadingApps(true);
           
-          // 🌟 ВИПРАВЛЕНО: Шукаємо заявки за UserNickname, а не AdopterEmail
           const { data: appsData, error: appsError } = await supabase
             .from('AdoptionRequests')
             .select('*')
@@ -72,7 +74,16 @@ function Profile() {
             const { data: petsData } = await supabase.from('Pets').select('Id, Name, ImageName');
 
             const enrichedApps = appsData.map(app => {
-              const matchedPet = petsData?.find(p => p.Name === app.PetName.split(',')[0].trim());
+              // Перевіряємо, чи це волонтерство для конкретної тваринки, чи просто прихисток
+              let searchName = app.PetName;
+              if (app.PetName.includes('Волонтерство')) {
+                const match = app.PetName.match(/\((.*?)\)/);
+                if (match) searchName = match[1];
+              } else {
+                searchName = app.PetName.split(',')[0].trim();
+              }
+
+              const matchedPet = petsData?.find(p => p.Name === searchName);
               return {
                 ...app,
                 PetId: matchedPet?.Id,
@@ -106,11 +117,9 @@ function Profile() {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
     }
-
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
-
     if (location.state) {
       window.history.replaceState({}, document.title);
     }
@@ -217,6 +226,22 @@ function Profile() {
     return (app.Status || 'Нова') === appFilter;
   });
 
+  // Допоміжна функція для парсингу даних заявки (визначаємо тип та ім'я тваринки)
+  const parseAppInfo = (app) => {
+    const isVolunteer = app.PetName.includes('Волонтерство');
+    const appType = isVolunteer ? 'Волонтерство' : 'Прихисток';
+    let petName = 'будь-який хвостик';
+
+    if (isVolunteer) {
+      const match = app.PetName.match(/\((.*?)\)/);
+      if (match) petName = match[1];
+    } else {
+      petName = app.PetName;
+    }
+
+    return { isVolunteer, appType, petName };
+  };
+
   return (
     <div className="profile-page" style={{ position: 'relative' }}>
 
@@ -226,30 +251,100 @@ function Profile() {
         </div>
       )}
 
+      {/* Модальне вікно видалення акаунту */}
       {isDeleteModalOpen && (
-        <div className="modal" style={{ display: 'flex', zIndex: 10000 }}>
-          <div className="modal-content fade-view" style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}>
+        <div className="modal profile-modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
+          <div className="modal-content fade-view" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}>
             <div style={{ fontSize: '50px', marginBottom: '15px' }}>🐾😢</div>
             <h3 style={{ color: '#4A148C', fontSize: '22px', marginBottom: '15px', fontWeight: 'bold' }}>Видалення акаунту</h3>
             <p style={{ color: '#555', fontSize: '15px', lineHeight: '1.6', marginBottom: '30px' }}>
               Ви впевнені, що хочете назавжди покинути родину <strong>AdoptMe</strong>? Усі ваші обрані тваринки та історія заявок будуть втрачені.
             </p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button
-                className="back-to-favorites-btn"
-                onClick={() => setIsDeleteModalOpen(false)}
-                style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px' }}
-              >
+              <button className="back-to-favorites-btn" onClick={() => setIsDeleteModalOpen(false)} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px' }}>
                 Скасувати
               </button>
-              <button
-                className="adopt-pet-btn"
-                onClick={confirmDeleteAccount}
-                style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px', background: '#d32f2f', boxShadow: '0 5px 15px rgba(211, 47, 47, 0.3)' }}
-              >
+              <button className="adopt-pet-btn" onClick={confirmDeleteAccount} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px', background: '#d32f2f', boxShadow: '0 5px 15px rgba(211, 47, 47, 0.3)' }}>
                 Так, видалити
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* НОВЕ: Модальне вікно деталей заявки */}
+      {selectedApp && (
+        <div className="modal profile-modal-overlay" onClick={() => setSelectedApp(null)}>
+          <div className="modal-content fade-view app-details-modal" onClick={e => e.stopPropagation()}>
+            <span className="profile-close-btn" onClick={() => setSelectedApp(null)}>&times;</span>
+            
+            {(() => {
+              const { isVolunteer, appType, petName } = parseAppInfo(selectedApp);
+              return (
+                <>
+                  <h3 className="modal-title">Деталі заявки №{selectedApp.Id}</h3>
+                  <div className="app-details-grid">
+                    <div className="detail-row">
+                      <strong>Тип заявки:</strong> 
+                      <span className="highlight-text">{appType}</span>
+                    </div>
+                    <div className="detail-row">
+                      <strong>Ім'я заявника:</strong> 
+                      <span>{selectedApp.AdopterName}</span>
+                    </div>
+                    <div className="detail-row">
+                      <strong>Телефон:</strong> 
+                      <span>{selectedApp.AdopterPhone}</span>
+                    </div>
+                    <div className="detail-row">
+                      <strong>Тваринка:</strong> 
+                      <span>
+                        {selectedApp.PetId ? (
+                           <Link to={`/pets/${selectedApp.PetId}`} onClick={() => setSelectedApp(null)} className="app-pet-link">
+                             {petName}
+                           </Link>
+                        ) : petName}
+                      </span>
+                    </div>
+                    <div className="detail-row">
+                      <strong>Статус:</strong> 
+                      <span className={`status-badge ${selectedApp.Status || 'Нова'}`} style={{ display: 'inline-block', padding: '4px 12px', fontSize: '13px' }}>
+                        {selectedApp.Status || 'Нова'}
+                      </span>
+                    </div>
+
+                    {isVolunteer ? (
+                      <div className="detail-row full-width">
+                        <strong>Деталі допомоги:</strong>
+                        <div className="detail-box">{selectedApp.Reason}</div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="detail-row">
+                          <strong>Досвід утримання:</strong> 
+                          <span>{selectedApp.HasExperience ? 'Так' : 'Ні'}</span>
+                        </div>
+                        <div className="detail-row">
+                          <strong>Інші тварини вдома:</strong> 
+                          <span>{selectedApp.HasOtherPets ? 'Так' : 'Ні'}</span>
+                        </div>
+                        <div className="detail-row full-width">
+                          <strong>Умови проживання:</strong>
+                          <div className="detail-box">{selectedApp.LivingConditions}</div>
+                        </div>
+                        {selectedApp.Reason && selectedApp.Reason !== 'будь-який хвостик' && (
+                          <div className="detail-row full-width">
+                            <strong>Коментар / Чому хочете прихистити:</strong>
+                            <div className="detail-box">{selectedApp.Reason}</div>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <button className="save-profile-btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setSelectedApp(null)}>Закрити</button>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -341,37 +436,46 @@ function Profile() {
               {loadingApps ? <p>Завантаження заявок...</p> : (
                 <div className="applications-list">
                   {filteredApps.length === 0 ? <p className="empty-message">Заявок з таким статусом не знайдено.</p> :
-                    filteredApps.map(app => (
-                      <div className="application-card" key={app.Id}>
+                    filteredApps.map(app => {
+                      const { isVolunteer, appType, petName } = parseAppInfo(app);
+                      
+                      return (
+                        <div 
+                          className="application-card clickable-card" 
+                          key={app.Id} 
+                          onClick={() => setSelectedApp(app)}
+                        >
+                          <div className="app-card-left">
+                            {app.PetId ? (
+                              <Link to={`/pets/${app.PetId}`} onClick={(e) => e.stopPropagation()}>
+                                <img src={app.PetImage} alt={petName} className="app-pet-image" />
+                              </Link>
+                            ) : (
+                              <img src={app.PetImage} alt="Тваринка" className="app-pet-image" />
+                            )}
 
-                        <div className="app-card-left">
-                          {app.PetId ? (
-                            <Link to={`/pets/${app.PetId}`}>
-                              <img src={app.PetImage} alt={app.PetName} className="app-pet-image" />
-                            </Link>
-                          ) : (
-                            <img src={app.PetImage} alt="Тваринка" className="app-pet-image" />
-                          )}
+                            <div className="app-details">
+                              <h4 className="app-type-label">{appType}</h4>
+                              <p className="app-pet-name">Тваринка: 
+                                {app.PetId && petName !== 'будь-який хвостик' ? (
+                                  <Link to={`/pets/${app.PetId}`} className="app-pet-link" onClick={(e) => e.stopPropagation()}><span> {petName}</span></Link>
+                                ) : (
+                                  <span> {petName}</span>
+                                )}
+                              </p>
+                              <p className="app-number">Заявка №: {app.Id}</p>
+                              <small className="app-short-desc">
+                                {isVolunteer ? app.Reason.split('.')[0] : `Умови: ${app.LivingConditions}`}
+                              </small>
+                            </div>
+                          </div>
 
-                          <div className="app-details">
-                            <h4>Тваринка:
-                              {app.PetId ? (
-                                <Link to={`/pets/${app.PetId}`} className="app-pet-link"><span> {app.PetName}</span></Link>
-                              ) : (
-                                <span> {app.PetName}</span>
-                              )}
-                            </h4>
-                            <p>Заявка №: {app.Id}</p>
-                            <small>Умови: {app.LivingConditions}</small>
+                          <div className={`app-status status-badge ${app.Status || 'Нова'}`}>
+                            {app.Status || 'Нова'}
                           </div>
                         </div>
-
-                        <div className={`app-status status-badge ${app.Status || 'Нова'}`}>
-                          {app.Status || 'Нова'}
-                        </div>
-
-                      </div>
-                    ))
+                      );
+                    })
                   }
                 </div>
               )}

@@ -1,28 +1,112 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
-import { supabase } from '../supabaseClient'; // 👈 ДОДАНО ІМПОРТ SUPABASE
+import { supabase } from '../supabaseClient';
 import './Help.css';
 import { useToast } from '../context/ToastContext';
 
 function Help() {
+  const navigate = useNavigate();
+
   const [openFaq, setOpenFaq] = useState(null);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isModalClosing, setIsModalClosing] = useState(false);
   const [isSuccessScreen, setIsSuccessScreen] = useState(false);
 
   const [volunteerName, setVolunteerName] = useState('');
-  const [volunteerPhone, setVolunteerPhone] = useState('');
+  const [volunteerPhone, setVolunteerPhone] = useState(''); 
+  
   const [helpType, setHelpType] = useState('');
+  // 👇 НОВИЙ СТАН ДЛЯ РУЧНОГО ВВОДУ
+  const [customHelpType, setCustomHelpType] = useState('');
   const [preferredDay, setPreferredDay] = useState('');
+  const [selectedPet, setSelectedPet] = useState(null);
+  const [pets, setPets] = useState([]);
+
+  const [isHelpTypeOpen, setIsHelpTypeOpen] = useState(false);
+  const [isDayOpen, setIsDayOpen] = useState(false);
+  const [isPetDropdownOpen, setIsPetDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      const { data, error } = await supabase.from('Pets').select('Id, Name, ImageName');
+      if (!error && data) {
+        setPets(data);
+      }
+    };
+    fetchPets();
+  }, []);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const openModal = () => {
+  const formatExistingPhone = (phoneStr) => {
+    if (!phoneStr) return '';
+    let digits = phoneStr.replace(/\D/g, '');
+    
+    if (digits.startsWith('380')) {
+      digits = digits.substring(3);
+    } else if (digits.startsWith('0')) {
+      digits = digits.substring(1);
+    } else if (digits.startsWith('38')) {
+      digits = digits.substring(2);
+    }
+    
+    digits = digits.substring(0, 9); 
+    
+    let formatted = '+38(0';
+    if (digits.length > 0) formatted += digits.substring(0, 2);
+    if (digits.length > 2) formatted += ') ' + digits.substring(2, 5);
+    if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
+    if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
+    
+    return formatted;
+  };
+
+  const openModal = async () => {
+    const localNickname = localStorage.getItem('userNickname');
+
+    if (!localNickname || localNickname === 'Гість') {
+      alert('Будь ласка, увійдіть або зареєструйтесь, щоб надіслати заявку на волонтерство!');
+      navigate('/login'); 
+      return; 
+    }
+
     setIsSuccessScreen(false);
     setIsModalOpen(true);
+
+    let name = '';
+    let phone = '';
+
+    try {
+      const { data: userData, error } = await supabase
+        .from('Users')
+        .select('FirstName, Phone')
+        .eq('Nickname', localNickname)
+        .maybeSingle();
+
+      if (userData) {
+        name = userData.FirstName || '';
+        phone = userData.Phone || '';
+      } else if (error) {
+        console.error("Помилка завантаження з БД:", error);
+      }
+    } catch (err) {
+      console.error("Помилка автоматичного завантаження профілю:", err);
+    }
+
+    if (!name) {
+      name = localNickname;
+    }
+
+    if (name) setVolunteerName(name);
+    if (phone) {
+      setVolunteerPhone(formatExistingPhone(phone));
+    } else {
+      setVolunteerPhone(''); 
+    }
   };
 
   const closeModal = () => {
@@ -33,72 +117,111 @@ function Help() {
       setVolunteerName('');
       setVolunteerPhone('');
       setHelpType('');
+      setCustomHelpType(''); // 👈 Очищуємо поле при закритті
       setPreferredDay('');
+      setSelectedPet(null);
+      setIsHelpTypeOpen(false);
+      setIsDayOpen(false);
+      setIsPetDropdownOpen(false);
     }, 300);
   };
 
+  const toggleDropdown = (dropdownName) => {
+    if (dropdownName === 'help') {
+      setIsHelpTypeOpen(!isHelpTypeOpen);
+      setIsDayOpen(false);
+      setIsPetDropdownOpen(false);
+    } else if (dropdownName === 'day') {
+      setIsDayOpen(!isDayOpen);
+      setIsHelpTypeOpen(false);
+      setIsPetDropdownOpen(false);
+    } else if (dropdownName === 'pet') {
+      setIsPetDropdownOpen(!isPetDropdownOpen);
+      setIsHelpTypeOpen(false);
+      setIsDayOpen(false);
+    }
+  };
+
   const handlePhoneChange = (e) => {
-    const rawDigits = e.target.value.replace(/\D/g, '');
-    if (rawDigits.length === 0) { setVolunteerPhone(''); return; }
-    let digits = rawDigits;
-    if (!digits.startsWith('38')) digits = '38' + digits;
-    digits = digits.substring(0, 12);
-    let formatted = '+';
-    if (digits.length > 0) formatted += digits.substring(0, 2);
-    if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
-    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
-    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
+    let input = e.target.value;
+    
+    if (input.length < 5 || !input.startsWith('+38(0')) {
+      setVolunteerPhone('+38(0');
+      return;
+    }
+    
+    let rawAfter = input.substring(5).replace(/\D/g, '');
+    rawAfter = rawAfter.substring(0, 9);
+    
+    let formatted = '+38(0';
+    if (rawAfter.length > 0) formatted += rawAfter.substring(0, 2);
+    if (rawAfter.length > 2) formatted += ') ' + rawAfter.substring(2, 5);
+    if (rawAfter.length > 5) formatted += ' ' + rawAfter.substring(5, 7);
+    if (rawAfter.length > 7) formatted += ' ' + rawAfter.substring(7, 9);
+    
     setVolunteerPhone(formatted);
   };
 
-  // 👇 ОНОВЛЕНА ФУНКЦІЯ ВІДПРАВКИ ДАНИХ
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // 👇 Перевіряємо, чи заповнене кастомне поле, якщо вибрано "Інше"
+    if (!helpType || !preferredDay || (helpType === 'Інше' && !customHelpType.trim())) {
+      alert("Будь ласка, заповніть усі необхідні поля.");
+      return;
+    }
+
+    // Формуємо фінальний вигляд допомоги
+    const finalHelpType = helpType === 'Інше' ? `Інше (${customHelpType.trim()})` : helpType;
+
     const volunteerData = {
-        PetIds: [], 
-        UserNickname: localStorage.getItem('userNickname') || 'Гість',
-        PetName: 'Волонтерство', // 👈 Маркер для адмінки, що це волонтер
-        AdopterName: volunteerName,
-        AdopterPhone: volunteerPhone,
-        Reason: `Вид допомоги: ${helpType}. Зручний день: ${preferredDay}.`,
-        LivingConditions: '-',
-        HasExperience: false,
-        HasOtherPets: false,
-        Status: 'Нова'
+      PetIds: selectedPet ? [selectedPet.Id] : [],
+      UserNickname: localStorage.getItem('userNickname') || 'Гість',
+      PetName: selectedPet ? `Волонтерство (${selectedPet.Name})` : 'Волонтерство', 
+      AdopterName: volunteerName,
+      AdopterPhone: volunteerPhone,
+      Reason: `Вид допомоги: ${finalHelpType}.\nЗручний день: ${preferredDay}.`,
+      LivingConditions: '-',
+      HasExperience: false,
+      HasOtherPets: false,
+      Status: 'Нова'
     };
 
     const { error } = await supabase.from('AdoptionRequests').insert([volunteerData]);
 
     if (!error) {
-        setIsSuccessScreen(true);
+      setIsSuccessScreen(true);
     } else {
-        alert("Помилка відправки заявки: " + error.message);
+      alert("Помилка відправки заявки: " + error.message);
     }
   };
 
-  const faqs = [
-    {
-      question: "В які дні та години можна відвідати притулок?",
-      answer: "Ми завжди раді гостям з понеділка по п'ятницю, з 08:30 до 16:30. У суботу та неділю притулок закритий для відвідувачів (вихідні дні)."
-    },
-    {
-      question: "Чи потрібно попереджати про свій візит?",
-      answer: "Так, ми дуже просимо заповнювати анкету на сторінці або телефонувати нам заздалегідь. Так ми зможемо вас зустріти, провести інструктаж та підказати, яка саме допомога сьогодні найбільш актуальна."
-    },
-    {
-      question: "Чи можна приходити до притулку з дітьми?",
-      answer: "Звісно! Спілкування з хвостиками дуже корисне та виховує емпатію. Проте, заради безпеки, діти до 16 років обов'язково повинні знаходитись на території притулку виключно у супроводі дорослих."
-    },
-    {
-      question: "Як краще одягнутися, якщо я хочу допомогти руками?",
-      answer: "Обирайте зручний, закритий одяг, який не шкода забруднити або зачепити, та комфортне закрите взуття (кросівки, черевики). Собаки дуже емоційні і можуть радісно стрибати на вас брудними лапками!"
-    },
-    {
-      question: "Чи можу я вигуляти собаку, якщо в мене немає досвіду?",
-      answer: "Так! Наші куратори підберуть для вас спокійну та дружню собачку, яка вміє гуляти на повідці, та детально розкажуть про всі правила безпечного вигулу."
+  const getPetImage = (pet) => {
+    if (!pet.ImageName) return '/paw-placeholder.png';
+    try {
+      if (Array.isArray(pet.ImageName)) {
+        return pet.ImageName.length > 0 ? pet.ImageName[0] : '/paw-placeholder.png';
+      }
+      if (typeof pet.ImageName === 'string') {
+        if (pet.ImageName.trim().startsWith('[')) {
+          const validJsonString = pet.ImageName.replace(/'/g, '"');
+          const parsed = JSON.parse(validJsonString);
+          return parsed.length > 0 ? parsed[0] : '/paw-placeholder.png';
+        }
+        return pet.ImageName;
+      }
+    } catch (e) {
+      console.error("Помилка парсингу фото для:", pet.Name, e);
     }
+    return '/paw-placeholder.png';
+  };
+
+  const faqs = [
+    { question: "В які дні та години можна відвідати притулок?", answer: "Ми завжди раді гостям з понеділка по п'ятницю, з 08:30 до 16:30." },
+    { question: "Чи потрібно попереджати про свій візит?", answer: "Так, заповнюйте анкету або телефонувати нам заздалегідь." },
+    { question: "Чи можна приходити до притулку з дітьми?", answer: "Звісно! Але діти до 16 років повинні бути з дорослими." },
+    { question: "Як краще одягнутися?", answer: "Обирайте зручний, закритий одяг, який не шкода забруднити." },
+    { question: "Чи можу я вигуляти собаку, якщо в мене немає досвіду?", answer: "Так! Наші куратори підберуть спокійну собачку та все розкажуть." }
   ];
 
   return (
@@ -113,69 +236,40 @@ function Help() {
           </div>
 
           <div className="help-intro">
-            <p>
-              Навіть година вашого часу чи невеликий пакуночок корму мають величезне значення. 
-              Якщо ви знаходитесь у Житомирі або просто проїздом, завітайте до нас — наші хвостики завжди чекають на спілкування та вашу підтримку!
-            </p>
+            <p>Навіть година вашого часу чи невеликий пакуночок корму мають величезне значення. Якщо ви знаходитесь у Житомирі або просто проїздом, завітайте до нас!</p>
           </div>
 
           <div className="volunteer-block">
             <h3 className="section-title">Стати волонтером</h3>
             <div className="volunteer-cards">
               <div className="vol-card">
-                <div className="vol-icon-wrapper">
-                  <img src="/dog-walking.png" alt="Вигул" className="vol-icon" />
-                </div>
+                <div className="vol-icon-wrapper"><img src="/dog-walking.png" alt="Вигул" className="vol-icon" /></div>
                 <h4>Вигул собак</h4>
-                <p>Собакам життєво необхідний рух та свіже повітря. Допоможіть нам з щоденним вигулом — це корисно і для вас, і для них!</p>
+                <p>Собакам життєво необхідний рух та свіже повітря.</p>
               </div>
               <div className="vol-card">
-                <div className="vol-icon-wrapper">
-                  <img src="/cleaning.png" alt="Прибирання" className="vol-icon" />
-                </div>
+                <div className="vol-icon-wrapper"><img src="/cleaning.png" alt="Прибирання" className="vol-icon" /></div>
                 <h4>Прибирання та догляд</h4>
-                <p>Чистота — запорука здоров'я. Нам завжди потрібні додаткові руки для прибирання вольєрів та миття мисочок.</p>
+                <p>Нам завжди потрібні додаткові руки для прибирання вольєрів.</p>
               </div>
               <div className="vol-card">
-                <div className="vol-icon-wrapper">
-                  <img src="/hugging.png" alt="Соціалізація" className="vol-icon" />
-                </div>
+                <div className="vol-icon-wrapper"><img src="/hugging.png" alt="Соціалізація" className="vol-icon" /></div>
                 <h4>Соціалізація</h4>
-                <p>Тваринкам потрібна увага. Просто приїхати, погладити котика чи погратися з цуценям — це адаптує їх до майбутньої родини.</p>
+                <p>Просто приїхати, погладити котика чи погратися з цуценям.</p>
               </div>
             </div>
-            <button className="action-btn" onClick={openModal}>Записатися</button>
+            <button className="volunteer-action-btn" onClick={openModal}>Записатися</button>
           </div>
 
           <div className="needs-block">
             <h3 className="section-title">Що завжди потрібно притулку?</h3>
             <p className="needs-subtitle">Ви можете принести ці речі особисто або відправити поштою.</p>
             <div className="needs-grid">
-              <div className="need-item">
-                <img src="/food-bag.png" alt="Їжа" className="need-img" />
-                <h5>Їжа та смаколики</h5>
-                <p>Сухий та вологий корм для котів і собак, лікувальні дієти, крупи, м'ясні обрізки, жувальні смаколики.</p>
-              </div>
-              <div className="need-item">
-                <img src="/medicine.png" alt="Ліки" className="need-img" />
-                <h5>Медикаменти</h5>
-                <p>Засоби від бліх та кліщів, глистогінні препарати, бинти, шприци, пелюшки, антисептики та вітаміни.</p>
-              </div>
-              <div className="need-item">
-                <img src="/blanket.png" alt="Одяг і ковдри" className="need-img" />
-                <h5>Теплі речі</h5>
-                <p>Старі чисті ковдри, пледи, постільна білизна, рушники. Взимку потрібен теплий одяг для собак.</p>
-              </div>
-              <div className="need-item">
-                <img src="/cleaning-tools.png" alt="Побутові речі" className="need-img" />
-                <h5>Побутові речі</h5>
-                <p>Миючі засоби (без хлору), губки, металеві відра, віники, гумові рукавички, сміттєві пакети.</p>
-              </div>
-              <div className="need-item">
-                <img src="/toys.png" alt="Іграшки" className="need-img" />
-                <h5>Іграшки та амуніція</h5>
-                <p>М'ячики, канатики, кігтеточки, лотки, нашийники різних розмірів, міцні повідці, металеві миски.</p>
-              </div>
+              <div className="need-item"><img src="/food-bag.png" alt="Їжа" className="need-img" /><h5>Їжа та смаколики</h5></div>
+              <div className="need-item"><img src="/medicine.png" alt="Ліки" className="need-img" /><h5>Медикаменти</h5></div>
+              <div className="need-item"><img src="/blanket.png" alt="Одяг" className="need-img" /><h5>Теплі речі</h5></div>
+              <div className="need-item"><img src="/cleaning-tools.png" alt="Побутові" className="need-img" /><h5>Побутові речі</h5></div>
+              <div className="need-item"><img src="/toys.png" alt="Іграшки" className="need-img" /><h5>Іграшки та амуніція</h5></div>
             </div>
           </div>
 
@@ -209,7 +303,7 @@ function Help() {
                 <h3 className="success-title">Дякуємо, {volunteerName}!</h3>
                 <p className="success-text">Ваша заявка успішно надіслана.</p>
                 <p className="success-text">Наш куратор зв'яжеться з вами найближчим часом для підтвердження часу та деталей.</p>
-                <button className="action-btn" style={{ marginTop: '25px' }} onClick={closeModal}>Чудово!</button>
+                <button className="volunteer-action-btn" style={{ marginTop: '25px' }} onClick={closeModal}>Чудово!</button>
               </div>
             ) : (
               <div className="fade-view">
@@ -225,7 +319,7 @@ function Help() {
                       value={volunteerName} 
                       onChange={(e) => setVolunteerName(e.target.value)} 
                       required 
-                      className="vol-input"
+                      className="vol-input" 
                     />
                   </div>
                   <div className="input-group">
@@ -233,41 +327,117 @@ function Help() {
                       type="text" 
                       placeholder="+38(0__) ___ __ __" 
                       value={volunteerPhone} 
-                      onChange={handlePhoneChange} 
+                      onChange={handlePhoneChange}
+                      onFocus={() => {
+                        if (volunteerPhone === '') setVolunteerPhone('+38(0');
+                      }}
+                      onBlur={() => {
+                        if (volunteerPhone === '+38(0') setVolunteerPhone('');
+                      }}
                       required 
-                      className="vol-input"
+                      className="vol-input" 
                     />
                   </div>
                   
+                  {/* КАСОМНИЙ СЕЛЕКТ 1 */}
                   <div className="input-group">
-                    <select 
-                      value={helpType} 
-                      onChange={(e) => setHelpType(e.target.value)} 
-                      required 
-                      className="vol-select"
-                    >
-                      <option value="" disabled>Як ви хочете допомогти?</option>
-                      <option value="Вигул собак">Вигул собак</option>
-                      <option value="Прибирання та догляд">Прибирання та догляд</option>
-                      <option value="Соціалізація">Соціалізація тварин</option>
-                      <option value="Інше">Інше (фото, машиною тощо)</option>
-                    </select>
+                    <div className="custom-dropdown">
+                      <div 
+                        className={`vol-input dropdown-display ${isHelpTypeOpen ? 'open-down' : ''}`}
+                        onClick={() => toggleDropdown('help')}
+                      >
+                        {helpType ? <span className="dropdown-selected">{helpType}</span> : <span className="dropdown-placeholder">Як ви хочете допомогти?</span>}
+                        <span className="dropdown-arrow">{isHelpTypeOpen ? '▲' : '▼'}</span>
+                      </div>
+                      
+                      {isHelpTypeOpen && (
+                        <div className="dropdown-list down">
+                          {['Вигул собак', 'Прибирання та догляд', 'Соціалізація тварин', 'Інше'].map(option => (
+                            <div key={option} className="dropdown-option" onClick={() => { setHelpType(option); setIsHelpTypeOpen(false); }}>
+                              <span>{option}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
+                  {/* 👇 НОВЕ ПОЛЕ: З'являється тільки якщо вибрано "Інше (обгов)" */}
+                  {helpType === 'Інше' && (
+                    <div className="input-group fade-view">
+                      <input 
+                        type="text" 
+                        placeholder="Напишіть, як саме ви хочете допомогти..." 
+                        value={customHelpType} 
+                        onChange={(e) => setCustomHelpType(e.target.value)} 
+                        required 
+                        className="vol-input" 
+                      />
+                    </div>
+                  )}
+
+                  {/* КАСОМНИЙ СЕЛЕКТ 2 */}
                   <div className="input-group">
-                    <select 
-                      value={preferredDay} 
-                      onChange={(e) => setPreferredDay(e.target.value)} 
-                      required 
-                      className="vol-select"
-                    >
-                      <option value="" disabled>Оберіть зручний день</option>
-                      <option value="Понеділок">Понеділок</option>
-                      <option value="Вівторок">Вівторок</option>
-                      <option value="Середа">Середа</option>
-                      <option value="Четвер">Четвер</option>
-                      <option value="П'ятниця">П'ятниця</option>
-                    </select>
+                    <div className="custom-dropdown">
+                      <div 
+                        className={`vol-input dropdown-display ${isDayOpen ? 'open-down' : ''}`}
+                        onClick={() => toggleDropdown('day')}
+                      >
+                        {preferredDay ? <span className="dropdown-selected">{preferredDay}</span> : <span className="dropdown-placeholder">Оберіть зручний день</span>}
+                        <span className="dropdown-arrow">{isDayOpen ? '▲' : '▼'}</span>
+                      </div>
+                      
+                      {isDayOpen && (
+                        <div className="dropdown-list down">
+                          {['Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця"].map(option => (
+                            <div key={option} className="dropdown-option" onClick={() => { setPreferredDay(option); setIsDayOpen(false); }}>
+                              <span>{option}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* КАСОМНИЙ СЕЛЕКТ 3 */}
+                  <div className="input-group">
+                    <div className="custom-dropdown">
+                      <div 
+                        className={`vol-input dropdown-display ${isPetDropdownOpen ? 'open-up' : ''}`}
+                        onClick={() => toggleDropdown('pet')}
+                      >
+                        {selectedPet ? (
+                          <div className="selected-pet-info">
+                            <img src={getPetImage(selectedPet)} alt={selectedPet.Name} className="pet-selector-img" />
+                            <span className="dropdown-selected">{selectedPet.Name}</span>
+                          </div>
+                        ) : (
+                          <span className="dropdown-placeholder">Оберіть хвостика (за бажанням)</span>
+                        )}
+                        <span className="dropdown-arrow">{isPetDropdownOpen ? '▲' : '▼'}</span>
+                      </div>
+
+                      {isPetDropdownOpen && (
+                        <div className="dropdown-list up">
+                          <div 
+                            className="dropdown-option" 
+                            onClick={() => { setSelectedPet(null); setIsPetDropdownOpen(false); }}
+                          >
+                            <span className="any-pet-text">Будь-який хвостик</span>
+                          </div>
+                          {pets.map(pet => (
+                            <div 
+                              key={pet.Id} 
+                              className="dropdown-option pet-option-flex" 
+                              onClick={() => { setSelectedPet(pet); setIsPetDropdownOpen(false); }}
+                            >
+                              <img src={getPetImage(pet)} alt={pet.Name} className="pet-option-img" />
+                              <span>{pet.Name}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   
                   <p className="form-note">*Притулок відкритий для відвідувань Пн-Пт 08:30 – 16:30.</p>

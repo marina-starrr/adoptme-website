@@ -128,6 +128,10 @@ function PetDetails() {
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
+        finalData.ShowInLucky = true; // Скидаємо видимість, якщо статус змінився
+      } else {
+        // Переконуємось, що значення булеве
+        finalData.ShowInLucky = finalData.ShowInLucky !== false;
       }
 
       const { error } = await supabase.from('Pets').update(finalData).eq('Id', pet.Id);
@@ -438,7 +442,7 @@ function PetDetails() {
               </div>
             </div>
 
-            {/* МЕДИЧНІ НОТАТКИ (Видимі в адмінці під час редагування, або якщо є записи) */}
+            {/* МЕДИЧНІ НОТАТКИ */}
             {(pet.MedicalNotes || isEditing) && (
               <div className="pet-story-block" style={{ marginTop: '20px' }}>
                 <h3 className="section-subtitle" style={{ color: '#D32F2F' }}>🩺 Медичні примітки:</h3>
@@ -478,13 +482,29 @@ function PetDetails() {
                   </select>
                 </div>
 
+                {/* 👇 ОНОВЛЕНИЙ БЛОК ВЛАСНИКА З ГАЛОЧКОЮ */}
                 {editFormData.Status === 'Вже вдома' && (
-                  <div className="setting-row highlight-row">
-                    <label><strong>🏡 Власник:</strong></label>
-                    <div style={{ marginLeft: '15px', color: '#2E7D32', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                        {editFormData.OwnerName 
-                            ? `👤 ${editFormData.OwnerName}` 
-                            : "⏳ Автоматично призначиться при схваленні заявки"}
+                  <div className="setting-row highlight-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                      <label><strong>🏡 Власник:</strong></label>
+                      <div style={{ marginLeft: '15px', color: '#2E7D32', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                          {editFormData.OwnerName 
+                              ? `👤 ${editFormData.OwnerName}` 
+                              : "⏳ Автоматично призначиться при схваленні заявки"}
+                      </div>
+                    </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '5px' }}>
+                      <input 
+                        type="checkbox" 
+                        id="showInLuckyCheckbox"
+                        checked={editFormData.ShowInLucky !== false} 
+                        onChange={(e) => handleChange('ShowInLucky', e.target.checked)}
+                        style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10b981' }}
+                      />
+                      <label htmlFor="showInLuckyCheckbox" style={{ cursor: 'pointer', fontSize: '14px', color: '#2E7D32', fontWeight: '600' }}>
+                        🌟 Відображати в панелі "Щасливчики"
+                      </label>
                     </div>
                   </div>
                 )}

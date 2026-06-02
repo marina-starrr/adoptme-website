@@ -92,7 +92,6 @@
   align-items: center !important;
   gap: 8px !important;
   white-space: nowrap !important;
-  /* Прибрали background: white, тепер колір задається через класи статусів */
 }
 
 /* --- КОЛЬОРИ СТАТУСІВ --- */
@@ -143,7 +142,6 @@
   flex-direction: column;
 }
 
-/* Нові унікальні класи для заголовка, щоб уникнути конфліктів */
 .pet-profile-header {
   position: relative;
   width: 100%;
@@ -164,10 +162,10 @@
   word-wrap: break-word;
 }
 
-/* Характеристики (Сітка) */
+/* 🌟 Характеристики (Сітка) - 3 в ряд */
 .pet-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-template-columns: repeat(3, 1fr); /* 👈 ЗМІНЕНО: Рівно 3 стовпці однакової ширини */
   gap: 15px;
   margin-bottom: 30px;
 }
@@ -428,6 +426,11 @@
   .pet-profile-name { font-size: 2.5rem; text-align: center; }
   .action-area { position: sticky; bottom: 20px; z-index: 100; }
   .admin-buttons-row { flex-direction: column; }
+  
+  /* 🌟 Для телефонів робимо 2 в ряд, щоб не було занадто тісно */
+  .pet-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 /* --- ПАНЕЛЬ УПРАВЛІННЯ ФОТОГРАФІЯМИ (РЕЖИМ РЕДАГУВАННЯ) --- */
@@ -476,8 +479,6 @@
 }
 
 /* --- НОВІ КНОПКИ ТА ПОВІДОМЛЕННЯ ДЛЯ СТАТУСІВ --- */
-
-/* Кнопка "Повідомити, коли одужає" */
 .btn-notify {
   width: 100%;
   padding: 20px;
@@ -497,7 +498,6 @@
   box-shadow: 0 15px 30px rgba(245, 158, 11, 0.6);
 }
 
-/* Блок, коли усиновлення неможливе (Вже вдома / Не вдалось врятувати) */
 .status-message-block {
   background: #f8f9fa;
   padding: 20px;
