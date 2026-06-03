@@ -16,7 +16,7 @@ function PetDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  
+
   const [editableImages, setEditableImages] = useState([]);
 
   const { userRole, userEmail } = useAuth();
@@ -128,14 +128,45 @@ function PetDetails() {
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
-        finalData.ShowInLucky = true; // Скидаємо видимість, якщо статус змінився
+        finalData.ShowInLucky = true;
       } else {
-        // Переконуємось, що значення булеве
         finalData.ShowInLucky = finalData.ShowInLucky !== false;
       }
 
+      const isStatusChanged = pet.Status?.trim().toLowerCase() !== finalData.Status?.trim().toLowerCase();
+
       const { error } = await supabase.from('Pets').update(finalData).eq('Id', pet.Id);
       if (error) throw error;
+
+      const cleanStatus = finalData.Status?.trim();
+      // 🌟 ОНОВЛЕНО: Додано "Шукає дім"
+      if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
+        const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
+
+        const { data: favUsers, error: favError } = await supabase
+          .from('Favorites')
+          .select('*')
+          .eq('PetId', pet.Id);
+
+        if (favError) console.error("❌ Помилка отримання обраного з PetDetails:", favError.message);
+
+        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+
+        if (validFavUsers.length > 0) {
+          const notificationsToInsert = validFavUsers.map(fav => {
+            const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+            return {
+              UserNickname: nick,
+              PetId: pet.Id,
+              PetName: finalData.Name,
+              NewStatus: targetStatus,
+              IsRead: false
+            };
+          });
+          
+          await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+        }
+      }
 
       setPet(finalData);
       setIsEditing(false);
@@ -154,13 +185,19 @@ function PetDetails() {
     const isAlreadyFav = favorites.some(fav => fav.id === pet.Id);
 
     const dbImgs = getDbImages(pet);
-    const imageUrl = dbImgs.length > 0 
+    const imageUrl = dbImgs.length > 0
       ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${dbImgs[0]}`
       : null;
 
     if (!isAlreadyFav) {
-      if (userEmail) {
-        await supabase.from('Favorites').insert([{ UserEmail: userEmail, PetId: pet.Id }]);
+      const userNickname = localStorage.getItem('userNickname');
+      if (userNickname) {
+        await supabase.from('Favorites').insert([
+          {
+            PetId: pet.Id,
+            UserNickname: userNickname
+          }
+        ]);
       }
       favorites.push({ id: pet.Id, name: pet.Name, image: imageUrl });
       localStorage.setItem('favorites', JSON.stringify(favorites));
@@ -187,7 +224,7 @@ function PetDetails() {
     ]);
 
     if (!error) {
-      alert(`🔔 Дякуємо! Адміністратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
+      alert(`🔔 Дякуємо! Администратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
     } else {
       alert("❌ Сталася помилка: " + error.message);
     }
@@ -199,6 +236,7 @@ function PetDetails() {
       case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
       case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
       case 'Не вдалось врятувати': return { class: 'status-rainbow', icon: '🌈' };
+      case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
       default: return { class: 'status-looking', icon: '🐾' };
     }
   };
@@ -209,7 +247,7 @@ function PetDetails() {
   const currentStatus = isEditing ? editFormData.Status : pet.Status;
   const statusConfig = getStatusConfig(currentStatus || "Шукає дім");
 
-  const displayImages = isEditing 
+  const displayImages = isEditing
     ? editableImages.map(img => img.preview)
     : getDbImages(pet).map(imgName => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`);
 
@@ -232,7 +270,7 @@ function PetDetails() {
               ) : (
                 <div className="placeholder-image" style={{ padding: '100px', textAlign: 'center', background: '#f5f5f5', borderRadius: '30px' }}>Немає фото</div>
               )}
-              
+
               <div className={`pet-status-badge ${statusConfig.class}`}>
                 <span>{statusConfig.icon}</span> <span>{currentStatus || "Шукає дім"}</span>
               </div>
@@ -243,10 +281,10 @@ function PetDetails() {
                     ➕ Додати
                     <input type="file" multiple accept="image/*" onChange={handleAddPhotos} style={{ display: 'none' }} />
                   </label>
-                  
+
                   {displayImages.length > 0 && (
                     <>
-                      <label className="photo-btn change-btn" title="Замінити це photo">
+                      <label className="photo-btn change-btn" title="Замінити це фото">
                         🔄 Змінити
                         <input type="file" accept="image/*" onChange={handleChangeCurrentPhoto} style={{ display: 'none' }} />
                       </label>
@@ -371,7 +409,6 @@ function PetDetails() {
               </div>
             </div>
 
-            {/* БЕЙДЖІ (Вакцинація, Дресирування, Прибуття) */}
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '25px' }}>
               <div style={{ background: pet.IsVaccinated ? '#E8F5E9' : '#FFEBEE', color: pet.IsVaccinated ? '#2E7D32' : '#D32F2F', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 {isEditing ? (
@@ -442,7 +479,6 @@ function PetDetails() {
               </div>
             </div>
 
-            {/* МЕДИЧНІ НОТАТКИ */}
             {(pet.MedicalNotes || isEditing) && (
               <div className="pet-story-block" style={{ marginTop: '20px' }}>
                 <h3 className="section-subtitle" style={{ color: '#D32F2F' }}>🩺 Медичні примітки:</h3>
@@ -477,12 +513,12 @@ function PetDetails() {
                     <option value="Шукає дім">Шукає дім</option>
                     <option value="Потребує особливого догляду">Потребує особливого догляду</option>
                     <option value="На лікуванні">На лікуванні</option>
+                    <option value="Заброньована">Заброньована</option>
                     <option value="Вже вдома">Вже вдома</option>
                     <option value="Не вдалось врятувати">Не вдалось врятувати</option>
                   </select>
                 </div>
 
-                {/* 👇 ОНОВЛЕНИЙ БЛОК ВЛАСНИКА З ГАЛОЧКОЮ */}
                 {editFormData.Status === 'Вже вдома' && (
                   <div className="setting-row highlight-row" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px' }}>
                     <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -524,13 +560,16 @@ function PetDetails() {
                   )}
                 </div>
               ) : (
-                <>
-                  {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати') ? (
+                <div className="user-actions-block">
+                  {/* 🌟 ОНОВЛЕНО: Додано перевірку на Заброньована */}
+                  {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати' || currentStatus === 'Заброньована' || currentStatus === 'Заброньовано') ? (
                     <div className="status-message-block">
                       <p>
                         {currentStatus === 'Вже вдома' 
                           ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
-                          : '🌈 На жаль, ця тваринка більше не з нами.'}
+                          : currentStatus === 'Не вдалось врятувати'
+                            ? '🌈 На жаль, ця тваринка більше не з нами.'
+                            : '🔒 Ця тваринка вже заброньована іншою родиною!'}
                       </p>
                     </div>
                   ) : currentStatus === 'На лікуванні' ? (
@@ -538,7 +577,7 @@ function PetDetails() {
                   ) : (
                     <button onClick={handleAdoptClick} className="btn-adopt">💖 Подати заявку на усиновлення</button>
                   )}
-                </>
+                </div>
               )}
             </div>
           </div>

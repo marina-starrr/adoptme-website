@@ -55,7 +55,7 @@ function CustomDropdown({ options, value, onChange, placeholder }) {
 function AdminPets() {
   const navigate = useNavigate();
   const [petsList, setPetsList] = useState([]);
-  const [usersList, setUsersList] = useState([]); 
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -77,7 +77,7 @@ function AdminPets() {
   const [filterType, setFilterType] = useState('Всі');
   const [filterBreed, setFilterBreed] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
-  const [filterAge, setFilterAge] = useState('Всі'); 
+  const [filterAge, setFilterAge] = useState('Всі');
   const [filterStatus, setFilterStatus] = useState('Всі');
   const [filterSize, setFilterSize] = useState('Всі');
   const [filterEnergy, setFilterEnergy] = useState('Всі');
@@ -93,9 +93,9 @@ function AdminPets() {
     if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('річ') || lowerStr.includes('р.')) {
       return num * 12;
     } else if (lowerStr.includes('тиж')) {
-      return num * 0.25; 
+      return num * 0.25;
     } else if (lowerStr.includes('дн') || lowerStr.includes('день')) {
-      return num / 30; 
+      return num / 30;
     }
     return num;
   };
@@ -103,7 +103,7 @@ function AdminPets() {
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
       const matchType = filterType === 'Всі' || (pet.Type || '').trim().toLowerCase() === filterType.trim().toLowerCase();
-      
+
       const safePetBreed = pet.Breed ? pet.Breed.trim() : 'Безпородна';
       const matchBreed = filterBreed === 'Всі' || safePetBreed === filterBreed;
 
@@ -136,23 +136,28 @@ function AdminPets() {
     })
     .sort((a, b) => {
       if (sortOrder === 'name') return (a.Name || '').localeCompare(b.Name || '');
-      
+
       if (sortOrder === 'oldest') {
         const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
         const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
         return dateA - dateB;
       }
-      
+
       const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
       const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
       return dateB - dateA;
     });
 
+  const showToast = (message) => {
+    setToastMsg(message);
+    setTimeout(() => setToastMsg(''), 3500);
+  };
+
   const resetFilters = () => {
     setFilterType('Всі');
     setFilterBreed('Всі');
     setFilterGender('Всі');
-    setFilterAge('Всі'); 
+    setFilterAge('Всі');
     setFilterStatus('Всі');
     setFilterSize('Всі');
     setFilterEnergy('Всі');
@@ -197,7 +202,7 @@ function AdminPets() {
     Tags: '',
     Description: '',
     Status: 'Шукає дім',
-    OwnerId: null, 
+    OwnerId: null,
     OwnerName: '',
     ArrivalDate: getTodayDate(),
     IsVaccinated: false,
@@ -210,14 +215,9 @@ function AdminPets() {
 
   const [petFormData, setPetFormData] = useState(initialFormState);
 
-  const showToast = (message) => {
-    setToastMsg(message);
-    setTimeout(() => setToastMsg(''), 3500);
-  };
-
   useEffect(() => {
     fetchPets();
-    fetchUsers(); 
+    fetchUsers();
   }, []);
 
   useEffect(() => {
@@ -244,9 +244,13 @@ function AdminPets() {
   }
 
   async function fetchUsers() {
-    const { data, error } = await supabase.from('Users').select('Id, FirstName, LastName, Nickname');
-    if (!error && data) {
-      setUsersList(data);
+    console.log("⏳ [fetchUsers] Завантаження списку користувачів...");
+    const { data, error = null } = await supabase.from('Users').select('*');
+    if (error) {
+      console.error("❌ [fetchUsers] Помилка отримання користувачів:", error.message);
+    } else {
+      console.log(`✅ [fetchUsers] Завантажено ${data?.length} користувачів.`);
+      setUsersList(data || []);
     }
   }
 
@@ -317,12 +321,95 @@ function AdminPets() {
       }
 
       if (editMode) {
+        const oldPet = petsList.find(p => p.Id === currentPetId);
+        const isStatusChanged = oldPet && oldPet.Status?.trim().toLowerCase() !== dataToSave.Status?.trim().toLowerCase();
+
         const { error } = await supabase.from('Pets').update(dataToSave).eq('Id', currentPetId);
         if (error) throw error;
+
+        const cleanStatus = dataToSave.Status?.trim();
+        if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
+          const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
+
+          const { data: favUsers, error: favError } = await supabase
+            .from('Favorites')
+            .select('*') 
+            .eq('PetId', currentPetId);
+
+          if (favError) console.error("❌ Помилка отримання з таблиці Favorites:", favError.message);
+
+          const validFavUsers = favUsers ? favUsers.filter(fav => {
+              return fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+          }) : [];
+
+          if (validFavUsers.length > 0) {
+            const notificationsToInsert = validFavUsers.map(fav => {
+              const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+              return {
+                UserNickname: nick,
+                PetId: currentPetId,
+                PetName: dataToSave.Name,
+                NewStatus: targetStatus,
+                IsRead: false
+              };
+            });
+
+            const { error: insertError } = await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+            if (insertError) {
+                console.error("❌ Помилка запису в таблицю FavoriteNotifications:", insertError.message);
+            }
+          }
+        }
+
         showToast("✅ Профіль тваринки успішно оновлено!");
       } else {
-        const { error } = await supabase.from('Pets').insert([dataToSave]);
+        // 🌟 ОНОВЛЕНО: ДЕТАЛЬНЕ ЛОГУВАННЯ СТВОРЕННЯ НОВОЇ ТВАРИНКИ
+        console.log("🚀 [handleSavePet] Починаємо створення нової тваринки...");
+        
+        const { data: newPetData, error } = await supabase.from('Pets').insert([dataToSave]).select();
         if (error) throw error;
+
+        console.log("📥 [handleSavePet] Відповідь від БД після insert Pets:", newPetData);
+
+        if (newPetData && newPetData.length > 0) {
+            // Підтримка різних регістрів, які може повернути Supabase (Id або id)
+            const newPetId = newPetData[0].Id || newPetData[0].id;
+            console.log("🔍 [handleSavePet] ID нової тваринки:", newPetId);
+            
+            const validUsers = usersList.filter(u => u.Nickname || u.nickname || u.NickName || u.nickname);
+            console.log(`👥 [handleSavePet] Знайдено ${validUsers.length} валідних користувачів для розсилки.`);
+            
+            if (validUsers.length > 0) {
+                const notificationsToInsert = validUsers.map(user => {
+                    const nick = user.Nickname || user.nickname || user.NickName;
+                    return {
+                        UserNickname: nick,
+                        PetId: newPetId,
+                        PetName: dataToSave.Name,
+                        NewStatus: 'Новенький хвостик',
+                        IsRead: false
+                    };
+                });
+                
+                console.log("📤 [handleSavePet] Готуємо масив до вставки у FavoriteNotifications:", notificationsToInsert);
+                
+                const { data: insertedNotifs, error: notifError } = await supabase
+                    .from('FavoriteNotifications')
+                    .insert(notificationsToInsert)
+                    .select(); // Додаємо select(), щоб побачити результат вставки
+
+                if (notifError) {
+                    console.error("❌ [handleSavePet] Помилка розсилки сповіщень:", notifError.message);
+                } else {
+                    console.log("✅ [handleSavePet] Успішно створено сповіщення! Результат:", insertedNotifs);
+                }
+            } else {
+                console.warn("⚠️ [handleSavePet] Масив користувачів порожній, розсилку скасовано.");
+            }
+        } else {
+            console.warn("⚠️ [handleSavePet] БД не повернула дані створеної тваринки (можливо, проблема з .select()).");
+        }
+
         showToast("🎉 Нового хвостика успішно додано!");
       }
 
@@ -357,8 +444,12 @@ function AdminPets() {
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
+      {toastMsg && (
+        <div className="custom-toast" style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#4A148C', color: '#fff', padding: '15px 30px', borderRadius: '30px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
+          {toastMsg}
+        </div>
+      )}
       <div className="admin-page-layout">
-
         <aside className="admin-sidebar" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
           <div className="sidebar-header">
             <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
@@ -369,7 +460,7 @@ function AdminPets() {
             <label>Вид тварини</label>
             <CustomDropdown 
               options={[
-                { value: 'Всі', label: 'Всі види' },
+                { value: 'Всі', label: 'Всі виды' },
                 ...petTypes.map(type => ({ value: type, label: type }))
               ]} 
               value={filterType} 
@@ -472,7 +563,7 @@ function AdminPets() {
           </div>
 
           <div className="filter-block">
-            <label>Позначка (Статус)</label>
+            <label>Позначка (Статус тваринки)</label>
             <CustomDropdown 
               options={[
                 { value: 'Всі', label: 'Всі статуси' },
@@ -490,13 +581,11 @@ function AdminPets() {
 
         <div className="admin-content-area">
           <div className="admin-card">
-            
             <div className="admin-header-box">
               <div className="admin-title-row">
                 <h2 className="admin-page-title">
                   <span className="admin-page-title-icon">🐾</span> База тварин
                 </h2>
-                
                 <div className="sort-control">
                   <span className="sort-label">Сортувати:</span>
                   <div style={{ width: '220px' }}>
@@ -642,12 +731,10 @@ function AdminPets() {
 
               <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0', marginTop: '10px' }}>
                 <h4 style={{ margin: '0 0 10px 0', color: '#49109f' }}>Медичний статус</h4>
-                
                 <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                   <input type="checkbox" id="isVaccinated" checked={petFormData.IsVaccinated} onChange={e => setPetFormData({ ...petFormData, IsVaccinated: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                   <label htmlFor="isVaccinated" style={{ margin: 0, cursor: 'pointer', fontWeight: 'bold', color: '#2E7D32' }}>💉 Тваринка вакцинована</label>
                 </div>
-
                 <div className="input-group">
                   <label>Медичні нотатки (ліки, особливості)</label>
                   <textarea placeholder="Наприклад: Потребує гіпоалергенний корм..." value={petFormData.MedicalNotes || ''} onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })} className="form-control" rows="2"></textarea>
@@ -673,6 +760,7 @@ function AdminPets() {
                   <option value="На лікуванні">💊 На лікуванні</option>
                   <option value="Вже вдома">🏡 Вже вдома</option>
                   <option value="Не вдалось врятувати">🌈 Не вдалось врятувати</option>
+                  <option value="Заброньована">🔒 Заброньована</option>
                 </select>
               </div>
 
@@ -757,7 +845,6 @@ function AdminPets() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

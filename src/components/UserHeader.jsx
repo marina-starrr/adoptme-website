@@ -14,6 +14,10 @@ function UserHeader() {
     const [notifications, setNotifications] = useState([]);
     const [showForm, setShowForm] = useState(false);
 
+    const [livePetsData, setLivePetsData] = useState([]);
+    const [selectedPetIds, setSelectedPetIds] = useState([]);
+    const [isFetchingLive, setIsFetchingLive] = useState(false);
+
     const { isLoggedIn, logout } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
@@ -33,22 +37,84 @@ function UserHeader() {
     const [agreeToTerms, setAgreeToTerms] = useState(false);
 
     const textareaRef = useRef(null);
-    const dropdownRef = useRef(null); // 🌟 Ref для міні-меню
+    const dropdownRef = useRef(null); 
     const navigate = useNavigate();
 
-    // Завантаження сповіщень
+    const formatExistingPhone = (phoneStr) => {
+        if (!phoneStr) return '';
+        let digits = phoneStr.replace(/\D/g, '');
+        
+        if (digits.startsWith('380')) {
+            digits = digits.substring(3);
+        } else if (digits.startsWith('0')) {
+            digits = digits.substring(1);
+        } else if (digits.startsWith('38')) {
+            digits = digits.substring(2);
+        }
+        
+        digits = digits.substring(0, 9); 
+        
+        let formatted = '+38(0';
+        if (digits.length > 0) formatted += digits.substring(0, 2);
+        if (digits.length > 2) formatted += ') ' + digits.substring(2, 5);
+        if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
+        if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
+        
+        return formatted;
+    };
+
     const fetchNotifications = async () => {
         const userNickname = localStorage.getItem('userNickname');
+        console.log("🔔 [fetchNotifications] Пошук сповіщень для:", userNickname);
+        
         if (userNickname) {
-            const { data, error } = await supabase
+            const { data: treatmentData, error: treatmentError } = await supabase
                 .from('TreatmentNotifications')
                 .select('*')
                 .eq('UserNickname', userNickname)
                 .eq('Status', 'Оброблена');
 
-            if (!error && data) {
-                setNotifications(data);
+            const { data: adoptionData, error: adoptionError } = await supabase
+                .from('AdoptionRequests')
+                .select('*')
+                .eq('UserNickname', userNickname)
+                .neq('Status', 'Нова')
+                .eq('UserNotified', false);
+
+            const { data: favoriteData, error: favoriteError } = await supabase
+                .from('FavoriteNotifications')
+                .select('*')
+                .eq('UserNickname', userNickname)
+                .eq('IsRead', false);
+
+            if (favoriteError) console.error("❌ Помилка FavoriteNotifications:", favoriteError.message);
+            else console.log("📥 [fetchNotifications] Знайдено FavoriteNotifications:", favoriteData);
+
+            let combinedNotifications = [];
+
+            if (!treatmentError && treatmentData) {
+                combinedNotifications = [
+                    ...combinedNotifications, 
+                    ...treatmentData.map(n => ({ ...n, type: 'treatment', uniqueId: `treat_${n.Id}` }))
+                ];
             }
+
+            if (!adoptionError && adoptionData) {
+                combinedNotifications = [
+                    ...combinedNotifications, 
+                    ...adoptionData.map(a => ({ ...a, type: 'adoption_status', uniqueId: `adopt_${a.Id}` }))
+                ];
+            }
+
+            if (!favoriteError && favoriteData) {
+                combinedNotifications = [
+                    ...combinedNotifications,
+                    ...favoriteData.map(f => ({ ...f, type: 'favorite_status', uniqueId: `fav_${f.Id}` }))
+                ];
+            }
+
+            console.log("📬 [fetchNotifications] Загальний масив сповіщень для рендеру:", combinedNotifications);
+            setNotifications(combinedNotifications);
         }
     };
 
@@ -57,6 +123,37 @@ function UserHeader() {
             fetchNotifications();
         }
     }, [isLoggedIn]);
+
+    useEffect(() => {
+        if (showForm) {
+            const loadUserData = async () => {
+                const localNickname = localStorage.getItem('userNickname');
+                if (localNickname && localNickname !== 'Гість') {
+                    try {
+                        const { data: userData, error } = await supabase
+                            .from('Users')
+                            .select('FirstName, LastName, Phone, Email')
+                            .eq('Nickname', localNickname)
+                            .maybeSingle();
+                        
+                        if (userData) {
+                            if (userData.FirstName) setAdopterFirstName(userData.FirstName);
+                            if (userData.LastName) setAdopterLastName(userData.LastName);
+                            if (userData.Email) setAdopterEmail(userData.Email);
+                            if (userData.Phone) {
+                                setAdopterPhone(formatExistingPhone(userData.Phone));
+                            } else {
+                                setAdopterPhone(''); 
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Помилка завантаження профілю:', err);
+                    }
+                }
+            };
+            loadUserData();
+        }
+    }, [showForm]);
 
     useEffect(() => {
         const handleOpenFavorites = () => {
@@ -74,7 +171,6 @@ function UserHeader() {
         };
     }, []);
 
-    // 🌟 Закриття міні-меню при кліку поза ним
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -137,10 +233,34 @@ function UserHeader() {
         window.dispatchEvent(new Event('cartUpdated'));
     };
 
-    const handleDeleteNotification = async (id) => {
-        const { error } = await supabase.from('TreatmentNotifications').delete().eq('Id', id);
-        if (!error) {
-            setNotifications(prev => prev.filter(n => n.Id !== id));
+    const handleDeleteNotification = async (notif) => {
+        setNotifications(prev => prev.filter(n => n.uniqueId !== notif.uniqueId));
+
+        try {
+            if (notif.type === 'treatment') {
+                await supabase.from('TreatmentNotifications').delete().eq('Id', notif.Id);
+            } else if (notif.type === 'adoption_status') {
+                await supabase.from('AdoptionRequests').update({ UserNotified: true }).eq('Id', notif.Id);
+            } else if (notif.type === 'favorite_status') {
+                await supabase.from('FavoriteNotifications').update({ IsRead: true }).eq('Id', notif.Id);
+            }
+        } catch (err) {
+            console.error(err);
+            fetchNotifications(); 
+        }
+    };
+
+    const handleNotificationCardClick = async (notif) => {
+        handleDeleteNotification(notif);
+        
+        setIsNotificationsOpen(false);
+        
+        if (notif.type === 'adoption_status') {
+            navigate('/profile', { 
+                state: { activeTab: 'applications', highlightAppId: notif.Id } 
+            });
+        } else if (notif.type === 'favorite_status') {
+            navigate(`/pets/${notif.PetId}`); 
         }
     };
 
@@ -155,17 +275,22 @@ function UserHeader() {
     };
 
     const handlePhoneChange = (e) => {
-        const rawDigits = e.target.value.replace(/\D/g, '');
-        if (rawDigits.length === 0) { setAdopterPhone(''); return; }
-        let digits = rawDigits;
-        if (!digits.startsWith('38')) digits = '38' + digits;
-        digits = digits.substring(0, 12);
-        let formatted = '+';
-        if (digits.length > 0) formatted += digits.substring(0, 2);
-        if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
-        if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
-        if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-        if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
+        let input = e.target.value;
+        
+        if (input.length < 5 || !input.startsWith('+38(0')) {
+            setAdopterPhone('+38(0');
+            return;
+        }
+        
+        let rawAfter = input.substring(5).replace(/\D/g, '');
+        rawAfter = rawAfter.substring(0, 9);
+        
+        let formatted = '+38(0';
+        if (rawAfter.length > 0) formatted += rawAfter.substring(0, 2);
+        if (rawAfter.length > 2) formatted += ') ' + rawAfter.substring(2, 5);
+        if (rawAfter.length > 5) formatted += ' ' + rawAfter.substring(5, 7);
+        if (rawAfter.length > 7) formatted += ' ' + rawAfter.substring(7, 9);
+        
         setAdopterPhone(formatted);
     };
 
@@ -184,8 +309,14 @@ function UserHeader() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const petNames = favorites.map(f => f.name).join(", ");
-        const petIds = favorites.map(f => f.id);
+        if (selectedPetIds.length === 0) {
+            alert("❌ Будь ласка, оберіть хоча б одну тваринку, доступну для усиновлення!");
+            return;
+        }
+
+        const selectedPets = livePetsData.filter(p => selectedPetIds.includes(p.Id));
+        const petNames = selectedPets.map(f => f.Name).join(", ");
+        const petIds = selectedPets.map(f => f.Id);
         const userNickname = localStorage.getItem('userNickname');
 
         const adoptionData = {
@@ -201,13 +332,28 @@ function UserHeader() {
             HasOtherPets: hasOtherPets === 'yes',
             OtherPetsDetails: hasOtherPets === 'yes' ? otherPetsDetails : '',
             Reason: comment,
-            Status: 'Нова'
+            Status: 'Нова',
+            UserNotified: false 
         };
 
         const { error } = await supabase.from('AdoptionRequests').insert([adoptionData]);
 
         if (!error) {
-            localStorage.removeItem('favorites');
+            if (userNickname && petIds.length > 0) {
+                await supabase
+                    .from('Favorites')
+                    .delete()
+                    .eq('UserNickname', userNickname)
+                    .in('PetId', petIds);
+            }
+
+            const remainingFavs = favorites.filter(f => !petIds.includes(f.id));
+            if (remainingFavs.length > 0) {
+                localStorage.setItem('favorites', JSON.stringify(remainingFavs));
+            } else {
+                localStorage.removeItem('favorites');
+            }
+
             setIsSuccessScreen(true);
             window.dispatchEvent(new Event('cartUpdated'));
 
@@ -218,6 +364,7 @@ function UserHeader() {
             setHousingType('');
             setComment('');
             setAgreeToTerms(false);
+            setSelectedPetIds([]);
         } else {
             alert("Сталася помилка при відправці: " + error.message);
         }
@@ -234,7 +381,6 @@ function UserHeader() {
         }, 300);
     };
 
-    // 🌟 Функція виходу з акаунту
     const handleLogoutClick = () => {
         const userNickname = localStorage.getItem('userNickname');
         const currentFavorites = localStorage.getItem('favorites');
@@ -251,6 +397,28 @@ function UserHeader() {
         logout();
         setIsAccountOpen(false);
         navigate('/login');
+    };
+
+    const getStatusClass = (statusStr) => {
+        switch(statusStr) {
+            case 'Нова': return 'new';
+            case 'Розглядається': return 'review';
+            case 'Схвалено': return 'approved';
+            case 'Передано': return 'handed';
+            case 'Відхилено': return 'rejected';
+            default: return 'new';
+        }
+    };
+
+    const getPetStatusClass = (statusStr) => {
+        switch(statusStr) {
+            case 'На лікуванні': return 'treatment';
+            case 'Вже вдома': case 'Вже знайшла дім': return 'home';
+            case 'Не вдалось врятувати': return 'rainbow';
+            case 'Заброньована': case 'Заброньовано': return 'reserved';
+            case 'Шукає дім': return 'looking'; 
+            default: return 'review';
+        }
     };
 
     return (
@@ -271,7 +439,6 @@ function UserHeader() {
                     <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
                     <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
                     <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
-                    {/* 👇 ДОДАНО НОВИЙ ПУНКТ МЕНЮ */}
                     <li><Link to="/help" className="nav-link" onClick={closeMenu}>Допомога</Link></li>
                     <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
                 </ul>
@@ -302,7 +469,6 @@ function UserHeader() {
                 )}
 
                 {isLoggedIn ? (
-                    // 🌟 НОВИЙ БЛОК: Аватарка з міні-меню
                     <div className="avatar-dropdown-container" ref={dropdownRef}>
                         <img
                             src="/avatar.png"
@@ -353,20 +519,55 @@ function UserHeader() {
                                 <p className="empty-favorites-text">У вас поки немає нових сповіщень.</p>
                             ) : (
                                 notifications.map(notif => (
-                                    <div key={notif.Id} className="notification-card">
-                                        <p>
-                                            🎉 Радісна новина! Тваринка{' '}
-                                            <Link
-                                                to={`/pets/${notif.PetId}`}
-                                                onClick={handleCloseNotifications}
-                                                className="notification-pet-link"
-                                            >
-                                                {notif.PetName}
-                                            </Link>{' '}
-                                            успішно пройшла лікування і тепер чекає на вас!
-                                        </p>
+                                    <div 
+                                        key={notif.uniqueId} 
+                                        className="notification-card"
+                                        onClick={() => handleNotificationCardClick(notif)}
+                                        style={{ cursor: notif.type !== 'treatment' ? 'pointer' : 'default' }}
+                                    >
+                                        {notif.type === 'treatment' ? (
+                                            <p>
+                                                🎉 Радісна новина! Тваринка{' '}
+                                                <Link
+                                                    to={`/pets/${notif.PetId}`}
+                                                    onClick={handleCloseNotifications}
+                                                    className="notification-pet-link"
+                                                >
+                                                    {notif.PetName}
+                                                </Link>{' '}
+                                                упішно пройшла лікування і тепер чекає на вас!
+                                            </p>
+                                        ) : notif.type === 'adoption_status' ? (
+                                            <p>
+                                                📋 Статус вашої заявки на <strong>{notif.PetName}</strong> було змінено! Новий статус:{' '}
+                                                <span className={`status-badge-inline ${getStatusClass(notif.Status)}`}>
+                                                    {notif.Status}
+                                                </span>
+                                            </p>
+                                        ) : notif.type === 'favorite_status' && notif.NewStatus === 'Новенький хвостик' ? (
+                                            <p>
+                                                ✨ У притулку поповнення! Зустрічайте хвостика на ім'я <strong>{notif.PetName}</strong>.{' '}
+                                                <Link
+                                                    to={`/pets/${notif.PetId}`}
+                                                    onClick={handleCloseNotifications}
+                                                    className="notification-pet-link"
+                                                >
+                                                    Дивитися
+                                                </Link>
+                                            </p>
+                                        ) : (
+                                            <p>
+                                                ❤️ Тваринка <strong>{notif.PetName}</strong> з вашого обраного змінила статус на:{' '}
+                                                <span className={`status-badge-inline ${getPetStatusClass(notif.NewStatus)}`}>
+                                                    {notif.NewStatus}
+                                                </span>
+                                            </p>
+                                        )}
                                         <button
-                                            onClick={() => handleDeleteNotification(notif.Id)}
+                                            onClick={(e) => {
+                                                e.stopPropagation(); 
+                                                handleDeleteNotification(notif);
+                                            }}
                                             className="mark-read-btn"
                                         >
                                             Зрозуміло
@@ -379,7 +580,7 @@ function UserHeader() {
                 </div>
             )}
 
-            {/* Модальне вікно для ОБРАНОГО (Без змін) */}
+            {/* Модальне вікно для ОБРАНОГО */}
             {isFavoritesOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -435,16 +636,35 @@ function UserHeader() {
                                         <p className="success-favorites-text">
                                             Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
                                         </p>
-                                        <button className="adopt-pet-btn" onClick={() => {
+                                        <button className="adopt-pet-btn" onClick={async () => {
                                             if (!isLoggedIn) {
                                                 handleCloseFavorites();
                                                 navigate('/login', {
                                                     state: { welcomeMsg: '🐾 Будь ласка, увійдіть в систему, щоб прихистити тваринку' }
                                                 });
                                             } else {
+                                                setIsFetchingLive(true);
+                                                const ids = favorites.map(f => f.id);
+                                                if (ids.length > 0) {
+                                                    const { data, error } = await supabase
+                                                        .from('Pets')
+                                                        .select('Id, Name, Status')
+                                                        .in('Id', ids);
+                                                    
+                                                    if (!error && data) {
+                                                        setLivePetsData(data);
+                                                        const validIds = data
+                                                            .filter(p => !['на лікуванні', 'вже вдома', 'не вдалось врятувати', 'заброньована', 'заброньовано'].includes(p.Status?.trim().toLowerCase()))
+                                                            .map(p => p.Id);
+                                                        setSelectedPetIds(validIds);
+                                                    }
+                                                }
+                                                setIsFetchingLive(false);
                                                 setShowForm(true);
                                             }
-                                        }}>Прихистити</button>
+                                        }}>
+                                            {isFetchingLive ? '⏳ Перевірка...' : 'Прихистити'}
+                                        </button>
                                     </div>
                                 )}
                             </div>
@@ -454,9 +674,43 @@ function UserHeader() {
                                     <h3>Анкета на прихисток</h3>
                                 </div>
                                 <form className="adoption-form" onSubmit={handleSubmit}>
+                                    
+                                    <div className="form-step">
+                                        <h4 className="form-step-title">Крок 1: Оберіть тваринок для прихистку</h4>
+                                        <div className="adoption-pet-selection-list">
+                                            {livePetsData.map(pet => {
+                                                const isUnavailable = ['на лікуванні', 'вже вдома', 'не вдалось врятувати', 'заброньована', 'заброньовано'].includes(pet.Status?.trim().toLowerCase());
+                                                return (
+                                                    <div key={pet.Id} className={`selection-pet-item ${isUnavailable ? 'unavailable' : ''}`}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            id={`select-pet-${pet.Id}`}
+                                                            checked={selectedPetIds.includes(pet.Id)}
+                                                            disabled={isUnavailable}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedPetIds([...selectedPetIds, pet.Id]);
+                                                                } else {
+                                                                    setSelectedPetIds(selectedPetIds.filter(id => id !== pet.Id));
+                                                                }
+                                                            }}
+                                                        />
+                                                        <label htmlFor={`select-pet-${pet.Id}`} className="selection-pet-label">
+                                                            <span><strong>{pet.Name}</strong></span>
+                                                            {isUnavailable ? (
+                                                                <span className="unavail-badge">({pet.Status}) — недоступно</span>
+                                                            ) : (
+                                                                <span className="avail-badge">({pet.Status || 'Шукає дім'}) — доступно</span>
+                                                            )}
+                                                        </label>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
 
                                     <div className="form-step">
-                                        <h4 className="form-step-title">Крок 1: Ваші контакти</h4>
+                                        <h4 className="form-step-title">Крок 2: Ваші контакти</h4>
                                         <div className="name-inputs-row">
                                             <input type="text" placeholder="Ім'я" value={adopterFirstName} onChange={handleFirstNameChange} required />
                                             <input type="text" placeholder="Прізвище" value={adopterLastName} onChange={handleLastNameChange} required />
@@ -468,12 +722,23 @@ function UserHeader() {
                                             onChange={(e) => setAdopterEmail(e.target.value)}
                                             required
                                         />
-                                        <input type="text" placeholder="+38(0__) ___ __ __" value={adopterPhone} onChange={handlePhoneChange} required />
+                                        <input 
+                                            type="text" 
+                                            placeholder="+38(0__) ___ __ __" 
+                                            value={adopterPhone} 
+                                            onChange={handlePhoneChange} 
+                                            onFocus={() => {
+                                                if (adopterPhone === '') setAdopterPhone('+38(0');
+                                            }}
+                                            onBlur={() => {
+                                                if (adopterPhone === '+38(0') setAdopterPhone('');
+                                            }}
+                                            required 
+                                        />
                                     </div>
 
                                     <div className="form-step">
-                                        <h4 className="form-step-title">Крок 2: Умови проживання</h4>
-
+                                        <h4 className="form-step-title">Крок 3: Умови проживання</h4>
                                         <select value={housingType} onChange={(e) => setHousingType(e.target.value)} required className="form-select">
                                             <option value="" disabled>Оберіть тип житла</option>
                                             <option value="Власна квартира">Власна квартира</option>
@@ -533,8 +798,7 @@ function UserHeader() {
                                     </div>
 
                                     <div className="form-step">
-                                        <h4 className="form-step-title">Крок 3: Додатково</h4>
-
+                                        <h4 className="form-step-title">Крок 4: Додатково</h4>
                                         <div className="textarea-container">
                                             <textarea
                                                 ref={textareaRef}

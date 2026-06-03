@@ -113,17 +113,34 @@ function Profile() {
     }
   }, []);
 
+  // 🌟 ОНОВЛЕНО: Обробка state з роутера (перехід зі сповіщень)
   useEffect(() => {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
     }
+    
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
+
+    // Якщо ми маємо заявки і нам передали ID для підсвічування
+    if (applications.length > 0 && location.state?.highlightAppId) {
+      const targetApp = applications.find(app => app.Id === location.state.highlightAppId);
+      
+      if (targetApp) {
+        // Автоматично відкриваємо модалку цієї заявки
+        setSelectedApp(targetApp);
+        
+        // Переконуємось, що фільтр дозволяє побачити цю заявку в списку (ставимо 'Всі')
+        setAppFilter('Всі');
+      }
+    }
+
+    // Очищаємо state, щоб при оновленні сторінки знову не вискакували повідомлення
     if (location.state) {
       window.history.replaceState({}, document.title);
     }
-  }, [location]);
+  }, [location, applications]); // 👈 Додали applications в залежності, щоб спрацювало після їх завантаження
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -272,7 +289,7 @@ function Profile() {
         </div>
       )}
 
-      {/* НОВЕ: Модальне вікно деталей заявки */}
+      {/* Модальне вікно деталей заявки */}
       {selectedApp && (
         <div className="modal profile-modal-overlay" onClick={() => setSelectedApp(null)}>
           <div className="modal-content fade-view app-details-modal" onClick={e => e.stopPropagation()}>
@@ -443,6 +460,7 @@ function Profile() {
                         <div 
                           className="application-card clickable-card" 
                           key={app.Id} 
+                          id={`app-card-${app.Id}`} // 👈 ДОДАНО: ID для скролінгу, якщо знадобиться
                           onClick={() => setSelectedApp(app)}
                         >
                           <div className="app-card-left">

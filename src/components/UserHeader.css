@@ -454,7 +454,9 @@
     padding-bottom: 8px;
 }
 
+/* 👇 ОНОВЛЕНО: Додано input[type="email"] щоб стилі застосувались до пошти */
 .adoption-form input[type="text"],
+.adoption-form input[type="email"],
 .form-select,
 .form-textarea-small {
     width: 100%;
@@ -854,4 +856,169 @@
 .mark-read-btn:hover {
     background: #d1bdfc;
     transform: translateY(-2px);
+}
+
+/* =========================================
+   ДОДАТКОВІ СТИЛІ ДЛЯ СТАТУСІВ У СПОВІЩЕННЯХ
+   ========================================= */
+.status-badge-inline {
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    display: inline-block;
+    margin-left: 5px;
+}
+
+.status-badge-inline.new {
+    background-color: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #93c5fd;
+}
+
+.status-badge-inline.review {
+    background-color: #fef3c7;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+
+.status-badge-inline.approved {
+    background-color: #d1fae5;
+    color: #059669;
+    border: 1px solid #6ee7b7;
+}
+
+.status-badge-inline.handed {
+    background-color: #ede9fe;
+    color: #7c3aed;
+    border: 1px solid #ddd6fe;
+}
+
+.status-badge-inline.rejected {
+    background-color: #fee2e2;
+    color: #dc2626;
+    border: 1px solid #fca5a5;
+}
+
+/* Стилі для статусів тварин з обраного у сповіщеннях */
+.status-badge-inline.treatment {
+    background-color: #fce7f3;
+    color: #be185d;
+    border: 1px solid #fbcfe8;
+}
+
+.status-badge-inline.home {
+    background-color: #e0f2fe;
+    color: #0369a1;
+    border: 1px solid #7dd3fc;
+}
+
+.status-badge-inline.rainbow {
+    background-color: #f3f4f6;
+    color: #374151;
+    border: 1px solid #d1d5db;
+}
+
+.status-badge-inline.reserved {
+    background-color: #fef9c3;
+    color: #a16207;
+    border: 1px solid #fef08a;
+}
+
+/* =========================================
+   СПИСОК ВИБОРУ ТВАРИНОК В АНКЕТІ ПРИХИСТКУ
+   ========================================= */
+.adoption-pet-selection-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 5px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 5px;
+    text-align: left;
+}
+
+/* Кастомний скролбар для списку вибору */
+.adoption-pet-selection-list::-webkit-scrollbar {
+    width: 5px;
+}
+.adoption-pet-selection-list::-webkit-scrollbar-thumb {
+    background: #d4cbf9;
+    border-radius: 10px;
+}
+
+.selection-pet-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 15px;
+    background: white;
+    border: 2px solid #e0d4f5;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.selection-pet-item input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: #6847DD;
+    cursor: pointer;
+}
+
+.selection-pet-item:hover:not(.unavailable) {
+    border-color: #6847DD;
+    background: #fdfbfe;
+}
+
+/* Стиль заблокованих карток */
+.selection-pet-item.unavailable {
+    background: #f5f5f5;
+    border-color: #e0e0e0;
+    opacity: 0.7;
+}
+
+.selection-pet-label {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    cursor: pointer;
+}
+
+.selection-pet-item.unavailable .selection-pet-label {
+    cursor: not-allowed;
+    color: #888;
+}
+
+/* Текстові бейджі */
+.unavail-badge {
+    color: #dc2626;
+    font-weight: 800;
+    font-size: 12px;
+    background: #fee2e2;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+.avail-badge {
+    color: #059669;
+    font-weight: 800;
+    font-size: 12px;
+    background: #d1fae5;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+}
+
+/* Стиль для сповіщення, коли тваринка знову ШУКАЄ ДІМ */
+.status-badge-inline.looking {
+    background-color: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
 }

@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
 
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);
@@ -32,7 +31,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
             if (status === 'На лікуванні') {
                 const userNickname = localStorage.getItem('userNickname');
                 if (userNickname) {
-                    const { data } = await supabase
+                    const { data, error } = await supabase
                         .from('TreatmentNotifications')
                         .select('Id')
                         .eq('PetId', id)
@@ -48,7 +47,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         checkNotificationStatus();
     }, [id, status]);
 
-    // Логіка додавання в обране
     const toggleFavorite = async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -57,13 +55,29 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
         if (isFavorite) {
-            if (userEmail) {
-                await supabase.from('Favorites').delete().eq('UserEmail', userEmail).eq('PetId', id);
+            if (userNickname) {
+                const { error } = await supabase
+                    .from('Favorites')
+                    .delete()
+                    .eq('UserNickname', userNickname)
+                    .eq('PetId', id);
+                    
+                if (error) console.error("❌ Помилка видалення з Favorites:", error.message);
             }
             favorites = favorites.filter(pet => pet.id !== id);
         } else {
-            if (userEmail) {
-                await supabase.from('Favorites').insert([{ UserEmail: userEmail, PetId: id }]);
+            if (userNickname) {
+                const { error } = await supabase.from('Favorites').insert([
+                    { 
+                        PetId: id,
+                        UserNickname: userNickname 
+                    }
+                ]);
+                
+                if (error) console.error("❌ Помилка вставки в Favorites:", error.message);
+                else console.log("✅ Тваринку успішно додано в Favorites БД!");
+            } else {
+                console.warn("⚠️ Користувач не авторизований, зберігаємо лише локально.");
             }
             favorites.push({ id, name, image });
         }
@@ -73,7 +87,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         window.dispatchEvent(new Event('cartUpdated'));
     };
 
-    // 🌟 Оновлена логіка підписки/відписки на сповіщення про лікування
     const handleNotifyClick = async (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -85,7 +98,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         }
 
         if (isNotified) {
-            // Якщо вже підписаний — ВІДПИСУЄМОСЯ
             const { error } = await supabase
                 .from('TreatmentNotifications')
                 .delete()
@@ -99,7 +111,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                 alert("❌ Сталася помилка при відписці: " + error.message);
             }
         } else {
-            // Якщо не підписаний — ПІДПИСУЄМОСЯ
             const { error } = await supabase.from('TreatmentNotifications').insert([
                 {
                     UserNickname: userNickname,
@@ -119,21 +130,21 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         }
     };
 
-    // Визначення стилю та іконки бейджа
     const getStatusConfig = (petStatus) => {
         switch(petStatus) {
             case 'Потребує особливого догляду': return { class: 'status-special', icon: '❤️‍🩹' };
             case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
             case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
             case 'Не вдалось врятувати': return { class: 'status-rainbow', icon: '🌈' };
-            default: return { class: 'status-looking', icon: '🐾' }; // Шукає дім
+            case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
+            default: return { class: 'status-looking', icon: '🐾' };
         }
     };
 
     const statusConfig = getStatusConfig(status);
 
-    // Змінні для керування відображенням іконок
-    const hideIcon = status === 'Вже вдома' || status === 'Не вдалось врятувати';
+    // 🌟 ОНОВЛЕНО: Ховаємо сердечко для "Заброньована"
+    const hideIcon = status === 'Вже вдома' || status === 'Не вдалось врятувати' || status === 'Заброньована' || status === 'Заброньовано';
     const showBell = status === 'На лікуванні';
 
     return (
@@ -146,10 +157,10 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                 <h3 className="pet-name">{name}</h3>
 
                 <div className={`pet-status-badge ${statusConfig.class}`}>
-                    {statusConfig.icon} {status}
+                    <span className="badge-icon">{statusConfig.icon}</span>
+                    <span className="badge-text">{status}</span>
                 </div>
 
-                {/* Логіка відображення іконок (Сердечко / Дзвіночок / Нічого) */}
                 {!isAdmin && !hideIcon && (
                     showBell ? (
                         <img

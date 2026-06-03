@@ -9,7 +9,7 @@ function AdminAdoptions() {
     const [toastMsg, setToastMsg] = useState('');
     
     const [openDropdownId, setOpenDropdownId] = useState(null);
-    const [filterType, setFilterType] = useState('Всі'); // 'Всі', 'Прихисток', 'Волонтерство'
+    const [filterType, setFilterType] = useState('Всі'); 
 
     const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
@@ -40,7 +40,7 @@ function AdminAdoptions() {
     const handleStatusChange = async (id, newStatus) => {
         const app = applications.find(a => a.Id === id);
 
-        // 1. ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "ПЕРЕДАНО" (Тваринка їде додому)
+        // 1. ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "ПЕРЕДАНО"
         if (newStatus === 'Передано' && app.Status !== 'Передано') {
             if (app.PetName?.includes('Волонтерство')) {
                 showToast('❌ Статус "Передано" не застосовується для волонтерів.');
@@ -69,14 +69,33 @@ function AdminAdoptions() {
                 
                 if (petIds.length > 0) {
                     for (const petId of petIds) {
-                        await supabase
-                            .from('Pets')
-                            .update({
-                                Status: 'Вже вдома',
-                                OwnerId: ownerId,
-                                OwnerName: app.AdopterName
-                            })
-                            .eq('Id', petId);
+                        await supabase.from('Pets').update({
+                            Status: 'Вже вдома',
+                            OwnerId: ownerId,
+                            OwnerName: app.AdopterName
+                        }).eq('Id', petId);
+
+                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+
+                        if (validFavUsers.length > 0) {
+                            const notificationsToInsert = validFavUsers
+                                .map(fav => {
+                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                    if (!nick || nick === app.UserNickname) return null;
+                                    return {
+                                        UserNickname: nick,
+                                        PetId: petId,
+                                        PetName: app.PetName.split(',')[0].trim(),
+                                        NewStatus: 'Вже знайшла дім',
+                                        IsRead: false
+                                    };
+                                }).filter(n => n !== null);
+
+                            if (notificationsToInsert.length > 0) {
+                                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                            }
+                        }
                     }
                 }
                 showToast('🏡 Тваринку успішно закріплено за новим власником!');
@@ -88,7 +107,44 @@ function AdminAdoptions() {
             }
         }
 
-        // 2. 👇 НОВА ЛОГІКА: ЯКЩО СТАТУС ЗМІНЮЄТЬСЯ З "ПЕРЕДАНО" НА НИЖЧИЙ (Скасування передачі)
+        // 1.5 ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "СХВАЛЕНО" (Бронювання)
+        if (newStatus === 'Схвалено' && app.Status !== 'Схвалено') {
+            if (!app.PetName?.includes('Волонтерство')) {
+                try {
+                    const petIds = app.PetIds || [];
+                    if (petIds.length > 0) {
+                        for (const petId of petIds) {
+                            await supabase.from('Pets').update({ Status: 'Заброньована' }).eq('Id', petId);
+
+                            const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                            const validFavUsers = favUsers ? favUsers.filter(fav => {
+                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                return nick && nick !== app.UserNickname;
+                            }) : [];
+                            
+                            if (validFavUsers.length > 0) {
+                                const notificationsToInsert = validFavUsers.map(fav => {
+                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                    return {
+                                        UserNickname: nick,
+                                        PetId: petId,
+                                        PetName: app.PetName.split(',')[0].trim(),
+                                        NewStatus: 'Заброньована',
+                                        IsRead: false
+                                    };
+                                });
+                                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                            }
+                        }
+                    }
+                    showToast('🔒 Тваринку автоматично заброньовано!');
+                } catch (err) {
+                    console.error("Помилка бронювання:", err);
+                }
+            }
+        }
+
+        // 2. СКАСУВАННЯ ПЕРЕДАЧІ (Повернення статусу "Шукає дім")
         if (app.Status === 'Передано' && newStatus !== 'Передано') {
             if (!window.confirm(`Ви дійсно хочете скасувати передачу тваринки? Її статус зміниться на "Шукає дім" і вона зникне з панелі щасливчиків.`)) {
                 setOpenDropdownId(null);
@@ -99,16 +155,30 @@ function AdminAdoptions() {
                 const petIds = app.PetIds || [];
                 if (petIds.length > 0) {
                     for (const petId of petIds) {
-                        await supabase
-                            .from('Pets')
-                            .update({
-                                Status: 'Шукає дім',
-                                OwnerId: null,
-                                OwnerName: null,
-                                Description: null, // Очищаємо відгук власника, якщо він був
-                                ShowInLucky: true  // Повертаємо дефолтне значення галочки
-                            })
-                            .eq('Id', petId);
+                        await supabase.from('Pets').update({
+                            Status: 'Шукає дім',
+                            OwnerId: null,
+                            OwnerName: null,
+                            Description: null, 
+                            ShowInLucky: true  
+                        }).eq('Id', petId);
+
+                        // 🌟 СПОВІЩЕННЯ: Тваринка знову доступна
+                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                        if (validFavUsers.length > 0) {
+                            const notificationsToInsert = validFavUsers.map(fav => {
+                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                return {
+                                    UserNickname: nick,
+                                    PetId: petId,
+                                    PetName: app.PetName.split(',')[0].trim(),
+                                    NewStatus: 'Шукає дім',
+                                    IsRead: false
+                                };
+                            });
+                            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                        }
                     }
                 }
                 showToast('🔙 Тваринку повернуто до статусу "Шукає дім".');
@@ -119,20 +189,56 @@ function AdminAdoptions() {
             }
         }
 
+        // 2.5 СКАСУВАННЯ "СХВАЛЕНО" (Зняття броні)
+        if (app.Status === 'Схвалено' && newStatus !== 'Схвалено' && newStatus !== 'Передано') {
+            if (!app.PetName?.includes('Волонтерство')) {
+                try {
+                    const petIds = app.PetIds || [];
+                    if (petIds.length > 0) {
+                        for (const petId of petIds) {
+                            await supabase.from('Pets').update({ Status: 'Шукає дім' }).eq('Id', petId);
+
+                            // 🌟 СПОВІЩЕННЯ: Бронь скасована
+                            const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                            const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                            if (validFavUsers.length > 0) {
+                                const notificationsToInsert = validFavUsers.map(fav => {
+                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                    return {
+                                        UserNickname: nick,
+                                        PetId: petId,
+                                        PetName: app.PetName.split(',')[0].trim(),
+                                        NewStatus: 'Шукає дім',
+                                        IsRead: false
+                                    };
+                                });
+                                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                            }
+                        }
+                    }
+                    showToast('🔓 Бронь знято. Тваринка знову шукає дім.');
+                } catch (err) {
+                    console.error("Помилка зняття броні:", err);
+                }
+            }
+        }
+
         // 3. ОНОВЛЕННЯ САМОЇ ЗАЯВКИ
         const { error } = await supabase
             .from('AdoptionRequests')
-            .update({ Status: newStatus })
+            .update({ 
+                Status: newStatus,
+                UserNotified: false 
+            })
             .eq('Id', id);
 
         if (error) {
-            showToast('❌ Помилка оновлення статусу: ' + error.message);
+            showToast('❌ Помилка оновлення статусу заявки: ' + error.message);
         } else {
             setApplications(applications.map(a => 
                 a.Id === id ? { ...a, Status: newStatus } : a
             ));
-            // Показуємо базове повідомлення тільки якщо ми просто змінили проміжний статус
-            if (newStatus !== 'Передано' && app.Status !== 'Передано') {
+            if (newStatus !== 'Передано' && app.Status !== 'Передано' && newStatus !== 'Схвалено' && app.Status !== 'Схвалено') {
                 showToast('✅ Статус заявки успішно оновлено!');
             }
         }
@@ -142,11 +248,7 @@ function AdminAdoptions() {
 
     const handleDeleteApplication = async (id) => {
         if (window.confirm('Ви впевнені, що хочете видалити цю заявку?')) {
-            const { error } = await supabase
-                .from('AdoptionRequests')
-                .delete()
-                .eq('Id', id);
-
+            const { error } = await supabase.from('AdoptionRequests').delete().eq('Id', id);
             if (error) {
                 showToast('❌ Помилка видалення: ' + error.message);
             } else {
@@ -172,7 +274,6 @@ function AdminAdoptions() {
 
     return (
         <div style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
-            
             {toastMsg && (
                 <div className="custom-toast">
                     {toastMsg}
@@ -180,7 +281,6 @@ function AdminAdoptions() {
             )}
 
             <div className="admin-card">
-                
                 <div className="admin-header-box">
                     <h2 className="admin-page-title">
                         <span className="admin-page-title-icon">📝</span>
@@ -192,18 +292,9 @@ function AdminAdoptions() {
                 </div>
 
                 <div className="admin-filters">
-                    <button 
-                        className={`filter-btn ${filterType === 'Всі' ? 'active' : ''}`} 
-                        onClick={() => setFilterType('Всі')}
-                    >Всі заявки</button>
-                    <button 
-                        className={`filter-btn ${filterType === 'Прихисток' ? 'active' : ''}`} 
-                        onClick={() => setFilterType('Прихисток')}
-                    >🐾 Прихисток</button>
-                    <button 
-                        className={`filter-btn ${filterType === 'Волонтерство' ? 'active' : ''}`} 
-                        onClick={() => setFilterType('Волонтерство')}
-                    >🤝 Волонтерство</button>
+                    <button className={`filter-btn ${filterType === 'Всі' ? 'active' : ''}`} onClick={() => setFilterType('Всі')}>Всі заявки</button>
+                    <button className={`filter-btn ${filterType === 'Прихисток' ? 'active' : ''}`} onClick={() => setFilterType('Прихисток')}>🐾 Прихисток</button>
+                    <button className={`filter-btn ${filterType === 'Волонтерство' ? 'active' : ''}`} onClick={() => setFilterType('Волонтерство')}>🤝 Волонтерство</button>
                 </div>
 
                 <div className="applications-list">
@@ -226,7 +317,6 @@ function AdminAdoptions() {
 
                             return (
                                 <div key={app.Id} className={`app-card-premium status-${app.Status === 'Нова' ? 'new' : app.Status === 'Розглядається' ? 'review' : app.Status === 'Схвалено' ? 'approved' : app.Status === 'Передано' ? 'handed' : 'rejected'} ${isVolunteer ? 'type-volunteer' : 'type-adoption'}`}>
-                                    
                                     <div className="app-card-header">
                                         <div className="app-id-badge">
                                             {isVolunteer ? '🤝 Волонтерство' : '🐾 Прихисток'} #{app.Id}
@@ -236,14 +326,10 @@ function AdminAdoptions() {
 
                                     <div className="app-card-body">
                                         <div className="app-info-grid">
-                                            
                                             <div className="info-item">
-                                                <span className="info-label">
-                                                    {isVolunteer ? '🐾 Бажана тваринка:' : '🐾 Тваринка:'}
-                                                </span>
+                                                <span className="info-label">{isVolunteer ? '🐾 Бажана тваринка:' : '🐾 Тваринка:'}</span>
                                                 <span className="info-value highlight">{displayPetName}</span>
                                             </div>
-                                            
                                             <div className="info-item">
                                                 <span className="info-label">👤 Заявник:</span>
                                                 <span className="info-value">
@@ -251,12 +337,10 @@ function AdminAdoptions() {
                                                     {app.UserNickname && <span style={{ color: '#888', fontSize: '13px' }}> @{app.UserNickname}</span>}
                                                 </span> 
                                             </div>
-                                            
                                             <div className="info-item">
                                                 <span className="info-label">📞 Телефон:</span>
                                                 <a href={`tel:${app.AdopterPhone}`} className="info-value link">{app.AdopterPhone}</a>
                                             </div>
-
                                             {!isVolunteer && (
                                                 <div className="info-item">
                                                     <span className="info-label">🏠 Умови:</span>
@@ -267,12 +351,8 @@ function AdminAdoptions() {
 
                                         {!isVolunteer && (
                                             <div className="badges-row">
-                                                <span className={`trait-badge ${app.HasExperience ? 'positive' : 'negative'}`}>
-                                                    {app.HasExperience ? '✅ Є досвід' : '❌ Без досвіду'}
-                                                </span>
-                                                <span className={`trait-badge ${app.HasOtherPets ? 'positive' : 'negative'}`}>
-                                                    {app.HasOtherPets ? '✅ Інші тварини' : '❌ Немає інших тварин'}
-                                                </span>
+                                                <span className={`trait-badge ${app.HasExperience ? 'positive' : 'negative'}`}>{app.HasExperience ? '✅ Є досвід' : '❌ Без досвіду'}</span>
+                                                <span className={`trait-badge ${app.HasOtherPets ? 'positive' : 'negative'}`}>{app.HasOtherPets ? '✅ Інші тварини' : '❌ Немає інших тварин'}</span>
                                             </div>
                                         )}
 
@@ -287,25 +367,16 @@ function AdminAdoptions() {
                                     <div className="app-card-footer">
                                         <div className="status-control">
                                             <label>Змінити статус:</label>
-                                            
                                             <div className="custom-dropdown-container">
-                                                <div 
-                                                    className={`custom-dropdown-header ${openDropdownId === app.Id ? 'open' : ''}`}
-                                                    onClick={() => toggleDropdown(app.Id)}
-                                                >
+                                                <div className={`custom-dropdown-header ${openDropdownId === app.Id ? 'open' : ''}`} onClick={() => toggleDropdown(app.Id)}>
                                                     <span>{app.Status || 'Нова'}</span>
                                                     <span className="dropdown-arrow">▼</span>
                                                 </div>
-
                                                 {openDropdownId === app.Id && (
                                                     <ul className="custom-dropdown-list">
                                                         {statuses.map(s => (
                                                             (isVolunteer && s === 'Передано') ? null : (
-                                                                <li 
-                                                                    key={s} 
-                                                                    className={`custom-dropdown-item ${app.Status === s ? 'selected' : ''}`}
-                                                                    onClick={() => handleStatusChange(app.Id, s)}
-                                                                >
+                                                                <li key={s} className={`custom-dropdown-item ${app.Status === s ? 'selected' : ''}`} onClick={() => handleStatusChange(app.Id, s)}>
                                                                     {s}
                                                                 </li>
                                                             )
@@ -313,14 +384,11 @@ function AdminAdoptions() {
                                                     </ul>
                                                 )}
                                             </div>
-
                                         </div>
-                                        
                                         <button className="delete-app-btn" onClick={() => handleDeleteApplication(app.Id)} title="Видалити">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                         </button>
                                     </div>
-
                                 </div>
                             );
                         })
