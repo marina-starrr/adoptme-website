@@ -69,10 +69,12 @@ function AdminAdoptions() {
                 
                 if (petIds.length > 0) {
                     for (const petId of petIds) {
+                        // 👇 При передачі додаємо стандартний опис саме в HomeDescription
                         await supabase.from('Pets').update({
                             Status: 'Вже вдома',
                             OwnerId: ownerId,
-                            OwnerName: app.AdopterName
+                            OwnerName: app.AdopterName,
+                            HomeDescription: "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
                         }).eq('Id', petId);
 
                         const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
@@ -104,6 +106,51 @@ function AdminAdoptions() {
                 showToast('❌ Помилка передачі тваринки: ' + err.message);
                 setOpenDropdownId(null);
                 return; 
+            }
+        }
+
+        // 2. СКАСУВАННЯ ПЕРЕДАЧІ / ВІДХИЛЕННЯ (Повернення статусу "Шукає дім")
+        if (app.Status === 'Передано' && newStatus !== 'Передано') {
+            if (!window.confirm(`Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім", її перша історія відновиться, а домашня історія успіху видалиться.`)) {
+                setOpenDropdownId(null);
+                return; 
+            }
+
+            try {
+                const petIds = app.PetIds || [];
+                if (petIds.length > 0) {
+                    for (const petId of petIds) {
+                        // 👇 При скасуванні зануляємо тільки HomeDescription, Description залишається цілим!
+                        await supabase.from('Pets').update({
+                            Status: 'Шукає дім',
+                            OwnerId: null,
+                            OwnerName: null,
+                            HomeDescription: null, 
+                            ShowInLucky: true  
+                        }).eq('Id', petId);
+
+                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                        if (validFavUsers.length > 0) {
+                            const notificationsToInsert = validFavUsers.map(fav => {
+                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                return {
+                                    UserNickname: nick,
+                                    PetId: petId,
+                                    PetName: app.PetName.split(',')[0].trim(),
+                                    NewStatus: 'Шукає дім',
+                                    IsRead: false
+                                };
+                            });
+                            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                        }
+                    }
+                }
+                showToast('🔙 Тваринку повернуто до статусу "Шукає дім", а початковий опис відновлено!');
+            } catch (err) {
+                showToast('❌ Помилка скасування передачі: ' + err.message);
+                setOpenDropdownId(null);
+                return;
             }
         }
 
@@ -144,51 +191,6 @@ function AdminAdoptions() {
             }
         }
 
-        // 2. СКАСУВАННЯ ПЕРЕДАЧІ (Повернення статусу "Шукає дім")
-        if (app.Status === 'Передано' && newStatus !== 'Передано') {
-            if (!window.confirm(`Ви дійсно хочете скасувати передачу тваринки? Її статус зміниться на "Шукає дім" і вона зникне з панелі щасливчиків.`)) {
-                setOpenDropdownId(null);
-                return; 
-            }
-
-            try {
-                const petIds = app.PetIds || [];
-                if (petIds.length > 0) {
-                    for (const petId of petIds) {
-                        await supabase.from('Pets').update({
-                            Status: 'Шукає дім',
-                            OwnerId: null,
-                            OwnerName: null,
-                            Description: null, 
-                            ShowInLucky: true  
-                        }).eq('Id', petId);
-
-                        // 🌟 СПОВІЩЕННЯ: Тваринка знову доступна
-                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
-                        if (validFavUsers.length > 0) {
-                            const notificationsToInsert = validFavUsers.map(fav => {
-                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                return {
-                                    UserNickname: nick,
-                                    PetId: petId,
-                                    PetName: app.PetName.split(',')[0].trim(),
-                                    NewStatus: 'Шукає дім',
-                                    IsRead: false
-                                };
-                            });
-                            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-                        }
-                    }
-                }
-                showToast('🔙 Тваринку повернуто до статусу "Шукає дім".');
-            } catch (err) {
-                showToast('❌ Помилка скасування передачі: ' + err.message);
-                setOpenDropdownId(null);
-                return;
-            }
-        }
-
         // 2.5 СКАСУВАННЯ "СХВАЛЕНО" (Зняття броні)
         if (app.Status === 'Схвалено' && newStatus !== 'Схвалено' && newStatus !== 'Передано') {
             if (!app.PetName?.includes('Волонтерство')) {
@@ -198,7 +200,6 @@ function AdminAdoptions() {
                         for (const petId of petIds) {
                             await supabase.from('Pets').update({ Status: 'Шукає дім' }).eq('Id', petId);
 
-                            // 🌟 СПОВІЩЕННЯ: Бронь скасована
                             const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
                             const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
                             if (validFavUsers.length > 0) {

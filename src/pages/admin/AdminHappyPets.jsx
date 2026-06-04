@@ -10,14 +10,13 @@ function AdminHappyPets() {
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Стейт для форми
     const [formData, setFormData] = useState({
         petId: '',
         userId: '',
         ownerName: '', 
-        description: '',
+        homeDescription: '', // 👇 Взаємодіє з полем HomeDescription
         images: [],
-        showInLucky: true // 👈 ДОДАНО ДЕФОЛТНИЙ СТАН ДЛЯ ГАЛОЧКИ
+        showInLucky: true 
     });
 
     const [uploadingFiles, setUploadingFiles] = useState(false);
@@ -43,7 +42,7 @@ function AdminHappyPets() {
     const fetchAvailablePets = async () => {
         const { data, error } = await supabase
             .from('Pets')
-            .select('Id, Name, Status')
+            .select('Id, Name, Status, Description, HomeDescription, Images, ImageName')
             .order('Id', { ascending: false });
 
         if (!error && data) {
@@ -65,6 +64,23 @@ function AdminHappyPets() {
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handlePetChange = (e) => {
+        const selectedPetId = e.target.value;
+        const chosenPet = availablePets.find(p => p.Id.toString() === selectedPetId);
+        
+        if (chosenPet) {
+            setFormData((prev) => ({
+                ...prev,
+                petId: selectedPetId,
+                images: chosenPet.Images || (chosenPet.ImageName ? [chosenPet.ImageName] : []),
+                // Заповнюємо поле з HomeDescription
+                homeDescription: chosenPet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
+            }));
+        } else {
+            setFormData((prev) => ({ ...prev, petId: '', images: [], homeDescription: '' }));
+        }
     };
 
     const handleUserChange = (e) => {
@@ -121,13 +137,14 @@ function AdminHappyPets() {
 
         setLoading(true);
 
+        // Відправляємо саме в поле HomeDescription, не чіпаючи Description!
         const petDataToUpdate = {
             OwnerName: formData.ownerName,
-            Description: formData.description,
+            HomeDescription: formData.homeDescription, 
             Images: formData.images,
             ImageName: formData.images.length > 0 ? formData.images[0] : null,
             Status: 'Вже вдома',
-            ShowInLucky: formData.showInLucky // 👈 ДОДАНО: відправляємо стан галочки до БД
+            ShowInLucky: formData.showInLucky 
         };
 
         const { error } = await supabase
@@ -151,35 +168,45 @@ function AdminHappyPets() {
     const editPet = (pet) => {
         setIsEditing(true);
         const matchedUser = availableUsers.find(u => `${u.FirstName} ${u.LastName}` === pet.OwnerName);
-
+        
         setFormData({
             petId: pet.Id.toString(),
             userId: matchedUser ? matchedUser.Id.toString() : '',
             ownerName: pet.OwnerName || '',
-            description: pet.Description || '',
+            homeDescription: pet.HomeDescription || '',
             images: pet.Images || (pet.ImageName ? [pet.ImageName] : []),
-            showInLucky: pet.ShowInLucky !== false // 👈 ДОДАНО: підтягуємо значення при редагуванні
+            showInLucky: pet.ShowInLucky !== false
         });
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const deletePetHistory = async (id) => {
-        if (window.confirm('Ви впевнені, що хочете видалити історію? (Сама тваринка не видалиться, але її статус зміниться на "Шукає дім")')) {
-            const { error } = await supabase
-                .from('Pets')
-                .update({ Status: 'Шукає дім', OwnerName: null, Description: null, ShowInLucky: true })
-                .eq('Id', id);
-            
-            if (!error) {
-                fetchHappyPets();
-                fetchAvailablePets();
+        if (window.confirm('Ви впевнені, що хочете видалити історію? (Сама тваринка не видалиться, але її статус зміниться на "Шукає дім", а початковий опис відновиться)')) {
+            try {
+                const { error } = await supabase
+                    .from('Pets')
+                    .update({ 
+                        Status: 'Шукає дім', 
+                        OwnerName: null, 
+                        HomeDescription: null, // 👇 Стираємо тільки домашню історію
+                        ShowInLucky: true 
+                    })
+                    .eq('Id', id);
+                
+                if (!error) {
+                    fetchHappyPets();
+                    fetchAvailablePets();
+                    resetForm();
+                }
+            } catch (err) {
+                console.error(err);
             }
         }
     };
 
     const resetForm = () => {
         setIsEditing(false);
-        setFormData({ petId: '', userId: '', ownerName: '', description: '', images: [], showInLucky: true });
+        setFormData({ petId: '', userId: '', ownerName: '', homeDescription: '', images: [], showInLucky: true });
     };
 
     return (
@@ -202,7 +229,7 @@ function AdminHappyPets() {
                             <select 
                                 name="petId" 
                                 value={formData.petId} 
-                                onChange={handleInputChange} 
+                                onChange={handlePetChange} 
                                 required
                                 disabled={isEditing}
                             >
@@ -234,11 +261,10 @@ function AdminHappyPets() {
                     </div>
 
                     <div className="form-group">
-                        <label>Відгук / Історія:</label>
-                        <textarea name="description" value={formData.description} onChange={handleInputChange} rows="3" required></textarea>
+                        <label>Відгук / Історія успіху в родині:</label>
+                        <textarea name="homeDescription" value={formData.homeDescription} onChange={handleInputChange} rows="3" required></textarea>
                     </div>
 
-                    {/* 👇 НОВИЙ БЛОК ЧЕКБОКСУ У ФОРМІ АДМІНА */}
                     <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', margin: '15px 0' }}>
                         <input 
                             type="checkbox" 
@@ -289,7 +315,7 @@ function AdminHappyPets() {
                                 <th>Тваринка</th>
                                 <th>Нова сім'я</th>
                                 <th>Відгук</th>
-                                <th>Відображення</th> {/* 👈 ДОДАНО КОЛОНКУ */}
+                                <th>Відображення</th> 
                                 <th>Дії</th>
                             </tr>
                         </thead>
@@ -303,8 +329,7 @@ function AdminHappyPets() {
                                         <td><img src={imgSrc} alt={pet.Name} className="table-img-preview" /></td>
                                         <td><strong>{pet.Name}</strong></td>
                                         <td>{pet.OwnerName || "Не вказано"}</td>
-                                        <td><div className="text-truncate">{pet.Description}</div></td>
-                                        {/* 👇 НОВА СТИЛІЗОВАНА ЯЧЕЙКА СТАТУСУ ВИДІМОСТІ */}
+                                        <td><div className="text-truncate">{pet.HomeDescription}</div></td>
                                         <td>
                                             <span style={{ 
                                                 padding: '4px 10px', 

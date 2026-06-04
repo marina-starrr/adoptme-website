@@ -59,6 +59,12 @@ function Home() {
   const location = useLocation();
   const [toastMsg, setToastMsg] = useState('');
   const [happyPets, setHappyPets] = useState([]);
+  
+  const [allNewArrivals, setAllNewArrivals] = useState([]); 
+  const [filteredNewPets, setFilteredNewPets] = useState([]); 
+  const [dynamicTypes, setDynamicTypes] = useState([]); 
+  const [newTypeNames, setNewTypeNames] = useState([]); 
+  const [selectedCategory, setSelectedCategory] = useState('Всі'); 
 
   const sliderPets = [
     { src: '/mars1.png', id: 1 },
@@ -83,7 +89,6 @@ function Home() {
 
   useEffect(() => {
     const fetchHappyPets = async () => {
-      // 👇 ЗМІНА: Забираємо небезпечний фільтр з БД. Просимо просто тваринок "Вже вдома" (беремо з запасом 20 штук)
       const { data, error } = await supabase
         .from('Pets')
         .select('*')
@@ -97,30 +102,67 @@ function Home() {
       }
 
       if (data) {
-        // 👇 ЗМІНА: Відфільтровуємо ТІЛЬКИ ТИХ, у кого галочка явно знята (=== false)
-        // Всі старі тваринки (null) і нові з галочкою (true) пройдуть далі
         const visiblePetsData = data.filter(pet => pet.ShowInLucky !== false).slice(0, 8);
 
         const formattedPets = visiblePetsData.map(pet => {
           let images = [];
-          if (pet.Images && Array.isArray(pet.Images)) {
+          if (pet.Images && Array.isArray(pet.Images) && pet.Images.length > 0) {
             images = pet.Images.map(img => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${img}`);
-          } else {
+          } else if (pet.ImageName) {
             images = [`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`];
+          } else {
+            images = ['/placeholder.png'];
           }
 
           return {
             id: pet.Id,
             petName: pet.Name,
             ownerName: pet.OwnerName || "Нова сім'я",
-            text: pet.Description || "Знайшов свій дім!",
+            text: pet.HomeDescription || "Знайшов свій дім!", 
             images: images
           };
         });
         setHappyPets(formattedPets);
       }
     };
+
+    const fetchNewArrivals = async () => {
+      const { data, error } = await supabase.from('Pets').select('*');
+
+      if (!error && data) {
+        const getPastDateString = (daysAgo) => {
+          const d = new Date();
+          d.setDate(d.getDate() - daysAgo);
+          return d.toISOString().split('T')[0];
+        };
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        const weekAgoStr = getPastDateString(7);
+
+        const arrivals = data.filter(pet => {
+          if (pet.Status === 'Вже вдома') return false;
+          return pet.ArrivalDate >= weekAgoStr && pet.ArrivalDate <= todayStr;
+        });
+
+        arrivals.sort((a, b) => b.Id - a.Id);
+
+        setAllNewArrivals(arrivals);
+        setFilteredNewPets(arrivals); 
+
+        const typesInNewArrivals = [...new Set(arrivals.map(p => p.Type).filter(Boolean))];
+        setDynamicTypes(typesInNewArrivals);
+
+        const completelyNewTypes = typesInNewArrivals.filter(type => {
+          const hasOldPets = data.some(pet => pet.Type === type && pet.ArrivalDate < weekAgoStr);
+          return !hasOldPets;
+        });
+        
+        setNewTypeNames(completelyNewTypes);
+      }
+    };
+
     fetchHappyPets();
+    fetchNewArrivals();
   }, []);
 
   const changeImage = (direction) => {
@@ -139,18 +181,36 @@ function Home() {
     return () => clearInterval(sliderTimer);
   }, []);
 
+  const getNewPetImg = (pet) => {
+    const firstImg = (pet.Images && pet.Images.length > 0) ? pet.Images[0] : pet.ImageName;
+    return firstImg 
+      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${firstImg}` 
+      : '/placeholder.png';
+  };
+
+  const handleCategoryClick = (type) => {
+    setSelectedCategory(type);
+    if (type === 'Всі') {
+      setFilteredNewPets(allNewArrivals);
+    } else {
+      setFilteredNewPets(allNewArrivals.filter(pet => pet.Type === type));
+    }
+  };
+
   return (
-    <>
-      <div className="hero" style={{ position: 'relative' }}>
-
-        {toastMsg && (
-          <div className="custom-toast">
-            {toastMsg}
-          </div>
-        )}
-
+    <div className="home-page-container">
+      {/* 👇 Глобальний контейнер для лапок, щоб вони були на фоні всієї сторінки */}
+      <div className="fixed-background-paws">
         <BackgroundPaws />
+      </div>
 
+      {toastMsg && (
+        <div className="custom-toast" style={{ zIndex: 9999 }}>
+          {toastMsg}
+        </div>
+      )}
+
+      <div className="hero">
         <div className="hero-left">
           <div className="call-to-action-container">
             <Link to="/pets" style={{ textDecoration: 'none' }}>
@@ -200,7 +260,50 @@ function Home() {
         </div>
       </div>
 
-      {/* 🌟 СЕКЦІЯ: ЩАСЛИВЧИКИ */}
+      {allNewArrivals.length > 0 && (
+        <section className="home-news-section">
+          <h2 className="news-section-title">Наші новинки 🌟</h2>
+          <p className="news-section-subtitle">Ці хвостики щойно прибули до притулку за останній тиждень та дуже чекають на знайомство</p>
+          
+          <div className="news-categories-badges">
+            <button 
+               className={`news-type-badge ${selectedCategory === 'Всі' ? 'active' : ''}`}
+               onClick={() => handleCategoryClick('Всі')}
+            >
+              📂 Всі новинки
+            </button>
+            {dynamicTypes.map((type) => (
+              <button 
+                 key={type} 
+                 className={`news-type-badge ${selectedCategory === type ? 'active' : ''}`}
+                 onClick={() => handleCategoryClick(type)}
+              >
+                📂 Розділ: {type}
+                {newTypeNames.includes(type) && <span className="type-new-tag">✨ Новинка</span>}
+              </button>
+            ))}
+          </div>
+
+          <div className="news-pets-grid">
+            {filteredNewPets.map((pet) => (
+              <Link to={`/pets/${pet.Id}`} key={pet.Id} className="news-pet-card">
+                <div className="news-card-img-wrapper">
+                  <img src={getNewPetImg(pet)} alt={pet.Name} />
+                  <span className="new-arrival-tag">Новенький 🐾</span>
+                </div>
+                <div className="news-card-details">
+                  <h3>{pet.Name}</h3>
+                  <div className="news-card-meta">
+                    <span>{pet.Type}</span> • <span>{pet.Breed}</span>
+                  </div>
+                  <p className="news-card-age">Вік: {pet.Age}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
       {happyPets.length > 0 && (
         <section className="lucky-section">
           <h2 className="lucky-title">Вони вже знайшли свій дім 🏡</h2>
@@ -214,7 +317,7 @@ function Home() {
           </div>
         </section>
       )}
-    </>
+    </div>
   );
 }
 

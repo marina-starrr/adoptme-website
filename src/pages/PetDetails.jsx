@@ -5,6 +5,17 @@ import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
 import './PetDetails.css';
 
+const isVideoFile = (urlOrName) => {
+  if (!urlOrName) return false;
+  const cleanUrl = urlOrName.split('?')[0].toLowerCase();
+  return cleanUrl.endsWith('.mp4') || 
+         cleanUrl.endsWith('.webm') || 
+         cleanUrl.endsWith('.ogg') || 
+         cleanUrl.endsWith('.mov') || 
+         cleanUrl.endsWith('.mkv') || 
+         cleanUrl.endsWith('.avi');
+};
+
 function PetDetails() {
   const { id } = useParams();
   const location = useLocation();
@@ -112,6 +123,14 @@ function PetDetails() {
     setIsSaving(true);
     try {
       let finalData = { ...editFormData };
+
+      const todayStr = new Date().toISOString().split('T')[0];
+      if (finalData.ArrivalDate > todayStr) {
+        alert("❌ Дата прибуття в притулок не може бути в майбутньому!");
+        setIsSaving(false);
+        return;
+      }
+
       const finalImagesArray = [];
       for (const img of editableImages) {
         if (img.isNew) {
@@ -128,6 +147,7 @@ function PetDetails() {
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
+        finalData.HomeDescription = null; // Очищуємо історію родини при поверненні
         finalData.ShowInLucky = true;
       } else {
         finalData.ShowInLucky = finalData.ShowInLucky !== false;
@@ -139,7 +159,6 @@ function PetDetails() {
       if (error) throw error;
 
       const cleanStatus = finalData.Status?.trim();
-      // 🌟 ОНОВЛЕНО: Додано "Шукає дім"
       if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
         const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
@@ -148,23 +167,22 @@ function PetDetails() {
           .select('*')
           .eq('PetId', pet.Id);
 
-        if (favError) console.error("❌ Помилка отримання обраного з PetDetails:", favError.message);
+        if (!favError && favUsers) {
+          const validFavUsers = favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname);
 
-        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
-
-        if (validFavUsers.length > 0) {
-          const notificationsToInsert = validFavUsers.map(fav => {
-            const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-            return {
-              UserNickname: nick,
-              PetId: pet.Id,
-              PetName: finalData.Name,
-              NewStatus: targetStatus,
-              IsRead: false
-            };
-          });
-          
-          await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+          if (validFavUsers.length > 0) {
+            const notificationsToInsert = validFavUsers.map(fav => {
+              const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+              return {
+                UserNickname: nick,
+                PetId: pet.Id,
+                PetName: finalData.Name,
+                NewStatus: targetStatus,
+                IsRead: false
+              };
+            });
+            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+          }
         }
       }
 
@@ -172,7 +190,7 @@ function PetDetails() {
       setIsEditing(false);
       setEditableImages([]);
       setActiveImageIndex(0);
-      alert("✅ Зміни та фото успішно збережено!");
+      alert("✅ Зміни та медіафайли успішно збережено!");
     } catch (err) {
       alert("❌ Помилка збереження: " + err.message);
     } finally {
@@ -193,10 +211,7 @@ function PetDetails() {
       const userNickname = localStorage.getItem('userNickname');
       if (userNickname) {
         await supabase.from('Favorites').insert([
-          {
-            PetId: pet.Id,
-            UserNickname: userNickname
-          }
+          { PetId: pet.Id, UserNickname: userNickname }
         ]);
       }
       favorites.push({ id: pet.Id, name: pet.Name, image: imageUrl });
@@ -247,11 +262,20 @@ function PetDetails() {
   const currentStatus = isEditing ? editFormData.Status : pet.Status;
   const statusConfig = getStatusConfig(currentStatus || "Шукає дім");
 
-  const displayImages = isEditing
-    ? editableImages.map(img => img.preview)
-    : getDbImages(pet).map(imgName => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`);
+  const displayMedia = isEditing
+    ? editableImages.map(img => ({
+        url: img.preview,
+        isVideo: img.isNew 
+            ? (img.file?.type?.startsWith('video/') || isVideoFile(img.file?.name)) 
+            : isVideoFile(img.name)
+      }))
+    : getDbImages(pet).map(imgName => ({
+        url: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`,
+        isVideo: isVideoFile(imgName)
+      }));
 
-  const safeActiveIndex = activeImageIndex >= displayImages.length ? Math.max(0, displayImages.length - 1) : activeImageIndex;
+  const safeActiveIndex = activeImageIndex >= displayMedia.length ? Math.max(0, displayMedia.length - 1) : activeImageIndex;
+  const currentMedia = displayMedia[safeActiveIndex];
 
   return (
     <div className={`pet-details-layout ${isAdminPath ? 'admin-mode' : ''}`}>
@@ -265,10 +289,22 @@ function PetDetails() {
         <div className="pet-details-content">
           <div className="pet-gallery-section">
             <div className="main-image-wrapper">
-              {displayImages.length > 0 ? (
-                <img src={displayImages[safeActiveIndex]} alt={pet.Name} className="main-pet-image" />
+              {displayMedia.length > 0 ? (
+                currentMedia.isVideo ? (
+                  <video 
+                    src={currentMedia.url} 
+                    controls 
+                    autoPlay 
+                    muted 
+                    loop 
+                    playsInline
+                    className="main-pet-image" 
+                  />
+                ) : (
+                  <img src={currentMedia.url} alt={pet.Name} className="main-pet-image" />
+                )
               ) : (
-                <div className="placeholder-image" style={{ padding: '100px', textAlign: 'center', background: '#f5f5f5', borderRadius: '30px' }}>Немає фото</div>
+                <div className="placeholder-image" style={{ padding: '100px', textAlign: 'center', background: '#f5f5f5', borderRadius: '30px' }}>Немає медіа</div>
               )}
 
               <div className={`pet-status-badge ${statusConfig.class}`}>
@@ -277,18 +313,18 @@ function PetDetails() {
 
               {isEditing && (
                 <div className="edit-photo-controls">
-                  <label className="photo-btn add-btn" title="Додати нові фото">
-                    ➕ Додати
-                    <input type="file" multiple accept="image/*" onChange={handleAddPhotos} style={{ display: 'none' }} />
+                  <label className="photo-btn add-btn" title="Додати нові фото або відео">
+                    ➕ Додати медіа
+                    <input type="file" multiple accept="image/*,video/*" onChange={handleAddPhotos} style={{ display: 'none' }} />
                   </label>
 
-                  {displayImages.length > 0 && (
+                  {displayMedia.length > 0 && (
                     <>
-                      <label className="photo-btn change-btn" title="Замінити це фото">
+                      <label className="photo-btn change-btn" title="Замінити поточний файл">
                         🔄 Змінити
-                        <input type="file" accept="image/*" onChange={handleChangeCurrentPhoto} style={{ display: 'none' }} />
+                        <input type="file" accept="image/*,video/*" onChange={handleChangeCurrentPhoto} style={{ display: 'none' }} />
                       </label>
-                      <button type="button" className="photo-btn delete-btn" title="Видалити це фото" onClick={handleDeleteCurrentPhoto}>
+                      <button type="button" className="photo-btn delete-btn" title="Видалити поточний файл" onClick={handleDeleteCurrentPhoto}>
                         🗑️ Видалити
                       </button>
                     </>
@@ -297,15 +333,22 @@ function PetDetails() {
               )}
             </div>
 
-            {displayImages.length > 0 && (
+            {displayMedia.length > 0 && (
               <div className="gallery-thumbnails">
-                {displayImages.map((imgUrl, index) => (
+                {displayMedia.map((media, index) => (
                   <div
                     key={index}
                     className={`thumbnail-wrapper ${safeActiveIndex === index ? 'active' : ''}`}
                     onClick={() => setActiveImageIndex(index)}
                   >
-                    <img src={imgUrl} alt={`Thumbnail ${index + 1}`} />
+                    {media.isVideo ? (
+                      <div className="thumbnail-video-container">
+                        <video src={media.url} muted preload="metadata" />
+                        <div className="video-play-overlay">▶</div>
+                      </div>
+                    ) : (
+                      <img src={media.url} alt={`Thumbnail ${index + 1}`} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -331,9 +374,7 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <input value={editFormData.Age || ''} onChange={e => handleChange('Age', e.target.value)} className="inline-input center-input" />
-                  ) : (
-                    pet.Age
-                  )}
+                  ) : (pet.Age)}
                 </div>
               </div>
 
@@ -346,9 +387,7 @@ function PetDetails() {
                       <option>Хлопчик</option>
                       <option>Дівчинка</option>
                     </select>
-                  ) : (
-                    pet.Gender
-                  )}
+                  ) : (pet.Gender)}
                 </div>
               </div>
 
@@ -358,9 +397,7 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <input value={editFormData.Breed || ''} onChange={e => handleChange('Breed', e.target.value)} className="inline-input center-input" placeholder="Порода..." />
-                  ) : (
-                    pet.Breed || "Не вказано"
-                  )}
+                  ) : (pet.Breed || "Не вказано")}
                 </div>
               </div>
 
@@ -374,9 +411,7 @@ function PetDetails() {
                       <option>Середній</option>
                       <option>Великий</option>
                     </select>
-                  ) : (
-                    pet.Size || "Середній"
-                  )}
+                  ) : (pet.Size || "Середній")}
                 </div>
               </div>
 
@@ -390,9 +425,7 @@ function PetDetails() {
                       <option>Середній</option>
                       <option>Високий</option>
                     </select>
-                  ) : (
-                    pet.EnergyLevel || "Середній"
-                  )}
+                  ) : (pet.EnergyLevel || "Середній")}
                 </div>
               </div>
 
@@ -402,9 +435,7 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <input value={editFormData.FavoriteFood || ''} onChange={e => handleChange('FavoriteFood', e.target.value)} className="inline-input center-input" placeholder="М'яско..." />
-                  ) : (
-                    pet.FavoriteFood || "Усе смачненьке"
-                  )}
+                  ) : (pet.FavoriteFood || "Усе смачненьке")}
                 </div>
               </div>
             </div>
@@ -412,34 +443,22 @@ function PetDetails() {
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '25px' }}>
               <div style={{ background: pet.IsVaccinated ? '#E8F5E9' : '#FFEBEE', color: pet.IsVaccinated ? '#2E7D32' : '#D32F2F', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '5px' }}>
                 {isEditing ? (
-                  <>
-                    <input type="checkbox" checked={editFormData.IsVaccinated || false} onChange={e => handleChange('IsVaccinated', e.target.checked)} />
-                    Вакцинація
-                  </>
+                  <><input type="checkbox" checked={editFormData.IsVaccinated || false} onChange={e => handleChange('IsVaccinated', e.target.checked)} /> Вакцинація</>
                 ) : (
-                  <>
-                    {pet.IsVaccinated ? '💉 Вакциновано' : '⚠️ Не вакциновано'}
-                  </>
+                  <>{pet.IsVaccinated ? '💉 Вакциновано' : '⚠️ Не вакциновано'}</>
                 )}
               </div>
               
               <div style={{ background: '#FFF3E0', color: '#E65100', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px' }}>
                 {isEditing ? (
-                  <>
-                    <input type="checkbox" checked={editFormData.NeedsTraining || false} onChange={e => handleChange('NeedsTraining', e.target.checked)} />
-                    Потребує дресирування
-                  </>
-                ) : (
-                  pet.NeedsTraining ? '🎓 Потребує навчання' : '⭐ Слухняна(ий)'
-                )}
+                  <><input type="checkbox" checked={editFormData.NeedsTraining || false} onChange={e => handleChange('NeedsTraining', e.target.checked)} /> Потребує дресирування</>
+                ) : (pet.NeedsTraining ? '🎓 Потребує навчання' : '⭐ Слухняна(ий)')}
               </div>
 
               <div style={{ background: '#E3F2FD', color: '#1565C0', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px' }}>
                 {isEditing ? (
-                  <input type="date" value={editFormData.ArrivalDate || ''} onChange={e => handleChange('ArrivalDate', e.target.value)} style={{ border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold' }} />
-                ) : (
-                  `📅 У притулку з: ${pet.ArrivalDate || 'Невідомо'}`
-                )}
+                  <input type="date" value={editFormData.ArrivalDate || ''} max={new Date().toISOString().split('T')[0]} onChange={e => handleChange('ArrivalDate', e.target.value)} style={{ border: 'none', background: 'transparent', color: 'inherit', fontWeight: 'bold' }} />
+                ) : (`📅 У притулку з: ${pet.ArrivalDate || 'Невідомо'}`)}
               </div>
             </div>
 
@@ -466,17 +485,52 @@ function PetDetails() {
               )}
             </div>
 
+            {/* 👇 ОНОВЛЕНО: Відображення ДВОХ незалежних полів історії */}
             <div className="pet-story-block">
-              <h3 className="section-subtitle">📖 Моя історія:</h3>
-              <div className="story-content">
-                {isEditing ? (
-                  <div className="editable-container">
-                    <textarea value={editFormData.Description || ''} onChange={e => handleChange('Description', e.target.value)} className="inline-input input-desc" />
+              {isEditing ? (
+                <>
+                  <div style={{ marginBottom: '20px' }}>
+                    <h3 className="section-subtitle">📖 Опис історії та характеру в притулку:</h3>
+                    <div className="editable-container">
+                      <textarea 
+                        value={editFormData.Description || ''} 
+                        onChange={e => handleChange('Description', e.target.value)} 
+                        className="inline-input input-desc" 
+                        required
+                        rows="4"
+                      />
+                    </div>
                   </div>
-                ) : (
-                  <p className="pet-desc-text">{pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!"}</p>
-                )}
-              </div>
+
+                  {editFormData.Status === 'Вже вдома' && (
+                    <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
+                      <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px' }}>🏡 Історія успіху (Життя в новій родині):</h3>
+                      <div className="editable-container">
+                        <textarea 
+                          value={editFormData.HomeDescription || ''} 
+                          onChange={e => handleChange('HomeDescription', e.target.value)} 
+                          className="inline-input input-desc" 
+                          required
+                          rows="4"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <h3 className="section-subtitle">
+                    {pet.Status === 'Вже вдома' ? '🏡 Історія успіху (Життя в родині):' : '📖 Моя історія:'}
+                  </h3>
+                  <div className="story-content">
+                    <p className="pet-desc-text">
+                      {pet.Status === 'Вже вдома' 
+                        ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!") 
+                        : (pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!")}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
 
             {(pet.MedicalNotes || isEditing) && (
@@ -502,11 +556,16 @@ function PetDetails() {
                     value={editFormData.Status || 'Шукає дім'}
                     onChange={e => {
                       const newStatus = e.target.value;
-                      let newDesc = editFormData.Description;
-                      if (newStatus === 'Вже вдома' && (!newDesc || newDesc === pet.Description)) {
-                        newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                      let updatedData = { ...editFormData, Status: newStatus };
+                      
+                      if (newStatus === 'Вже вдома') {
+                        if (!updatedData.HomeDescription) {
+                          updatedData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                        }
+                      } else {
+                        updatedData.HomeDescription = null; // Очищення історії родини при поверненні
                       }
-                      setEditFormData(prev => ({ ...prev, Status: newStatus, Description: newDesc }));
+                      setEditFormData(updatedData);
                     }}
                     className="admin-select"
                   >
@@ -561,7 +620,6 @@ function PetDetails() {
                 </div>
               ) : (
                 <div className="user-actions-block">
-                  {/* 🌟 ОНОВЛЕНО: Додано перевірку на Заброньована */}
                   {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати' || currentStatus === 'Заброньована' || currentStatus === 'Заброньовано') ? (
                     <div className="status-message-block">
                       <p>

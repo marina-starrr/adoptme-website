@@ -17,7 +17,6 @@ function Profile() {
   const [toastMsg, setToastMsg] = useState('');
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
-  // Стан для відкритої заявки (модальне вікно)
   const [selectedApp, setSelectedApp] = useState(null);
 
   const location = useLocation();
@@ -37,6 +36,13 @@ function Profile() {
     setToastMsg(message);
     setTimeout(() => setToastMsg(''), 3500);
   };
+
+  // 👇 ЗАХИСТ МАРШРУТУ: Якщо адмін заходить на /profile, кидаємо його в адмінку
+  useEffect(() => {
+    if (localStorage.getItem('userRole') === 'admin') {
+      navigate('/admin/adoptions', { replace: true });
+    }
+  }, [navigate]);
 
   useEffect(() => {
     const fetchProfileAndApplications = async () => {
@@ -74,7 +80,6 @@ function Profile() {
             const { data: petsData } = await supabase.from('Pets').select('Id, Name, ImageName');
 
             const enrichedApps = appsData.map(app => {
-              // Перевіряємо, чи це волонтерство для конкретної тваринки, чи просто прихисток
               let searchName = app.PetName;
               if (app.PetName.includes('Волонтерство')) {
                 const match = app.PetName.match(/\((.*?)\)/);
@@ -102,7 +107,10 @@ function Profile() {
       }
     };
 
-    fetchProfileAndApplications();
+    // Виконуємо запит, тільки якщо це не адмін
+    if (localStorage.getItem('userRole') !== 'admin') {
+      fetchProfileAndApplications();
+    }
 
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
@@ -113,7 +121,6 @@ function Profile() {
     }
   }, []);
 
-  // 🌟 ОНОВЛЕНО: Обробка state з роутера (перехід зі сповіщень)
   useEffect(() => {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
@@ -123,24 +130,19 @@ function Profile() {
       setActiveTab(location.state.activeTab);
     }
 
-    // Якщо ми маємо заявки і нам передали ID для підсвічування
     if (applications.length > 0 && location.state?.highlightAppId) {
       const targetApp = applications.find(app => app.Id === location.state.highlightAppId);
       
       if (targetApp) {
-        // Автоматично відкриваємо модалку цієї заявки
         setSelectedApp(targetApp);
-        
-        // Переконуємось, що фільтр дозволяє побачити цю заявку в списку (ставимо 'Всі')
         setAppFilter('Всі');
       }
     }
 
-    // Очищаємо state, щоб при оновленні сторінки знову не вискакували повідомлення
     if (location.state) {
       window.history.replaceState({}, document.title);
     }
-  }, [location, applications]); // 👈 Додали applications в залежності, щоб спрацювало після їх завантаження
+  }, [location, applications]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -243,7 +245,6 @@ function Profile() {
     return (app.Status || 'Нова') === appFilter;
   });
 
-  // Допоміжна функція для парсингу даних заявки (визначаємо тип та ім'я тваринки)
   const parseAppInfo = (app) => {
     const isVolunteer = app.PetName.includes('Волонтерство');
     const appType = isVolunteer ? 'Волонтерство' : 'Прихисток';
@@ -268,7 +269,6 @@ function Profile() {
         </div>
       )}
 
-      {/* Модальне вікно видалення акаунту */}
       {isDeleteModalOpen && (
         <div className="modal profile-modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
           <div className="modal-content fade-view" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}>
@@ -289,7 +289,6 @@ function Profile() {
         </div>
       )}
 
-      {/* Модальне вікно деталей заявки */}
       {selectedApp && (
         <div className="modal profile-modal-overlay" onClick={() => setSelectedApp(null)}>
           <div className="modal-content fade-view app-details-modal" onClick={e => e.stopPropagation()}>
@@ -412,7 +411,6 @@ function Profile() {
 
         <section className="profile-content-area">
 
-          {/* ВКЛАДКА 1: УЛЮБЛЕНЦІ */}
           {activeTab === 'favorites' && (
             <div className="profile-tab-content fade-in">
               <h3>Мої улюбленці</h3>
@@ -433,7 +431,6 @@ function Profile() {
             </div>
           )}
 
-          {/* ВКЛАДКА 2: МОЇ ЗАЯВКИ */}
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
               <h3>Історія заявок у притулок</h3>
@@ -460,7 +457,7 @@ function Profile() {
                         <div 
                           className="application-card clickable-card" 
                           key={app.Id} 
-                          id={`app-card-${app.Id}`} // 👈 ДОДАНО: ID для скролінгу, якщо знадобиться
+                          id={`app-card-${app.Id}`}
                           onClick={() => setSelectedApp(app)}
                         >
                           <div className="app-card-left">
@@ -500,7 +497,6 @@ function Profile() {
             </div>
           )}
 
-          {/* ВКЛАДКА 3: ОСОБИСТІ ДАНІ */}
           {activeTab === 'personal' && (
             <div className="profile-tab-content fade-in">
               <h3>Особисті дані</h3>

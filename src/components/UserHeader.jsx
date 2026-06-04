@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
@@ -39,6 +39,19 @@ function UserHeader() {
     const textareaRef = useRef(null);
     const dropdownRef = useRef(null); 
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const userRole = localStorage.getItem('userRole');
+
+    const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password';
+    
+    const showLoggedInUI = isLoggedIn && !isAuthPage;
+
+    useEffect(() => {
+        if (userRole === 'admin' && !location.pathname.startsWith('/admin')) {
+            navigate('/admin/adoptions', { replace: true });
+        }
+    }, [userRole, location.pathname, navigate]);
 
     const formatExistingPhone = (phoneStr) => {
         if (!phoneStr) return '';
@@ -65,7 +78,6 @@ function UserHeader() {
 
     const fetchNotifications = async () => {
         const userNickname = localStorage.getItem('userNickname');
-        console.log("🔔 [fetchNotifications] Пошук сповіщень для:", userNickname);
         
         if (userNickname) {
             const { data: treatmentData, error: treatmentError } = await supabase
@@ -86,9 +98,6 @@ function UserHeader() {
                 .select('*')
                 .eq('UserNickname', userNickname)
                 .eq('IsRead', false);
-
-            if (favoriteError) console.error("❌ Помилка FavoriteNotifications:", favoriteError.message);
-            else console.log("📥 [fetchNotifications] Знайдено FavoriteNotifications:", favoriteData);
 
             let combinedNotifications = [];
 
@@ -113,7 +122,6 @@ function UserHeader() {
                 ];
             }
 
-            console.log("📬 [fetchNotifications] Загальний масив сповіщень для рендеру:", combinedNotifications);
             setNotifications(combinedNotifications);
         }
     };
@@ -201,9 +209,15 @@ function UserHeader() {
 
     const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);
-    const handleLogoClick = () => {
-        window.scrollTo(0, 0);
-        setIsOpen(false);
+    
+    const handleLogoClick = (e) => {
+        if (userRole === 'admin') {
+            e.preventDefault();
+            navigate('/admin/adoptions');
+        } else {
+            window.scrollTo(0, 0);
+            setIsOpen(false);
+        }
     };
 
     const openFavorites = () => {
@@ -252,7 +266,6 @@ function UserHeader() {
 
     const handleNotificationCardClick = async (notif) => {
         handleDeleteNotification(notif);
-        
         setIsNotificationsOpen(false);
         
         if (notif.type === 'adoption_status') {
@@ -424,6 +437,7 @@ function UserHeader() {
     return (
         <header className="header" id="home">
             <div className="header-left">
+                {/* Логотип залишаємо як <Link>, щоб він працював як зазвичай, або можете теж змінити на <a>, якщо потрібно повне перезавантаження */}
                 <Link to="/" onClick={handleLogoClick}>
                     <img src="/logo.png" alt="Adopt Me Logo" className="logo-img" />
                 </Link>
@@ -433,14 +447,15 @@ function UserHeader() {
                 <span className="bar"></span><span className="bar"></span><span className="bar"></span>
             </button>
 
+            {/* 👇 ОНОВЛЕНО: Замінено <Link> на звичайні теги <a> для ПОВНОГО ПЕРЕЗАВАНТАЖЕННЯ */}
             <nav>
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
-                    <li><Link to="/" className="nav-link" onClick={closeMenu}>Головна</Link></li>
-                    <li><Link to="/pets" className="nav-link" onClick={closeMenu}>Тварини</Link></li>
-                    <li><Link to="/about" className="nav-link" onClick={closeMenu}>Про нас</Link></li>
-                    <li><Link to="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</Link></li>
-                    <li><Link to="/help" className="nav-link" onClick={closeMenu}>Допомога</Link></li>
-                    <li><Link to="/contact" className="nav-link" onClick={closeMenu}>Контакти</Link></li>
+                    <li><a href="/" className="nav-link" onClick={closeMenu}>Головна</a></li>
+                    <li><a href="/pets" className="nav-link" onClick={closeMenu}>Тварини</a></li>
+                    <li><a href="/about" className="nav-link" onClick={closeMenu}>Про нас</a></li>
+                    <li><a href="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</a></li>
+                    <li><a href="/help" className="nav-link" onClick={closeMenu}>Допомога</a></li>
+                    <li><a href="/contact" className="nav-link" onClick={closeMenu}>Контакти</a></li>
                 </ul>
             </nav>
 
@@ -454,7 +469,7 @@ function UserHeader() {
                     style={{ cursor: 'pointer', marginLeft: '15px' }}
                 />
 
-                {isLoggedIn && (
+                {showLoggedInUI && (
                     <div className="notification-wrapper">
                         <img
                             src="/notification.png"
@@ -468,7 +483,7 @@ function UserHeader() {
                     </div>
                 )}
 
-                {isLoggedIn ? (
+                {showLoggedInUI ? (
                     <div className="avatar-dropdown-container" ref={dropdownRef}>
                         <img
                             src="/avatar.png"
@@ -483,13 +498,21 @@ function UserHeader() {
                                     <span className="mini-menu-name">@{localStorage.getItem('userNickname')}</span>
                                 </div>
 
-                                <Link to="/profile" state={{ activeTab: 'personal' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
-                                    👤 Мій профіль
-                                </Link>
+                                {userRole === 'admin' ? (
+                                    <Link to="/admin/adoptions" className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
+                                        ⚙️ Панель керування
+                                    </Link>
+                                ) : (
+                                    <>
+                                        <Link to="/profile" state={{ activeTab: 'personal' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
+                                            👤 Мій профіль
+                                        </Link>
 
-                                <Link to="/profile" state={{ activeTab: 'applications' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
-                                    📝 Мої заявки
-                                </Link>
+                                        <Link to="/profile" state={{ activeTab: 'applications' }} className="mini-menu-item" onClick={() => setIsAccountOpen(false)}>
+                                            📝 Мої заявки
+                                        </Link>
+                                    </>
+                                )}
 
                                 <div className="mini-menu-divider"></div>
 

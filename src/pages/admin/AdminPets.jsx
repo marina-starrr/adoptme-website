@@ -61,7 +61,7 @@ function AdminPets() {
   const [editMode, setEditMode] = useState(false);
   const [currentPetId, setCurrentPetId] = useState(null);
 
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const [sortOrder, setSortOrder] = useState('newest');
@@ -103,10 +103,8 @@ function AdminPets() {
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
       const matchType = filterType === 'Всі' || (pet.Type || '').trim().toLowerCase() === filterType.trim().toLowerCase();
-
       const safePetBreed = pet.Breed ? pet.Breed.trim() : 'Безпородна';
       const matchBreed = filterBreed === 'Всі' || safePetBreed === filterBreed;
-
       const matchGender = filterGender === 'Всі' || (pet.Gender || '').trim().toLowerCase() === filterGender.trim().toLowerCase();
 
       const ageInMonths = getAgeInMonths(pet.Age);
@@ -117,10 +115,8 @@ function AdminPets() {
       else if (filterAge === 'Більше 3 років') matchAge = ageInMonths > 36;
 
       const matchStatus = filterStatus === 'Всі' || (pet.Status || 'Шукає дім').trim().toLowerCase() === filterStatus.trim().toLowerCase();
-
       const safePetSize = pet.Size ? pet.Size.trim() : 'Середній';
       const matchSize = filterSize === 'Всі' || safePetSize === filterSize;
-
       const safePetEnergy = pet.EnergyLevel ? pet.EnergyLevel.trim() : 'Середній';
       const matchEnergy = filterEnergy === 'Всі' || safePetEnergy === filterEnergy;
 
@@ -136,13 +132,11 @@ function AdminPets() {
     })
     .sort((a, b) => {
       if (sortOrder === 'name') return (a.Name || '').localeCompare(b.Name || '');
-
       if (sortOrder === 'oldest') {
         const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
         const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
         return dateA - dateB;
       }
-
       const dateA = a.ArrivalDate ? new Date(a.ArrivalDate).getTime() : a.Id;
       const dateB = b.ArrivalDate ? new Date(b.ArrivalDate).getTime() : b.Id;
       return dateB - dateA;
@@ -199,8 +193,10 @@ function AdminPets() {
     Age: '',
     Gender: 'Хлопчик',
     ImageName: '',
+    Images: [],
     Tags: '',
     Description: '',
+    HomeDescription: null, 
     Status: 'Шукає дім',
     OwnerId: null,
     OwnerName: '',
@@ -244,12 +240,8 @@ function AdminPets() {
   }
 
   async function fetchUsers() {
-    console.log("⏳ [fetchUsers] Завантаження списку користувачів...");
     const { data, error = null } = await supabase.from('Users').select('*');
-    if (error) {
-      console.error("❌ [fetchUsers] Помилка отримання користувачів:", error.message);
-    } else {
-      console.log(`✅ [fetchUsers] Завантажено ${data?.length} користувачів.`);
+    if (!error) {
       setUsersList(data || []);
     }
   }
@@ -259,15 +251,19 @@ function AdminPets() {
     e.stopPropagation();
     setEditMode(true);
     setCurrentPetId(pet.Id);
+    
     setPetFormData({
+      ...pet,
       Name: pet.Name || '',
       Type: pet.Type || 'Кіт',
       Breed: pet.Breed || 'Безпородна',
       Age: pet.Age || '',
       Gender: pet.Gender || 'Хлопчик',
       ImageName: pet.ImageName || '',
+      Images: pet.Images || [],
       Tags: pet.Tags || '',
       Description: pet.Description || '',
+      HomeDescription: pet.HomeDescription || '', 
       Status: pet.Status || 'Шукає дім',
       OwnerId: pet.OwnerId || null,
       OwnerName: pet.OwnerName || '',
@@ -279,14 +275,14 @@ function AdminPets() {
       NeedsTraining: pet.NeedsTraining || false,
       Size: pet.Size || 'Середній'
     });
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setIsModalOpen(true);
   };
 
   const handleAddOpen = () => {
     setEditMode(false);
     setPetFormData(initialFormState);
-    setSelectedFile(null);
+    setSelectedFiles([]);
     setIsModalOpen(true);
   };
 
@@ -294,30 +290,49 @@ function AdminPets() {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
     const { error: uploadError } = await supabase.storage.from('pets').upload(fileName, file);
-    if (uploadError) throw new Error('Помилка завантаження фото: ' + uploadError.message);
+    if (uploadError) throw new Error('Помилка завантаження файлу: ' + uploadError.message);
     return fileName;
   };
 
   const handleSavePet = async (e) => {
     e.preventDefault();
+
+    const todayStr = getTodayDate();
+    if (petFormData.ArrivalDate > todayStr) {
+      showToast("❌ Дата прибуття в притулок не може бути в майбутньому!");
+      return;
+    }
+
     setIsUploading(true);
 
     try {
       let finalImageName = petFormData.ImageName;
+      let finalImages = petFormData.Images || [];
 
-      if (selectedFile) {
-        finalImageName = await uploadImage(selectedFile);
+      if (selectedFiles.length > 0) {
+        const uploadPromises = selectedFiles.map(file => uploadImage(file));
+        const uploadedFileNames = await Promise.all(uploadPromises);
+        
+        finalImages = uploadedFileNames;
+        finalImageName = uploadedFileNames[0];
       } else if (!editMode && !finalImageName) {
-        showToast("❌ Будь ласка, оберіть фотографію!");
+        showToast("❌ Будь ласка, оберіть хоча б одне photo чи відео!");
         setIsUploading(false);
         return;
       }
 
-      const dataToSave = { ...petFormData, ImageName: finalImageName };
+      const isHome = petFormData.Status === 'Вже вдома';
 
-      if (dataToSave.Status !== 'Вже вдома') {
+      const dataToSave = { 
+        ...petFormData, 
+        ImageName: finalImageName,
+        Images: finalImages 
+      };
+
+      if (!isHome) {
         dataToSave.OwnerId = null;
         dataToSave.OwnerName = null;
+        dataToSave.HomeDescription = null; // Очищуємо історію родини
       }
 
       if (editMode) {
@@ -355,29 +370,18 @@ function AdminPets() {
             });
 
             const { error: insertError } = await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-            if (insertError) {
-                console.error("❌ Помилка запису в таблицю FavoriteNotifications:", insertError.message);
-            }
+            if (insertError) console.error("❌ Помилка запису in таблицю FavoriteNotifications:", insertError.message);
           }
         }
 
         showToast("✅ Профіль тваринки успішно оновлено!");
       } else {
-        // 🌟 ОНОВЛЕНО: ДЕТАЛЬНЕ ЛОГУВАННЯ СТВОРЕННЯ НОВОЇ ТВАРИНКИ
-        console.log("🚀 [handleSavePet] Починаємо створення нової тваринки...");
-        
         const { data: newPetData, error } = await supabase.from('Pets').insert([dataToSave]).select();
         if (error) throw error;
 
-        console.log("📥 [handleSavePet] Відповідь від БД після insert Pets:", newPetData);
-
         if (newPetData && newPetData.length > 0) {
-            // Підтримка різних регістрів, які може повернути Supabase (Id або id)
             const newPetId = newPetData[0].Id || newPetData[0].id;
-            console.log("🔍 [handleSavePet] ID нової тваринки:", newPetId);
-            
             const validUsers = usersList.filter(u => u.Nickname || u.nickname || u.NickName || u.nickname);
-            console.log(`👥 [handleSavePet] Знайдено ${validUsers.length} валідних користувачів для розсилки.`);
             
             if (validUsers.length > 0) {
                 const notificationsToInsert = validUsers.map(user => {
@@ -391,23 +395,12 @@ function AdminPets() {
                     };
                 });
                 
-                console.log("📤 [handleSavePet] Готуємо масив до вставки у FavoriteNotifications:", notificationsToInsert);
-                
-                const { data: insertedNotifs, error: notifError } = await supabase
+                const { error: notifError } = await supabase
                     .from('FavoriteNotifications')
-                    .insert(notificationsToInsert)
-                    .select(); // Додаємо select(), щоб побачити результат вставки
+                    .insert(notificationsToInsert);
 
-                if (notifError) {
-                    console.error("❌ [handleSavePet] Помилка розсилки сповіщень:", notifError.message);
-                } else {
-                    console.log("✅ [handleSavePet] Успішно створено сповіщення! Результат:", insertedNotifs);
-                }
-            } else {
-                console.warn("⚠️ [handleSavePet] Масив користувачів порожній, розсилку скасовано.");
+                if (notifError) console.error("❌ Помилка розсилки сповіщень:", notifError.message);
             }
-        } else {
-            console.warn("⚠️ [handleSavePet] БД не повернула дані створеної тваринки (можливо, проблема з .select()).");
         }
 
         showToast("🎉 Нового хвостика успішно додано!");
@@ -692,7 +685,7 @@ function AdminPets() {
               <div className="form-row">
                 <div className="input-group">
                   <label>Дата прибуття в притулок</label>
-                  <input type="date" value={petFormData.ArrivalDate} onChange={e => setPetFormData({ ...petFormData, ArrivalDate: e.target.value })} className="form-control" required />
+                  <input type="date" value={petFormData.ArrivalDate} max={getTodayDate()} onChange={e => setPetFormData({ ...petFormData, ArrivalDate: e.target.value })} className="form-control" required />
                 </div>
                 <div className="input-group">
                   <label>Розмір</label>
@@ -747,11 +740,16 @@ function AdminPets() {
                   value={petFormData.Status} 
                   onChange={e => {
                     const newStatus = e.target.value;
-                    let newDesc = petFormData.Description;
-                    if (newStatus === 'Вже вдома' && !newDesc) {
-                      newDesc = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                    let updatedFormData = { ...petFormData, Status: newStatus };
+                    
+                    if (newStatus === 'Вже вдома') {
+                      if (!updatedFormData.HomeDescription) {
+                        updatedFormData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                      }
+                    } else {
+                      updatedFormData.HomeDescription = null; // Очищення історії родини при поверненні
                     }
-                    setPetFormData({ ...petFormData, Status: newStatus, Description: newDesc });
+                    setPetFormData(updatedFormData);
                   }} 
                   className="form-control"
                 >
@@ -797,25 +795,62 @@ function AdminPets() {
               </div>
 
               <div className="input-group">
-                <label>Фотографія</label>
+                <label>Фотографії або відео (можна обрати декілька)</label>
                 <label className="file-upload-label">
                   <span className="file-upload-text">
-                    {selectedFile ? `✅ Обрано: ${selectedFile.name}` : (editMode ? "🖼️ Натисніть, щоб змінити поточне фото" : "📷 Натисніть, щоб обрати фото")}
+                    {selectedFiles.length > 0 
+                      ? `✅ Обрано файлів: ${selectedFiles.length}` 
+                      : (editMode ? "🖼️ Натисніть, щоб замінити медіа (оберіть всі потрібні файли)" : "📷 Натисніть, щоб обрати photo/відео")}
                   </span>
-                  <input type="file" accept="image/*" onChange={(e) => setSelectedFile(e.target.files[0])} style={{ display: 'none' }} />
+                  <input 
+                    type="file" 
+                    multiple 
+                    accept="image/*,video/*" 
+                    onChange={(e) => setSelectedFiles(Array.from(e.target.files))} 
+                    style={{ display: 'none' }} 
+                  />
                 </label>
+                {selectedFiles.length > 0 && (
+                  <div style={{ marginTop: '10px', fontSize: '13px', color: '#6847DD', wordBreak: 'break-word', lineHeight: '1.4' }}>
+                    <strong>Вибрані файли:</strong> {selectedFiles.map(f => f.name).join(', ')}
+                  </div>
+                )}
+                {editMode && selectedFiles.length === 0 && (
+                  <div style={{ marginTop: '10px', fontSize: '12px', color: '#888' }}>
+                    * Якщо ви не оберете нових файлів, залишаться попередні зображення.
+                  </div>
+                )}
               </div>
 
-              <div className="input-group">
-                <label>Опис історії та характеру</label>
-                <textarea
-                  placeholder="Опишіть тваринку детальніше..."
-                  value={petFormData.Description || ''}
-                  onChange={e => setPetFormData({ ...petFormData, Description: e.target.value })}
-                  className="form-control"
-                  required
-                  rows="4">
-                </textarea>
+              {/* 👇 ОНОВЛЕНО: Відображення ДВОХ незалежних полів історії */}
+              <div className="pet-story-block">
+                <div style={{ marginBottom: '20px' }}>
+                  <h3 className="section-subtitle" style={{ fontSize: '15px' }}>📖 Опис історії та характеру в притулку:</h3>
+                  <div className="editable-container">
+                    <textarea 
+                      value={petFormData.Description || ''} 
+                      onChange={e => setPetFormData({ ...petFormData, Description: e.target.value })} 
+                      className="inline-input input-desc" 
+                      required
+                      rows="4"
+                    />
+                  </div>
+                </div>
+
+                {petFormData.Status === 'Вже вдома' && (
+                  <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
+                    <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px', fontSize: '15px' }}>🏡 Історія успіху (Життя в новій родині):</h3>
+                    <div className="editable-container">
+                      <textarea 
+                        value={petFormData.HomeDescription || ''} 
+                        onChange={e => setPetFormData({ ...petFormData, HomeDescription: e.target.value })} 
+                        className="inline-input input-desc" 
+                        required
+                        rows="4"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="form-actions">

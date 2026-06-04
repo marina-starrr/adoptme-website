@@ -3,14 +3,18 @@ import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import './AdminLayout.css'; 
 import { useToast } from '../context/ToastContext';
+import { supabase } from '../supabaseClient'; // 👇 ДОДАНО імпорт supabase
 
 function AdminLayout() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [toastMsg, setToastMsg] = useState('');
+    
+    // 👇 ДОДАНО: Стан для кількості нових заявок
+    const [newRequestsCount, setNewRequestsCount] = useState(0);
 
-    // 🌟 ДОДАНО: Автоматичний перехід на "Заявки" при вході в адмінку
+    // Автоматичний перехід на "Заявки" при вході в адмінку
     useEffect(() => {
         if (location.pathname === '/admin' || location.pathname === '/admin/') {
             navigate('/admin/adoptions', { replace: true });
@@ -27,6 +31,36 @@ function AdminLayout() {
             return () => clearTimeout(timer);
         }
     }, [location]);
+
+    // 👇 ДОДАНО: Логіка завантаження кількості нових заявок
+    useEffect(() => {
+        const fetchNewRequestsCount = async () => {
+            try {
+                const { count, error } = await supabase
+                    .from('AdoptionRequests')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('Status', 'Нова');
+
+                if (!error) {
+                    setNewRequestsCount(count || 0);
+                }
+            } catch (err) {
+                console.error("Помилка отримання кількості нових заявок:", err.message);
+            }
+        };
+
+        fetchNewRequestsCount();
+
+        // Опціонально: підписка в реальному часі на оновлення кількості (необов'язково)
+        const subscription = supabase
+            .channel('public:AdoptionRequests')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'AdoptionRequests' }, fetchNewRequestsCount)
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, []);
 
     const handleLogout = () => {
         const userNickname = localStorage.getItem('userNickname');
@@ -59,8 +93,14 @@ function AdminLayout() {
                 </div>
 
                 <nav className="admin-nav">
-                    <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}>
+                    <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`} style={{ position: 'relative' }}>
                         Заявки
+                        {/* 👇 ДОДАНО: Відображення бейджа */}
+                        {newRequestsCount > 0 && (
+                            <span className="admin-nav-badge">
+                                {newRequestsCount}
+                            </span>
+                        )}
                     </Link>
                     <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`}>
                         Сповіщення

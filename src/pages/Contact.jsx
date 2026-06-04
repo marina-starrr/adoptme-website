@@ -66,8 +66,8 @@ function Contact() {
                               <img src="/time.png" alt="Іконка годинника" className="card-icon" />
                               <h3 className="card-title">Години роботи</h3>
                           </div>
-                          <p className="card-info">Пн-Пт: 08:30 – 16:30</p>
-                          <p className="card-info">Сб-Нд: вихідний</p>
+                          <p className="card-info">Пн-Сб: 08:30 – 16:30</p>
+                          <p className="card-info">Нд: вихідний</p>
                       </div>
                   </div>
               </div>
@@ -97,18 +97,20 @@ function Contact() {
                       {/* Варіант 1: Локальне відео (з папки public) */}
                       <video 
                           src="/shelter-video.mp4" 
-                          controls 
                           className="shelter-video"
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
                       >
                           Ваш браузер не підтримує тег video.
                       </video>
 
                       {/* Варіант 2: Відео з YouTube (якщо потрібно - розкоментуй це, а <video> вище закоментуй) */}
-                      {/* 
-                      <iframe 
+                      {/* <iframe 
                           width="100%" 
                           height="350" 
-                          src="https://www.youtube.com/embed/ТУТ_ІД_ВІДЕО" 
+                          src="https://www.youtube.com/embed/ТУТ_ІД_ВІДЕО?autoplay=1&mute=1&loop=1&playlist=ТУТ_ІД_ВІДЕО" 
                           title="YouTube video player" 
                           frameBorder="0" 
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 

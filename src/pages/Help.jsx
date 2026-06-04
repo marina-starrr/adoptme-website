@@ -18,15 +18,21 @@ function Help() {
   const [volunteerPhone, setVolunteerPhone] = useState(''); 
   
   const [helpType, setHelpType] = useState('');
-  // 👇 НОВИЙ СТАН ДЛЯ РУЧНОГО ВВОДУ
   const [customHelpType, setCustomHelpType] = useState('');
+  
   const [preferredDay, setPreferredDay] = useState('');
+  
   const [selectedPet, setSelectedPet] = useState(null);
   const [pets, setPets] = useState([]);
 
   const [isHelpTypeOpen, setIsHelpTypeOpen] = useState(false);
-  const [isDayOpen, setIsDayOpen] = useState(false);
   const [isPetDropdownOpen, setIsPetDropdownOpen] = useState(false);
+
+  const todayObj = new Date();
+  const todayStr = todayObj.toISOString().split('T')[0];
+  const twoWeeksObj = new Date(todayObj);
+  twoWeeksObj.setDate(todayObj.getDate() + 14);
+  const twoWeeksStr = twoWeeksObj.toISOString().split('T')[0];
 
   useEffect(() => {
     const fetchPets = async () => {
@@ -117,11 +123,10 @@ function Help() {
       setVolunteerName('');
       setVolunteerPhone('');
       setHelpType('');
-      setCustomHelpType(''); // 👈 Очищуємо поле при закритті
+      setCustomHelpType(''); 
       setPreferredDay('');
       setSelectedPet(null);
       setIsHelpTypeOpen(false);
-      setIsDayOpen(false);
       setIsPetDropdownOpen(false);
     }, 300);
   };
@@ -129,16 +134,10 @@ function Help() {
   const toggleDropdown = (dropdownName) => {
     if (dropdownName === 'help') {
       setIsHelpTypeOpen(!isHelpTypeOpen);
-      setIsDayOpen(false);
-      setIsPetDropdownOpen(false);
-    } else if (dropdownName === 'day') {
-      setIsDayOpen(!isDayOpen);
-      setIsHelpTypeOpen(false);
       setIsPetDropdownOpen(false);
     } else if (dropdownName === 'pet') {
       setIsPetDropdownOpen(!isPetDropdownOpen);
       setIsHelpTypeOpen(false);
-      setIsDayOpen(false);
     }
   };
 
@@ -162,17 +161,22 @@ function Help() {
     setVolunteerPhone(formatted);
   };
 
+  const formatToDDMMYYYY = (dateStr) => {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}.${m}.${y}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // 👇 Перевіряємо, чи заповнене кастомне поле, якщо вибрано "Інше"
     if (!helpType || !preferredDay || (helpType === 'Інше' && !customHelpType.trim())) {
       alert("Будь ласка, заповніть усі необхідні поля.");
       return;
     }
 
-    // Формуємо фінальний вигляд допомоги
     const finalHelpType = helpType === 'Інше' ? `Інше (${customHelpType.trim()})` : helpType;
+    const formattedDate = formatToDDMMYYYY(preferredDay);
 
     const volunteerData = {
       PetIds: selectedPet ? [selectedPet.Id] : [],
@@ -180,7 +184,7 @@ function Help() {
       PetName: selectedPet ? `Волонтерство (${selectedPet.Name})` : 'Волонтерство', 
       AdopterName: volunteerName,
       AdopterPhone: volunteerPhone,
-      Reason: `Вид допомоги: ${finalHelpType}.\nЗручний день: ${preferredDay}.`,
+      Reason: `Вид допомоги: ${finalHelpType}.\nЗручний день: ${formattedDate}.`,
       LivingConditions: '-',
       HasExperience: false,
       HasOtherPets: false,
@@ -339,7 +343,6 @@ function Help() {
                     />
                   </div>
                   
-                  {/* КАСОМНИЙ СЕЛЕКТ 1 */}
                   <div className="input-group">
                     <div className="custom-dropdown">
                       <div 
@@ -362,7 +365,6 @@ function Help() {
                     </div>
                   </div>
 
-                  {/* 👇 НОВЕ ПОЛЕ: З'являється тільки якщо вибрано "Інше (обгов)" */}
                   {helpType === 'Інше' && (
                     <div className="input-group fade-view">
                       <input 
@@ -376,30 +378,35 @@ function Help() {
                     </div>
                   )}
 
-                  {/* КАСОМНИЙ СЕЛЕКТ 2 */}
                   <div className="input-group">
-                    <div className="custom-dropdown">
-                      <div 
-                        className={`vol-input dropdown-display ${isDayOpen ? 'open-down' : ''}`}
-                        onClick={() => toggleDropdown('day')}
-                      >
-                        {preferredDay ? <span className="dropdown-selected">{preferredDay}</span> : <span className="dropdown-placeholder">Оберіть зручний день</span>}
-                        <span className="dropdown-arrow">{isDayOpen ? '▲' : '▼'}</span>
-                      </div>
-                      
-                      {isDayOpen && (
-                        <div className="dropdown-list down">
-                          {['Понеділок', 'Вівторок', 'Середа', 'Четвер', "П'ятниця"].map(option => (
-                            <div key={option} className="dropdown-option" onClick={() => { setPreferredDay(option); setIsDayOpen(false); }}>
-                              <span>{option}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    <label style={{ display: 'block', fontSize: '13px', color: '#6847DD', fontWeight: 'bold', marginBottom: '6px', marginLeft: '5px' }}>
+                      Оберіть зручний день
+                    </label>
+                    <input
+                      type="date"
+                      value={preferredDay}
+                      min={todayStr}
+                      max={twoWeeksStr}
+                      onChange={(e) => {
+                        const selectedDate = e.target.value;
+                        if (selectedDate) {
+                          const dateObj = new Date(selectedDate);
+                          const dayOfWeek = dateObj.getDay();
+                          // Блокуємо суботу (6) та неділю (0)
+                          if (dayOfWeek === 0) {
+                            alert("❌ Притулок закритий у вихідні дні (неділя). Будь ласка, оберіть будній день.");
+                            setPreferredDay('');
+                            return;
+                          }
+                        }
+                        setPreferredDay(selectedDate);
+                      }}
+                      required
+                      className="vol-input"
+                      style={{ color: preferredDay ? '#333' : '#757575', cursor: 'pointer' }}
+                    />
                   </div>
 
-                  {/* КАСОМНИЙ СЕЛЕКТ 3 */}
                   <div className="input-group">
                     <div className="custom-dropdown">
                       <div 
@@ -440,7 +447,7 @@ function Help() {
                     </div>
                   </div>
                   
-                  <p className="form-note">*Притулок відкритий для відвідувань Пн-Пт 08:30 – 16:30.</p>
+                  <p className="form-note">*Притулок відкритий для відвідувань Пн-Сб 08:30 – 16:30.</p>
 
                   <button type="submit" className="submit-volunteer-btn">Надіслати заявку</button>
                 </form>

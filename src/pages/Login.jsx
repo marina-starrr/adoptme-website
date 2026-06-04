@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext'; // ДОДАНО: Імпорт глобального повідомлення
+import { useToast } from '../context/ToastContext'; 
 import { supabase } from '../supabaseClient';
 import './Login.css';
 
 function Login() {
     const [nickname, setNickname] = useState('');
     const [password, setPassword] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false); // 👇 ДОДАНО: Стан завантаження для форми
     const navigate = useNavigate();
     const location = useLocation();
 
     const { login } = useAuth();
-    const { showToast } = useToast(); // ДОДАНО: Використовуємо глобальну функцію
+    const { showToast } = useToast(); 
 
     useEffect(() => {
         if (location.state?.welcomeMsg) {
@@ -72,6 +73,7 @@ function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
+        setIsSubmitting(true); // 👇 Активуємо стан завантаження раніше
 
         try {
             const { data: user, error } = await supabase
@@ -83,21 +85,27 @@ function Login() {
 
             if (error) {
                 showToast('❌ Помилка з’єднання з базою даних!');
+                setIsSubmitting(false);
                 return;
             }
 
             if (!user) {
                 showToast('❌ Неправильний Нікнейм або Пароль!');
+                setIsSubmitting(false);
                 return;
             }
 
+            // ⚡ ОНОВЛЕНО ЛОГІКУ: Спочатку у фоні виконуємо всі важкі операції з БД,
+            // поки користувач бачить на кнопці текст завантаження.
+            await restoreAndMergeCart(user.Nickname);
+
+            // Тільки після того, як дані стовідсотково готові, записуємо роль та нікнейм
             localStorage.setItem('userNickname', user.Nickname);
             localStorage.setItem('userRole', user.Role);
 
+            // Перемикаємо стан авторизації та викликаємо редирект в один момент
             login();
             window.dispatchEvent(new Event('authChanged'));
-
-            await restoreAndMergeCart(user.Nickname);
 
             if (user.Role === 'admin') {
                 navigate('/admin/adoptions', { state: { welcomeMsg: 'Вітаємо в системі, Адміністраторе! 🐾' } });
@@ -107,13 +115,13 @@ function Login() {
 
         } catch (err) {
             showToast('❌ Сталася помилка при вході!');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
     return (
         <div className="login-page">
-            {/* ВИДАЛЕНО: {toastMsg && <div className="custom-toast">{toastMsg}</div>} */}
-
             <div className="login-card">
                 <h2>Вхід у акаунт 🐾</h2>
                 <p>Увійдіть за своїм індивідуальним нікнеймом</p>
@@ -127,6 +135,7 @@ function Login() {
                             onChange={(e) => setNickname(e.target.value)}
                             placeholder="Введіть свій нікнейм..."
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -138,6 +147,7 @@ function Login() {
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="Введіть пароль"
                             required
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -147,7 +157,9 @@ function Login() {
                         </Link>
                     </div>
 
-                    <button type="submit" className="login-submit-btn">Увійти</button>
+                    <button type="submit" className="login-submit-btn" disabled={isSubmitting}>
+                        {isSubmitting ? '🐾 Завантаження...' : 'Увійти'}
+                    </button>
                 </form>
 
                 <div className="register-link-container" style={{ marginTop: '20px', textAlign: 'center' }}>
