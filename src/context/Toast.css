@@ -1,29 +1,34 @@
 .global-toast {
     position: fixed;
-    top: 20px;
+    top: 30px;
     left: 50%;
-    transform: translateX(-50%) translateY(-100px);
-    background-color: #ffffff;
-    color: #1a1040;
-    padding: 14px 32px;
+    /* Ховаємо за верхньою межею екрану */
+    transform: translate(-50%, -150%);
+    background: #ffffff;
+    color: #21064A;
+    padding: 16px 32px;
     border-radius: 50px;
     font-weight: 700;
     font-size: 16px;
-    box-shadow: 0 8px 25px rgba(109, 76, 228, 0.3);
-    border: 2px solid #e0d4fc;
-    
-    /* ЗМІНЕНО: Було 99999, ставимо 999999, щоб перекрити overlay */
-    z-index: 999999; 
-    
+    box-shadow: 0 10px 40px rgba(104, 71, 221, 0.25);
+    border: 2px solid #6847DD;
+
+    z-index: 999999 !important;
+
     opacity: 0;
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s ease;
+    /* Пружна анімація (bouncy) */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
     pointer-events: none;
-    text-align: center;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     white-space: nowrap;
 }
 
-/* Клас, який додається для показу */
 .global-toast.show {
-    transform: translateX(-50%) translateY(0); /* Опускаємо на видиму частину */
+    /* Опускаємо на видиму частину */
+    transform: translate(-50%, 0);
     opacity: 1;
 }

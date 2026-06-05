@@ -12,7 +12,7 @@
     position: relative;
     transition: transform 0.3s ease;
     border: 3px solid #6847DD;
-    width: 100%;       
+    width: 100%;        
 }
 
 .pet-card:hover {
@@ -29,22 +29,42 @@
     position: relative;
 }
 
+/* Додаємо стилі для посилання, щоб воно точно займало весь блок */
+.pet-card-image-container a {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
 .pet-card-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* Гарантує центрування. 
+       Лайфхак: 'center 20%' замість 'center center' зміщує фокус трохи вище.
+       Це ідеально для фото тварин, щоб не обрізалися голови та вушка! */
+    object-position: center 20%; 
     display: block;
+    transition: transform 0.3s ease; /* Додасть плавності при наведенні, якщо потрібно */
 }
 
+/* 👇 Оновлене ім'я: знизу справа, біле, чітка темна тінь */
 .pet-name {
-    font-size: 32px;
-    font-weight: 700;
-    color: var(--white);
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--white, #ffffff);
     position: absolute;
-    top: 20px;
-    left: 20px;
+    bottom: 15px; /* Притискаємо донизу */
+    right: 15px;  /* Притискаємо вправо */
+    top: auto;
+    left: auto;
     z-index: 2;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    margin: 0;
+    /* Чітка темна тінь для контрасту на будь-якому фото */
+    text-shadow: 
+      1px 1px 4px rgba(0, 0, 0, 0.8), 
+      0px 0px 5px rgba(0, 0, 0, 0.6);
+    pointer-events: none; /* Щоб не перекривало клік по фотографії */
 }
 
 /* Універсальний клас для іконок дій (Сердечко або Дзвіночок) */
@@ -55,7 +75,7 @@
     width: 35px;
     height: 35px;
     cursor: pointer;
-    z-index: 4; /* Збільшив z-index, щоб іконка завжди була клікабельною поверх бейджа, якщо що */
+    z-index: 4;
     transition: transform 0.2s ease, filter 0.2s ease;
 }
 
@@ -146,6 +166,8 @@
 @media (max-width: 480px) {
     .pet-name {
         font-size: 24px;
+        bottom: 10px;
+        right: 10px;
     }
     .pet-info {
         font-size: 14px;
@@ -154,7 +176,6 @@
         width: 18px;
         height: 18px;
     }
-    /* Додатково зменшуємо бейдж на мобільних */
     .pet-status-badge {
         font-size: 10px !important;
         padding: 4px 8px !important;
@@ -199,36 +220,27 @@
     position: absolute;
     top: 15px;
     left: 15px;
-    
-    /* Залишаємо місце під дзвіночок (близько 60px) */
     max-width: calc(100% - 60px); 
-    
     padding: 6px 12px;
     border-radius: 12px;
     z-index: 3;
-    
     display: flex;
-    align-items: center; /* Вирівнюємо іконку і текст по центру */
+    align-items: center;
     gap: 6px;
-    
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Стиль для самої іконки (щоб вона не стискалася) */
 .badge-icon {
     flex-shrink: 0;
     font-size: 14px;
 }
 
-/* Стиль для тексту (саме він змушує слова переноситися) */
 .badge-text {
     font-size: 11px;
     font-weight: 700;
-    
-    /* Дозволяємо перенесення */
     white-space: normal !important; 
     word-break: break-word;
     line-height: 1.2;

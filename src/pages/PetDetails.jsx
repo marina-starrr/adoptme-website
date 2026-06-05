@@ -27,6 +27,7 @@ function PetDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isStoryExpanded, setIsStoryExpanded] = useState(false); // Стан для кнопки "Читати далі"
 
   const [editableImages, setEditableImages] = useState([]);
 
@@ -277,6 +278,15 @@ function PetDetails() {
   const safeActiveIndex = activeImageIndex >= displayMedia.length ? Math.max(0, displayMedia.length - 1) : activeImageIndex;
   const currentMedia = displayMedia[safeActiveIndex];
 
+  // Логіка обмеження символів для історії
+  const rawStoryText = pet.Status === 'Вже вдома' 
+    ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!") 
+    : (pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!");
+  
+  const charLimit = 250;
+  const isLongStory = rawStoryText.length > charLimit;
+  const displayStoryText = (isLongStory && !isStoryExpanded) ? rawStoryText.substring(0, charLimit) + '...' : rawStoryText;
+
   return (
     <div className={`pet-details-layout ${isAdminPath ? 'admin-mode' : ''}`}>
       {!isAdminPath && <BackgroundPaws customClass="details-paws" />}
@@ -287,6 +297,7 @@ function PetDetails() {
         </Link>
 
         <div className="pet-details-content">
+          {/* ЛІВА КОЛОНКА (Галерея + Кнопки) */}
           <div className="pet-gallery-section">
             <div className="main-image-wrapper">
               {displayMedia.length > 0 ? (
@@ -353,8 +364,43 @@ function PetDetails() {
                 ))}
               </div>
             )}
+
+            {/* Блок з кнопками ПЕРЕНЕСЕНО під фото */}
+            <div className="action-area">
+              {isAdminPath ? (
+                <div className="admin-actions-block">
+                  {isEditing ? (
+                    <div className="admin-buttons-row">
+                      <button onClick={() => setIsEditing(false)} disabled={isSaving} className="btn-cancel">Скасувати</button>
+                      <button onClick={handleSaveChanges} disabled={isSaving} className="btn-save">{isSaving ? '⏳ Збереження...' : '💾 Зберегти зміни'}</button>
+                    </div>
+                  ) : (
+                    <button onClick={handleEditToggle} className="btn-edit">✏️ Редагувати профіль</button>
+                  )}
+                </div>
+              ) : (
+                <div className="user-actions-block">
+                  {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати' || currentStatus === 'Заброньована' || currentStatus === 'Заброньовано') ? (
+                    <div className="status-message-block">
+                      <p>
+                        {currentStatus === 'Вже вдома' 
+                          ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
+                          : currentStatus === 'Не вдалось врятувати'
+                            ? '🌈 На жаль, ця тваринка більше не з нами.'
+                            : '🔒 Ця тваринка вже заброньована іншою родиною!'}
+                      </p>
+                    </div>
+                  ) : currentStatus === 'На лікуванні' ? (
+                    <button onClick={handleNotifyWhenHealthyClick} className="btn-notify"> 🔔 Повідомити, коли одужає</button>
+                  ) : (
+                    <button onClick={handleAdoptClick} className="btn-adopt">💖 Подати заявку на усиновлення</button>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* ПРАВА КОЛОНКА (Інформація) */}
           <div className="pet-info-section">
             <div className="pet-profile-header">
               {isEditing ? (
@@ -485,26 +531,34 @@ function PetDetails() {
               )}
             </div>
 
-            {/* 👇 ОНОВЛЕНО: Відображення ДВОХ незалежних полів історії */}
+            {/* Історія з обмеженням символів */}
             <div className="pet-story-block">
               {isEditing ? (
                 <>
                   <div style={{ marginBottom: '20px' }}>
                     <h3 className="section-subtitle">📖 Опис історії та характеру в притулку:</h3>
-                    <div className="editable-container">
-                      <textarea 
-                        value={editFormData.Description || ''} 
-                        onChange={e => handleChange('Description', e.target.value)} 
-                        className="inline-input input-desc" 
-                        required
-                        rows="4"
-                      />
+                    
+                    {/* 👇 ДОДАЄМО ОБГОРТКУ story-content ОСЬ ТУТ 👇 */}
+                    <div className="story-content">
+                      <div className="editable-container">
+                        <textarea 
+                          value={editFormData.Description || ''} 
+                          onChange={e => handleChange('Description', e.target.value)} 
+                          className="inline-input input-desc" 
+                          required
+                          rows="4"
+                          maxLength={700}
+                        />
+                      </div>
+                      <div className="char-counter">
+                        {editFormData.Description?.length || 0} / 700
+                      </div>
                     </div>
                   </div>
 
                   {editFormData.Status === 'Вже вдома' && (
                     <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
-                      <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px' }}>🏡 Історія успіху (Життя в новій родині):</h3>
+                      <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px' }}>🏡 Історія успіху:</h3>
                       <div className="editable-container">
                         <textarea 
                           value={editFormData.HomeDescription || ''} 
@@ -512,7 +566,12 @@ function PetDetails() {
                           className="inline-input input-desc" 
                           required
                           rows="4"
+                          maxLength={700}
                         />
+                      </div>
+                      {/* Лічильник символів для історії успіху */}
+                      <div className="char-counter">
+                        {editFormData.HomeDescription?.length || 0} / 700
                       </div>
                     </div>
                   )}
@@ -524,9 +583,12 @@ function PetDetails() {
                   </h3>
                   <div className="story-content">
                     <p className="pet-desc-text">
-                      {pet.Status === 'Вже вдома' 
-                        ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!") 
-                        : (pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!")}
+                      {displayStoryText}
+                      {isLongStory && (
+                        <span className="read-more-btn" onClick={() => setIsStoryExpanded(!isStoryExpanded)}>
+                          {isStoryExpanded ? ' Згорнути' : ' Читати далі'}
+                        </span>
+                      )}
                     </p>
                   </div>
                 </>
@@ -534,13 +596,27 @@ function PetDetails() {
             </div>
 
             {(pet.MedicalNotes || isEditing) && (
-              <div className="pet-story-block" style={{ marginTop: '20px' }}>
+              /* Прибрали marginTop: '20px', щоб зменшити візуальний розрив між блоками */
+              <div className="pet-story-block" style={{ marginTop: '0' }}>
                 <h3 className="section-subtitle" style={{ color: '#D32F2F' }}>🩺 Медичні примітки:</h3>
                 <div className="story-content" style={{ borderLeftColor: '#D32F2F', background: '#FFEBEE' }}>
                   {isEditing ? (
-                    <div className="editable-container">
-                      <textarea value={editFormData.MedicalNotes || ''} onChange={e => handleChange('MedicalNotes', e.target.value)} className="inline-input input-desc" placeholder="Медичні приписи..." />
-                    </div>
+                    <>
+                      <div className="editable-container">
+                        <textarea 
+                          value={editFormData.MedicalNotes || ''} 
+                          onChange={e => handleChange('MedicalNotes', e.target.value)} 
+                          className="inline-input input-desc" 
+                          placeholder="Медичні приписи..." 
+                          maxLength={300}
+                          rows="3"
+                        />
+                      </div>
+                      {/* Додано лічильник на 300 символів */}
+                      <div className="char-counter">
+                        {editFormData.MedicalNotes?.length || 0} / 300
+                      </div>
+                    </>
                   ) : (
                     <p className="pet-desc-text" style={{ color: '#C62828' }}>{pet.MedicalNotes}</p>
                   )}
@@ -605,39 +681,6 @@ function PetDetails() {
                 )}
               </div>
             )}
-
-            <div className="action-area">
-              {isAdminPath ? (
-                <div className="admin-actions-block">
-                  {isEditing ? (
-                    <div className="admin-buttons-row">
-                      <button onClick={() => setIsEditing(false)} disabled={isSaving} className="btn-cancel">Скасувати</button>
-                      <button onClick={handleSaveChanges} disabled={isSaving} className="btn-save">{isSaving ? '⏳ Збереження...' : '💾 Зберегти зміни'}</button>
-                    </div>
-                  ) : (
-                    <button onClick={handleEditToggle} className="btn-edit">✏️ Редагувати профіль</button>
-                  )}
-                </div>
-              ) : (
-                <div className="user-actions-block">
-                  {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати' || currentStatus === 'Заброньована' || currentStatus === 'Заброньовано') ? (
-                    <div className="status-message-block">
-                      <p>
-                        {currentStatus === 'Вже вдома' 
-                          ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
-                          : currentStatus === 'Не вдалось врятувати'
-                            ? '🌈 На жаль, ця тваринка більше не з нами.'
-                            : '🔒 Ця тваринка вже заброньована іншою родиною!'}
-                      </p>
-                    </div>
-                  ) : currentStatus === 'На лікуванні' ? (
-                    <button onClick={handleNotifyWhenHealthyClick} className="btn-notify"> 🔔 Повідомити, коли одужає</button>
-                  ) : (
-                    <button onClick={handleAdoptClick} className="btn-adopt">💖 Подати заявку на усиновлення</button>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
         </div>
       </div>

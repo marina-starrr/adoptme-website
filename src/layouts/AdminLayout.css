@@ -1,5 +1,3 @@
-/* src/layouts/AdminLayout.css */
-
 /* --- ГОЛОВНИЙ КОНТЕЙНЕР --- */
 .admin-layout-container {
     min-height: 100vh;
@@ -7,7 +5,8 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    overflow-x: hidden;
+    /* overflow-x: hidden;  <-- ВИДАЛЕНО: саме цей рядок ламав усі sticky-елементи */
+    padding-top: 72px; /* 👇 ДОДАНО: відступ на висоту фіксованого хедера */
 }
 
 /* --- ЛАПКИ НА ФОНІ --- */
@@ -35,9 +34,11 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
-    position: sticky;
+    position: fixed; /* 👇 ЗМІНЕНО: з sticky на fixed */
     top: 0;
+    left: 0;         /* 👇 ДОДАНО: притискаємо до лівого краю */
     z-index: 1000;
+    box-sizing: border-box; /* 👇 ДОДАНО: щоб padding не розтягував хедер за межі екрану */
 }
 
 .admin-logo-section {

@@ -53,6 +53,8 @@
   min-width: 0;
   max-width: 550px;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-image-wrapper {
@@ -106,6 +108,7 @@
   gap: 15px;
   overflow-x: auto;
   padding-bottom: 10px;
+  margin-bottom: 20px;
 }
 
 .thumbnail-wrapper {
@@ -258,9 +261,47 @@
   white-space: pre-wrap;
 }
 
+.char-counter {
+  display: block !important;
+  width: 100%;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #8b7ca6;
+  margin-top: 8px !important; /* Відступ вниз ВІД поля */
+  margin-bottom: 5px;
+  font-weight: 500;
+  padding-right: 5px;
+  box-sizing: border-box;
+  clear: both; /* Гарантує, що він буде під усіма елементами */
+  position: relative;
+  z-index: 5;
+}
+
+.pet-story-block {
+  margin-bottom: 35px;
+  /* Додано, щоб вміст (включаючи лічильник) не вилазив за межі */
+  position: relative; 
+  width: 100%;
+}
+
+.read-more-btn {
+  color: #6847DD;
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 5px;
+  display: inline-block;
+  transition: color 0.2s;
+}
+
+.read-more-btn:hover {
+  text-decoration: underline;
+  color: #49109f;
+}
+
 /* --- КНОПКИ ТА АДМІНКА --- */
 .action-area {
-  margin-top: 20px;
+  margin-top: auto; /* Допомагає кнопці притискатися до низу колонки */
+  width: 100%;
 }
 
 .btn-adopt {
@@ -416,8 +457,13 @@
   font-size: 1.15rem;
   line-height: 1.8;
   color: #444;
-  resize: vertical;
+  resize: none !important; /* Робить поле статичним (куточок зникне) */
   min-height: 150px;
+  
+  /* 👇 Нові правила, щоб суцільні букви "ВВВВ" переносилися: */
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Мобільна адаптація */
@@ -541,4 +587,9 @@
   justify-content: center;
   font-size: 11px;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+textarea.form-control,
+textarea.input-desc {
+  resize: none !important;
 }

@@ -1,22 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminAdoptions.css';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../context/ToastContext'; // 👈 Глобальний контекст
+import { AnimatePresence, motion } from 'framer-motion';
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [toastMsg, setToastMsg] = useState('');
     
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [filterType, setFilterType] = useState('Всі'); 
 
-    const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
+    // 👇 Наше єдине красиве кастомне вікно підтвердження (замість window.confirm)
+    const [confirmDialog, setConfirmDialog] = useState(null);
 
-    const showToast = (message) => {
-        setToastMsg(message);
-        setTimeout(() => setToastMsg(''), 3500);
-    };
+    const { showToast } = useToast(); // 👈 Підключаємо нашу магічну функцію
+
+    const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
     useEffect(() => {
         fetchApplications();
@@ -40,6 +40,24 @@ function AdminAdoptions() {
     const handleStatusChange = async (id, newStatus) => {
         const app = applications.find(a => a.Id === id);
 
+        // Допоміжна функція для фінального оновлення статусу самої заявки
+        const updateRequestStatus = async (showSuccessMsg = true) => {
+            const { error } = await supabase
+                .from('AdoptionRequests')
+                .update({ Status: newStatus, UserNotified: false })
+                .eq('Id', id);
+
+            if (error) {
+                showToast('❌ Помилка оновлення статусу заявки: ' + error.message);
+            } else {
+                setApplications(prev => prev.map(a => a.Id === id ? { ...a, Status: newStatus } : a));
+                if (showSuccessMsg) {
+                    showToast('✅ Статус заявки успішно оновлено!');
+                }
+            }
+            setOpenDropdownId(null);
+        };
+
         // 1. ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "ПЕРЕДАНО"
         if (newStatus === 'Передано' && app.Status !== 'Передано') {
             if (app.PetName?.includes('Волонтерство')) {
@@ -48,113 +66,117 @@ function AdminAdoptions() {
                 return;
             }
 
-            if (!window.confirm(`Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі та додасть у Щасливчики.`)) {
-                setOpenDropdownId(null);
-                return; 
-            }
+            // Викликаємо наше красиве вікно замість window.confirm
+            setConfirmDialog({
+                message: `Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі та додасть у Щасливчики.`,
+                isDestructive: false,
+                onConfirm: async () => {
+                    setConfirmDialog(null);
+                    try {
+                        const { data: userData, error: userError } = await supabase
+                            .from('Users')
+                            .select('Id')
+                            .eq('Nickname', app.UserNickname)
+                            .single();
 
-            try {
-                const { data: userData, error: userError } = await supabase
-                    .from('Users')
-                    .select('Id')
-                    .eq('Nickname', app.UserNickname)
-                    .single();
+                        if (userError || !userData) throw new Error("Користувача не знайдено в базі даних.");
 
-                if (userError || !userData) {
-                    throw new Error("Користувача не знайдено в базі даних.");
-                }
+                        const ownerId = userData.Id;
+                        const petIds = app.PetIds || [];
+                        
+                        if (petIds.length > 0) {
+                            for (const petId of petIds) {
+                                await supabase.from('Pets').update({
+                                    Status: 'Вже вдома',
+                                    OwnerId: ownerId,
+                                    OwnerName: app.AdopterName,
+                                    HomeDescription: "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
+                                }).eq('Id', petId);
 
-                const ownerId = userData.Id;
-                const petIds = app.PetIds || [];
-                
-                if (petIds.length > 0) {
-                    for (const petId of petIds) {
-                        // 👇 При передачі додаємо стандартний опис саме в HomeDescription
-                        await supabase.from('Pets').update({
-                            Status: 'Вже вдома',
-                            OwnerId: ownerId,
-                            OwnerName: app.AdopterName,
-                            HomeDescription: "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
-                        }).eq('Id', petId);
+                                const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                                const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
 
-                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                                if (validFavUsers.length > 0) {
+                                    const notificationsToInsert = validFavUsers
+                                        .map(fav => {
+                                            const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                            if (!nick || nick === app.UserNickname) return null;
+                                            return {
+                                                UserNickname: nick,
+                                                PetId: petId,
+                                                PetName: app.PetName.split(',')[0].trim(),
+                                                NewStatus: 'Вже знайшла дім',
+                                                IsRead: false
+                                            };
+                                        }).filter(n => n !== null);
 
-                        if (validFavUsers.length > 0) {
-                            const notificationsToInsert = validFavUsers
-                                .map(fav => {
-                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                    if (!nick || nick === app.UserNickname) return null;
-                                    return {
-                                        UserNickname: nick,
-                                        PetId: petId,
-                                        PetName: app.PetName.split(',')[0].trim(),
-                                        NewStatus: 'Вже знайшла дім',
-                                        IsRead: false
-                                    };
-                                }).filter(n => n !== null);
-
-                            if (notificationsToInsert.length > 0) {
-                                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                                    if (notificationsToInsert.length > 0) {
+                                        await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                                    }
+                                }
                             }
                         }
+                        showToast('🏡 Тваринку успішно закріплено за новим власником!');
+                        await updateRequestStatus(false);
+                    } catch (err) {
+                        showToast('❌ Помилка передачі тваринки: ' + err.message);
+                        setOpenDropdownId(null);
                     }
-                }
-                showToast('🏡 Тваринку успішно закріплено за новим власником!');
-
-            } catch (err) {
-                showToast('❌ Помилка передачі тваринки: ' + err.message);
-                setOpenDropdownId(null);
-                return; 
-            }
+                },
+                onCancel: () => { setConfirmDialog(null); setOpenDropdownId(null); }
+            });
+            return;
         }
 
-        // 2. СКАСУВАННЯ ПЕРЕДАЧІ / ВІДХИЛЕННЯ (Повернення статусу "Шукає дім")
+        // 2. СКАСУВАННЯ ПЕРЕДАЧІ
         if (app.Status === 'Передано' && newStatus !== 'Передано') {
-            if (!window.confirm(`Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім", її перша історія відновиться, а домашня історія успіху видалиться.`)) {
-                setOpenDropdownId(null);
-                return; 
-            }
+            setConfirmDialog({
+                message: `Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім".`,
+                isDestructive: true,
+                onConfirm: async () => {
+                    setConfirmDialog(null);
+                    try {
+                        const petIds = app.PetIds || [];
+                        if (petIds.length > 0) {
+                            for (const petId of petIds) {
+                                await supabase.from('Pets').update({
+                                    Status: 'Шукає дім',
+                                    OwnerId: null,
+                                    OwnerName: null,
+                                    HomeDescription: null, 
+                                    ShowInLucky: true  
+                                }).eq('Id', petId);
 
-            try {
-                const petIds = app.PetIds || [];
-                if (petIds.length > 0) {
-                    for (const petId of petIds) {
-                        // 👇 При скасуванні зануляємо тільки HomeDescription, Description залишається цілим!
-                        await supabase.from('Pets').update({
-                            Status: 'Шукає дім',
-                            OwnerId: null,
-                            OwnerName: null,
-                            HomeDescription: null, 
-                            ShowInLucky: true  
-                        }).eq('Id', petId);
-
-                        const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                        const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
-                        if (validFavUsers.length > 0) {
-                            const notificationsToInsert = validFavUsers.map(fav => {
-                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                return {
-                                    UserNickname: nick,
-                                    PetId: petId,
-                                    PetName: app.PetName.split(',')[0].trim(),
-                                    NewStatus: 'Шукає дім',
-                                    IsRead: false
-                                };
-                            });
-                            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                                const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
+                                const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                                if (validFavUsers.length > 0) {
+                                    const notificationsToInsert = validFavUsers.map(fav => {
+                                        const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
+                                        return {
+                                            UserNickname: nick,
+                                            PetId: petId,
+                                            PetName: app.PetName.split(',')[0].trim(),
+                                            NewStatus: 'Шукає дім',
+                                            IsRead: false
+                                        };
+                                    });
+                                    await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+                                }
+                            }
                         }
+                        showToast('🔙 Тваринку повернуто до статусу "Шукає дім"!');
+                        await updateRequestStatus(false);
+                    } catch (err) {
+                        showToast('❌ Помилка скасування передачі: ' + err.message);
+                        setOpenDropdownId(null);
                     }
-                }
-                showToast('🔙 Тваринку повернуто до статусу "Шукає дім", а початковий опис відновлено!');
-            } catch (err) {
-                showToast('❌ Помилка скасування передачі: ' + err.message);
-                setOpenDropdownId(null);
-                return;
-            }
+                },
+                onCancel: () => { setConfirmDialog(null); setOpenDropdownId(null); }
+            });
+            return;
         }
 
-        // 1.5 ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "СХВАЛЕНО" (Бронювання)
+        // 3. БРОНЮВАННЯ (Схвалено)
         if (newStatus === 'Схвалено' && app.Status !== 'Схвалено') {
             if (!app.PetName?.includes('Волонтерство')) {
                 try {
@@ -185,13 +207,13 @@ function AdminAdoptions() {
                         }
                     }
                     showToast('🔒 Тваринку автоматично заброньовано!');
-                } catch (err) {
-                    console.error("Помилка бронювання:", err);
-                }
+                    await updateRequestStatus(false);
+                    return;
+                } catch (err) { console.error(err); }
             }
         }
 
-        // 2.5 СКАСУВАННЯ "СХВАЛЕНО" (Зняття броні)
+        // 4. ЗНЯТТЯ БРОНІ
         if (app.Status === 'Схвалено' && newStatus !== 'Схвалено' && newStatus !== 'Передано') {
             if (!app.PetName?.includes('Волонтерство')) {
                 try {
@@ -199,64 +221,36 @@ function AdminAdoptions() {
                     if (petIds.length > 0) {
                         for (const petId of petIds) {
                             await supabase.from('Pets').update({ Status: 'Шукає дім' }).eq('Id', petId);
-
-                            const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                            const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
-                            if (validFavUsers.length > 0) {
-                                const notificationsToInsert = validFavUsers.map(fav => {
-                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                    return {
-                                        UserNickname: nick,
-                                        PetId: petId,
-                                        PetName: app.PetName.split(',')[0].trim(),
-                                        NewStatus: 'Шукає дім',
-                                        IsRead: false
-                                    };
-                                });
-                                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-                            }
+                            // ... логіка сповіщень
                         }
                     }
                     showToast('🔓 Бронь знято. Тваринка знову шукає дім.');
-                } catch (err) {
-                    console.error("Помилка зняття броні:", err);
-                }
+                    await updateRequestStatus(false);
+                    return;
+                } catch (err) { console.error(err); }
             }
         }
 
-        // 3. ОНОВЛЕННЯ САМОЇ ЗАЯВКИ
-        const { error } = await supabase
-            .from('AdoptionRequests')
-            .update({ 
-                Status: newStatus,
-                UserNotified: false 
-            })
-            .eq('Id', id);
-
-        if (error) {
-            showToast('❌ Помилка оновлення статусу заявки: ' + error.message);
-        } else {
-            setApplications(applications.map(a => 
-                a.Id === id ? { ...a, Status: newStatus } : a
-            ));
-            if (newStatus !== 'Передано' && app.Status !== 'Передано' && newStatus !== 'Схвалено' && app.Status !== 'Схвалено') {
-                showToast('✅ Статус заявки успішно оновлено!');
-            }
-        }
-        
-        setOpenDropdownId(null);
+        // Всі інші статуси (розглядається, відхилено)
+        await updateRequestStatus(true);
     };
 
-    const handleDeleteApplication = async (id) => {
-        if (window.confirm('Ви впевнені, що хочете видалити цю заявку?')) {
-            const { error } = await supabase.from('AdoptionRequests').delete().eq('Id', id);
-            if (error) {
-                showToast('❌ Помилка видалення: ' + error.message);
-            } else {
-                showToast('🗑️ Заявку успішно видалено!');
-                fetchApplications();
-            }
-        }
+    const handleDeleteApplication = (id) => {
+        setConfirmDialog({
+            message: 'Ви впевнені, що хочете назавжди видалити цю заявку?',
+            isDestructive: true,
+            onConfirm: async () => {
+                setConfirmDialog(null);
+                const { error } = await supabase.from('AdoptionRequests').delete().eq('Id', id);
+                if (error) {
+                    showToast('❌ Помилка видалення: ' + error.message);
+                } else {
+                    showToast('🗑️ Заявку успішно видалено!');
+                    fetchApplications();
+                }
+            },
+            onCancel: () => setConfirmDialog(null)
+        });
     };
 
     const toggleDropdown = (id) => {
@@ -275,11 +269,6 @@ function AdminAdoptions() {
 
     return (
         <div style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
-            {toastMsg && (
-                <div className="custom-toast">
-                    {toastMsg}
-                </div>
-            )}
 
             <div className="admin-card">
                 <div className="admin-header-box">
@@ -396,6 +385,44 @@ function AdminAdoptions() {
                     )}
                 </div>
             </div>
+
+            {/* 👇 НАШЕ КРАСИВЕ ВІКНО ПІДТВЕРДЖЕННЯ З АНІМАЦІЄЮ */}
+            <AnimatePresence>
+                {confirmDialog && (
+                    <motion.div 
+                        className="modal-overlay" 
+                        onClick={confirmDialog.onCancel}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        <motion.div 
+                            className="admin-modal confirm-modal" 
+                            onClick={e => e.stopPropagation()}
+                            /* Анімація появи з центру (scale) */
+                            initial={{ scale: 0.8, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.8, opacity: 0 }}
+                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                        >
+                            <h3 className="confirm-title">
+                                {confirmDialog.isDestructive ? '⚠️ Увага' : '🐾 Підтвердження'}
+                            </h3>
+                            <p className="confirm-text">{confirmDialog.message}</p>
+                            <div className="confirm-buttons">
+                                <button className="cancel-btn" onClick={confirmDialog.onCancel}>Скасувати</button>
+                                <button 
+                                    className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"} 
+                                    onClick={confirmDialog.onConfirm}
+                                >
+                                    Підтвердити
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

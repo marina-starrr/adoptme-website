@@ -730,7 +730,18 @@ function AdminPets() {
                 </div>
                 <div className="input-group">
                   <label>Медичні нотатки (ліки, особливості)</label>
-                  <textarea placeholder="Наприклад: Потребує гіпоалергенний корм..." value={petFormData.MedicalNotes || ''} onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })} className="form-control" rows="2"></textarea>
+                  <textarea 
+                    placeholder="Наприклад: Потребує гіпоалергенний корм..." 
+                    value={petFormData.MedicalNotes || ''} 
+                    onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })} 
+                    className="form-control" 
+                    rows="3"
+                    maxLength={300}
+                  />
+                  {/* Лічильник символів для адмінки */}
+                  <div className="char-counter">
+                    {petFormData.MedicalNotes?.length || 0} / 300
+                  </div>
                 </div>
               </div>
 

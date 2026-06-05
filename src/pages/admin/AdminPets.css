@@ -520,3 +520,24 @@
   transform: none;
   box-shadow: none;
 }
+
+/* --- СТИЛІ ДЛЯ ЛІЧИЛЬНИКА СИМВОЛІВ У МОДАЛЦІ --- */
+.pet-story-block {
+  width: 100%;
+}
+
+.char-counter {
+  display: block !important;
+  width: 100%;
+  text-align: right;
+  font-size: 0.85rem;
+  color: #8b7ca6;
+  margin-top: 8px !important; /* Відступ вниз ВІД поля */
+  margin-bottom: 5px;
+  font-weight: 500;
+  padding-right: 5px;
+  box-sizing: border-box;
+  clear: both; /* Гарантує, що він буде під усіма елементами */
+  position: relative;
+  z-index: 5;
+}

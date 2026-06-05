@@ -143,7 +143,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
     const statusConfig = getStatusConfig(status);
 
-    // 🌟 ОНОВЛЕНО: Ховаємо сердечко для "Заброньована"
     const hideIcon = status === 'Вже вдома' || status === 'Не вдалось врятувати' || status === 'Заброньована' || status === 'Заброньовано';
     const showBell = status === 'На лікуванні';
 
@@ -154,6 +153,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                     <img src={image} alt={name} className="pet-card-image" />
                 </Link>
 
+                {/* Просто клас pet-name, стилі оновлено в CSS */}
                 <h3 className="pet-name">{name}</h3>
 
                 <div className={`pet-status-badge ${statusConfig.class}`}>

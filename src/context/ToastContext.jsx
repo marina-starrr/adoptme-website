@@ -1,4 +1,5 @@
 import { createContext, useState, useContext, useCallback, useRef } from 'react';
+import './Toast.css'; // 👈 ДОДАЙ ЦЕЙ РЯДОК! Без нього стилі не працюють
 
 const ToastContext = createContext();
 
@@ -28,6 +29,7 @@ export const ToastProvider = ({ children }) => {
     return (
         <ToastContext.Provider value={{ showToast }}>
             {children}
+            {/* Блок самого сповіщення */}
             <div className={`global-toast ${toast.isVisible ? 'show' : ''}`}>
                 {toast.message}
             </div>

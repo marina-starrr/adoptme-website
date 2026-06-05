@@ -2,37 +2,31 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import './AdminLayout.css'; 
-import { useToast } from '../context/ToastContext';
-import { supabase } from '../supabaseClient'; // 👇 ДОДАНО імпорт supabase
+import { useToast } from '../context/ToastContext'; // 👈 Глобальний контекст
+import { supabase } from '../supabaseClient'; 
 
 function AdminLayout() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [toastMsg, setToastMsg] = useState('');
+    const { showToast } = useToast(); // 👈 Дістаємо функцію
     
-    // 👇 ДОДАНО: Стан для кількості нових заявок
     const [newRequestsCount, setNewRequestsCount] = useState(0);
 
-    // Автоматичний перехід на "Заявки" при вході в адмінку
     useEffect(() => {
         if (location.pathname === '/admin' || location.pathname === '/admin/') {
             navigate('/admin/adoptions', { replace: true });
         }
     }, [location.pathname, navigate]);
 
+    // 👇 Показуємо глобальний тост замість локального стейту
     useEffect(() => {
         if (location.state?.welcomeMsg) {
-            setToastMsg(location.state.welcomeMsg);
-            const timer = setTimeout(() => {
-                setToastMsg('');
-            }, 3500);
+            showToast(location.state.welcomeMsg);
             window.history.replaceState({}, document.title);
-            return () => clearTimeout(timer);
         }
-    }, [location]);
+    }, [location, showToast]);
 
-    // 👇 ДОДАНО: Логіка завантаження кількості нових заявок
     useEffect(() => {
         const fetchNewRequestsCount = async () => {
             try {
@@ -51,7 +45,6 @@ function AdminLayout() {
 
         fetchNewRequestsCount();
 
-        // Опціонально: підписка в реальному часі на оновлення кількості (необов'язково)
         const subscription = supabase
             .channel('public:AdoptionRequests')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'AdoptionRequests' }, fetchNewRequestsCount)
@@ -84,7 +77,7 @@ function AdminLayout() {
 
     return (
         <div className="admin-layout-container">
-            {toastMsg && <div className="custom-toast">{toastMsg}</div>}
+            {/* ❌ Видалено <div className="custom-toast">...</div> */}
 
             <header className="admin-header">
                 <div className="admin-logo-section">
@@ -95,7 +88,6 @@ function AdminLayout() {
                 <nav className="admin-nav">
                     <Link to="/admin/adoptions" className={`admin-nav-link ${location.pathname === '/admin/adoptions' ? 'active' : ''}`} style={{ position: 'relative' }}>
                         Заявки
-                        {/* 👇 ДОДАНО: Відображення бейджа */}
                         {newRequestsCount > 0 && (
                             <span className="admin-nav-badge">
                                 {newRequestsCount}

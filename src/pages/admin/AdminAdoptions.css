@@ -386,3 +386,50 @@
 .app-card-premium.type-volunteer .app-id-badge {
     color: #059669; /* Темно-зелений текст */
 }
+
+/* =========================================
+   МОДАЛЬНЕ ВІКНО ПІДТВЕРДЖЕННЯ
+   ========================================= */
+.confirm-modal {
+    max-width: 400px;
+    text-align: center;
+    padding: 35px 30px;
+}
+
+.confirm-title {
+    color: #21064A;
+    font-size: 22px;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.confirm-text {
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.delete-confirm-btn {
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease;
+}
+
+.delete-confirm-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
