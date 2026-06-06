@@ -1,9 +1,8 @@
 import React from 'react';
-import { useToast } from '../context/ToastContext';
 
-function BackgroundPaws() {
+function BackgroundPaws({ customClass = '' }) {
   return (
-    <div className="background-paws">
+    <div className={`background-paws ${customClass}`}>
         <div className="paw paw-1"></div>
         <div className="paw paw-2"></div>
         <div className="paw paw-3"></div>

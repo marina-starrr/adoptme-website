@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminHappyPets.css';
-import { useToast } from '../../context/ToastContext';
+import { useToast } from '../../context/ToastContext'; // 👈 Глобальні тости
+import { AnimatePresence, motion } from 'framer-motion'; // 👈 Анімації для модалки
 
 function AdminHappyPets() {
     const [happyPets, setHappyPets] = useState([]);
@@ -10,11 +11,17 @@ function AdminHappyPets() {
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
+    // Стейт для модалки видалення
+    const [petToDelete, setPetToDelete] = useState(null);
+    const [isModalClosing, setIsModalClosing] = useState(false);
+
+    const { showToast } = useToast();
+
     const [formData, setFormData] = useState({
         petId: '',
         userId: '',
         ownerName: '', 
-        homeDescription: '', // 👇 Взаємодіє з полем HomeDescription
+        homeDescription: '', 
         images: [],
         showInLucky: true 
     });
@@ -75,7 +82,6 @@ function AdminHappyPets() {
                 ...prev,
                 petId: selectedPetId,
                 images: chosenPet.Images || (chosenPet.ImageName ? [chosenPet.ImageName] : []),
-                // Заповнюємо поле з HomeDescription
                 homeDescription: chosenPet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
             }));
         } else {
@@ -112,7 +118,7 @@ function AdminHappyPets() {
             if (!error) {
                 uploadedImages.push(fileName);
             } else {
-                alert('Помилка завантаження фото: ' + error.message);
+                showToast('❌ Помилка завантаження фото: ' + error.message);
             }
         }
 
@@ -131,13 +137,12 @@ function AdminHappyPets() {
         e.preventDefault();
         
         if (!formData.petId) {
-            alert('Будь ласка, оберіть тваринку зі списку!');
+            showToast('⚠️ Будь ласка, оберіть тваринку зі списку!');
             return;
         }
 
         setLoading(true);
 
-        // Відправляємо саме в поле HomeDescription, не чіпаючи Description!
         const petDataToUpdate = {
             OwnerName: formData.ownerName,
             HomeDescription: formData.homeDescription, 
@@ -153,13 +158,13 @@ function AdminHappyPets() {
             .eq('Id', formData.petId);
 
         if (!error) {
-            alert('Історію щасливчика успішно збережено!');
+            showToast('✅ Історію щасливчика успішно збережено!');
             resetForm();
             fetchHappyPets();
             fetchAvailablePets(); 
         } else {
             console.error("Помилка:", error);
-            alert(`Помилка бази даних: ${error.message}`);
+            showToast(`❌ Помилка бази даних: ${error.message}`);
         }
         
         setLoading(false);
@@ -180,27 +185,47 @@ function AdminHappyPets() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const deletePetHistory = async (id) => {
-        if (window.confirm('Ви впевнені, що хочете видалити історію? (Сама тваринка не видалиться, але її статус зміниться на "Шукає дім", а початковий опис відновиться)')) {
-            try {
-                const { error } = await supabase
-                    .from('Pets')
-                    .update({ 
-                        Status: 'Шукає дім', 
-                        OwnerName: null, 
-                        HomeDescription: null, // 👇 Стираємо тільки домашню історію
-                        ShowInLucky: true 
-                    })
-                    .eq('Id', id);
-                
-                if (!error) {
-                    fetchHappyPets();
-                    fetchAvailablePets();
-                    resetForm();
-                }
-            } catch (err) {
-                console.error(err);
+    // 👇 ДОДАНО: Логіка відкриття і закриття модалки видалення
+    const closeDeleteModal = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setPetToDelete(null);
+            setIsModalClosing(false);
+        }, 300);
+    };
+
+    const confirmDeleteClick = (id) => {
+        setPetToDelete(id);
+    };
+
+    const deletePetHistory = async () => {
+        if (!petToDelete) return;
+        
+        closeDeleteModal(); // Плавне закриття
+
+        try {
+            const { error } = await supabase
+                .from('Pets')
+                .update({ 
+                    Status: 'Шукає дім', 
+                    OwnerName: null, 
+                    HomeDescription: null, 
+                    ShowInLucky: true 
+                })
+                .eq('Id', petToDelete);
+            
+            if (!error) {
+                showToast("🗑️ Історію видалено. Тваринка повернута в статус 'Шукає дім'.");
+                // Локальне оновлення списку
+                setHappyPets(prev => prev.filter(p => p.Id !== petToDelete));
+                fetchAvailablePets();
+                resetForm();
+            } else {
+                throw error;
             }
+        } catch (err) {
+            console.error(err);
+            showToast('❌ Помилка: ' + err.message);
         }
     };
 
@@ -210,7 +235,7 @@ function AdminHappyPets() {
     };
 
     return (
-        <div className="admin-happy-pets">
+        <div className="admin-happy-pets" style={{ position: 'relative' }}>
             <h2 className="admin-page-title">
                 <div className="admin-page-title-icon">🏡</div>
                 Менеджер Щасливчиків
@@ -345,7 +370,7 @@ function AdminHappyPets() {
                                         </td>
                                         <td>
                                             <button onClick={() => editPet(pet)} className="action-btn edit" title="Редагувати">✏️</button>
-                                            <button onClick={() => deletePetHistory(pet.Id)} className="action-btn delete" title="Прибрати зі списку (Зробити 'Шукає дім')">🗑️</button>
+                                            <button onClick={() => confirmDeleteClick(pet.Id)} className="action-btn delete" title="Прибрати зі списку (Зробити 'Шукає дім')">🗑️</button>
                                         </td>
                                     </tr>
                                 );
@@ -359,6 +384,37 @@ function AdminHappyPets() {
                     </table>
                 </div>
             </div>
+
+            {/* 👇 ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ З ЧИСТИМ CSS */}
+            {petToDelete && (
+                <div 
+                    className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+                    onClick={closeDeleteModal}
+                    style={{ zIndex: 10000 }}
+                >
+                    <div 
+                        className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} 
+                        style={{ maxWidth: '450px', textAlign: 'center' }} 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800' }}>⚠️ Прибрати історію?</h3>
+                        <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.6' }}>
+                            Ви впевнені, що хочете видалити історію цієї тваринки зі списку щасливчиків? 
+                            Сама тваринка не видалиться, але її статус зміниться на "Шукає дім", а її домашня історія зітреться.
+                        </p>
+                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                            <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
+                            <button
+                                className="save-btn"
+                                style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}
+                                onClick={deletePetHistory}
+                            >
+                                Так, прибрати
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

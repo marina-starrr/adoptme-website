@@ -8,7 +8,7 @@ import './Login.css';
 function Login() {
     const [nickname, setNickname] = useState('');
     const [password, setPassword] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); // 👇 ДОДАНО: Стан завантаження для форми
+    const [isSubmitting, setIsSubmitting] = useState(false); 
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -73,7 +73,7 @@ function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); // 👇 Активуємо стан завантаження раніше
+        setIsSubmitting(true); 
 
         try {
             const { data: user, error } = await supabase
@@ -95,15 +95,11 @@ function Login() {
                 return;
             }
 
-            // ⚡ ОНОВЛЕНО ЛОГІКУ: Спочатку у фоні виконуємо всі важкі операції з БД,
-            // поки користувач бачить на кнопці текст завантаження.
             await restoreAndMergeCart(user.Nickname);
 
-            // Тільки після того, як дані стовідсотково готові, записуємо роль та нікнейм
             localStorage.setItem('userNickname', user.Nickname);
             localStorage.setItem('userRole', user.Role);
 
-            // Перемикаємо стан авторизації та викликаємо редирект в один момент
             login();
             window.dispatchEvent(new Event('authChanged'));
 

@@ -3,11 +3,15 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext'; // 👈 Додано контекст сповіщень
 
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isNotified, setIsNotified] = useState(false);
     const { userEmail } = useAuth();
+    
+    // 👇 Підключаємо глобальні сповіщення
+    const { showToast } = useToast();
 
     // Перевірка, чи тваринка в обраному
     useEffect(() => {
@@ -75,7 +79,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                 ]);
                 
                 if (error) console.error("❌ Помилка вставки в Favorites:", error.message);
-                else console.log("✅ Тваринку успішно додано в Favorites БД!");
             } else {
                 console.warn("⚠️ Користувач не авторизований, зберігаємо лише локально.");
             }
@@ -93,7 +96,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
         const userNickname = localStorage.getItem('userNickname');
         if (!userNickname) {
-            alert("🐾 Будь ласка, увійдіть в систему, щоб керувати сповіщеннями!");
+            showToast("🐾 Будь ласка, увійдіть в систему, щоб керувати сповіщеннями!");
             return;
         }
 
@@ -106,9 +109,9 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
             if (!error) {
                 setIsNotified(false);
-                alert(`🔕 Ви скасували підписку на сповіщення про ${name}.`);
+                showToast(`🔕 Ви скасували підписку на сповіщення про ${name}.`);
             } else {
-                alert("❌ Сталася помилка при відписці: " + error.message);
+                showToast("❌ Сталася помилка при відписці: " + error.message);
             }
         } else {
             const { error } = await supabase.from('TreatmentNotifications').insert([
@@ -123,9 +126,9 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
             if (!error) {
                 setIsNotified(true);
-                alert(`🔔 Дякуємо! Ви отримаєте повідомлення, коли ${name} одужає.`);
+                showToast(`🔔 Дякуємо! Ви отримаєте повідомлення, коли ${name} одужає.`);
             } else {
-                alert("❌ Сталася помилка при підписці: " + error.message);
+                showToast("❌ Сталася помилка при підписці: " + error.message);
             }
         }
     };
@@ -153,7 +156,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                     <img src={image} alt={name} className="pet-card-image" />
                 </Link>
 
-                {/* Просто клас pet-name, стилі оновлено в CSS */}
                 <h3 className="pet-name">{name}</h3>
 
                 <div className={`pet-status-badge ${statusConfig.class}`}>

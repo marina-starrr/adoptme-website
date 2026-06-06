@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient';
 import './Reviews.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
 function Reviews() {
   const [reviews, setReviews] = useState([]);
@@ -16,11 +16,11 @@ function Reviews() {
 
   const { isLoggedIn } = useAuth(); 
   const navigate = useNavigate(); 
+  const { showToast } = useToast(); // 👈 Ініціалізуємо тости
 
   // 1. ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ВІДГУКІВ ТА АКТУАЛЬНИХ ТВАРИН
   const fetchReviews = async () => {
     try {
-      // Крок 1: Завантажуємо всі відгуки
       const { data: reviewsData, error: reviewsError } = await supabase
         .from('Reviews')
         .select('*')
@@ -28,20 +28,17 @@ function Reviews() {
 
       if (reviewsError) throw reviewsError;
 
-      // Крок 2: Отримуємо унікальні нікнейми всіх авторів відгуків
       const nicknames = [...new Set(reviewsData.map(r => r.UserNickname).filter(Boolean))];
 
       if (nicknames.length > 0) {
-        // Крок 3: Знаходимо ID цих користувачів у таблиці Users
         const { data: usersData, error: usersError } = await supabase
           .from('Users')
           .select('Id, Nickname')
           .in('Nickname', nicknames);
 
         if (!usersError && usersData) {
-          const userIds = usersData.map(u => u.Id || u.id); // Підтримка Id та id
+          const userIds = usersData.map(u => u.Id || u.id); 
 
-          // Крок 4: Знаходимо ВСІХ актуальних тварин для цих користувачів ("Вже вдома")
           const { data: petsData, error: petsError } = await supabase
             .from('Pets')
             .select('*')
@@ -49,7 +46,6 @@ function Reviews() {
             .eq('Status', 'Вже вдома');
 
           if (!petsError && petsData) {
-            // Формуємо словник: { "Нікнейм": [масив актуальних тварин] }
             const currentPetsMap = {};
             usersData.forEach(user => {
               const actualUserId = user.Id || user.id;
@@ -61,19 +57,17 @@ function Reviews() {
               }));
             });
 
-            // Крок 5: Додаємо актуальних тварин до кожного відгуку (DynamicPets)
             const updatedReviews = reviewsData.map(review => ({
               ...review,
               DynamicPets: currentPetsMap[review.UserNickname] || []
             }));
 
             setReviews(updatedReviews);
-            return; // Успішно завершили
+            return; 
           }
         }
       }
       
-      // Якщо авторів немає або сталася помилка, просто виводимо відгуки без тварин
       const fallbackReviews = reviewsData.map(review => ({ ...review, DynamicPets: [] }));
       setReviews(fallbackReviews);
 
@@ -103,7 +97,7 @@ function Reviews() {
     }
   };
 
-  // 2. ВІДПРАВКА НОВОГО ВІДГУКУ (спрощена, бо тварини тепер підтягуються динамічно)
+  // 2. ВІДПРАВКА НОВОГО ВІДГУКУ
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -125,7 +119,7 @@ function Reviews() {
             Name: nickname, 
             UserNickname: nickname,
             UserAvatar: avatar,
-            AdoptedPets: [], // Більше не зберігаємо сюди тварин жорстко
+            AdoptedPets: [], 
             Text: text,
             Date: formattedDate,
             UserReplies: [] 
@@ -134,10 +128,10 @@ function Reviews() {
         if (error) throw error;
 
         setText('');
-        fetchReviews(); // Оновлюємо сторінку, і нові/старі тварини підтягнуться самі
+        fetchReviews(); 
     } catch (error) {
         console.error("Помилка збереження:", error.message);
-        alert("Не вдалося відправити відгук. Спробуйте пізніше.");
+        showToast("❌ Не вдалося відправити відгук. Спробуйте пізніше."); // 👈 Замінено alert
     } finally {
         setIsLoading(false);
     }
@@ -176,7 +170,7 @@ function Reviews() {
         fetchReviews();
     } catch (error) {
         console.error("Помилка збереження відповіді:", error.message);
-        alert("Не вдалося відправити відповідь.");
+        showToast("❌ Не вдалося відправити відповідь."); // 👈 Замінено alert
     } finally {
         setIsLoading(false);
     }
@@ -241,7 +235,6 @@ function Reviews() {
                     <div className="avatars-cluster">
                         <img src={review.UserAvatar || '/ava.png'} alt="Аватар" className="review-avatar" />
                         
-                        {/* ТУТ МИ ВИКОРИСТОВУЄМО DynamicPets ЗАМІСТЬ СТАРОГО AdoptedPets */}
                         {review.DynamicPets && review.DynamicPets.length > 0 && (
                             <div className="pet-bubbles">
                                 {review.DynamicPets.map((petData, idx) => {

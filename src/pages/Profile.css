@@ -598,3 +598,27 @@
     .application-card { flex-direction: column; align-items: flex-start; gap: 15px; }
     .app-status { align-self: flex-start; }
 }
+
+/* =========================================
+   ДОДАТКОВІ АНІМАЦІЇ ДЛЯ МОДАЛЬНИХ ВІКОН
+   ========================================= */
+
+/* Анімація зникнення фону */
+.profile-modal-overlay.closing {
+    animation: fadeOutModal 0.3s forwards;
+}
+
+/* Анімація зникнення вікна */
+.modal-content.closing {
+    animation: animateclose 0.3s forwards;
+}
+
+@keyframes animateclose {
+    from { transform: scale(1); opacity: 1; }
+    to { transform: scale(0.9); opacity: 0; }
+}
+
+@keyframes fadeOutModal {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}

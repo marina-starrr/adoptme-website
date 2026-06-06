@@ -15,6 +15,9 @@ function AdminUsers() {
     const [userToDelete, setUserToDelete] = useState(null);
     const [toastMsg, setToastMsg] = useState('');
 
+    // 👇 ДОДАНО: Стан для керування плавною анімацією закриття
+    const [isModalClosing, setIsModalClosing] = useState(false);
+
     const initialFormState = {
         Nickname: '',
         FirstName: '',
@@ -27,10 +30,7 @@ function AdminUsers() {
 
     const [userFormData, setUserFormData] = useState(initialFormState);
 
-    const showToast = (message) => {
-        setToastMsg(message);
-        setTimeout(() => setToastMsg(''), 3500);
-    };
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchUsers();
@@ -52,6 +52,23 @@ function AdminUsers() {
             setLoading(false);
         }
     }
+
+    // 👇 ДОДАНО: Функції для плавного закриття модалок
+    const closeEditModal = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setIsModalOpen(false);
+            setIsModalClosing(false);
+        }, 300);
+    };
+
+    const closeDeleteModal = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setUserToDelete(null);
+            setIsModalClosing(false);
+        }, 300);
+    };
 
     // --- ЛОГІКА ДОДАВАННЯ / РЕДАГУВАННЯ ---
     const handleAddOpen = () => {
@@ -123,7 +140,7 @@ function AdminUsers() {
                 showToast("🎉 Нового користувача успішно створено!");
             }
 
-            setIsModalOpen(false);
+            closeEditModal(); // 👈 Плавне закриття після успішного збереження
             fetchUsers();
         } catch (error) {
             showToast("❌ Помилка: " + error.message);
@@ -139,11 +156,13 @@ function AdminUsers() {
 
     const executeDelete = async () => {
         if (!userToDelete) return;
+        
+        closeDeleteModal(); // 👈 Плавно закриваємо модалку перед початком видалення
+        
         try {
             const user = users.find(u => u.Id === userToDelete);
             if (user?.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
                 showToast("❌ Не можна видалити єдиного адміністратора!");
-                setUserToDelete(null);
                 return;
             }
 
@@ -151,11 +170,11 @@ function AdminUsers() {
             if (error) throw error;
 
             showToast("🗑️ Користувача успішно видалено!");
-            setUserToDelete(null);
-            fetchUsers();
+            
+            // 👇 Локальне оновлення замість fetchUsers(), щоб уникнути блимання
+            setUsers(prev => prev.filter(u => u.Id !== userToDelete));
         } catch (err) {
             showToast("❌ Помилка видалення: " + err.message);
-            setUserToDelete(null);
         }
     };
 
@@ -253,13 +272,13 @@ function AdminUsers() {
                 </div>
             </div>
 
-            {/* МОДАЛЬНЕ ВІКНО ДОДАВАННЯ/РЕДАГУВАННЯ */}
+            {/* 👇 МОДАЛЬНЕ ВІКНО ДОДАВАННЯ/РЕДАГУВАННЯ (З АНІМАЦІЄЮ) */}
             {isModalOpen && (
-                <div className="modal-overlay" onClick={() => !isSaving && setIsModalOpen(false)}>
-                    <div className="admin-modal" onClick={e => e.stopPropagation()}>
+                <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={() => !isSaving && closeEditModal()}>
+                    <div className={`admin-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <h3>{editMode ? "Редагування користувача" : "Новий користувач"}</h3>
-                            <button className="close-x" onClick={() => setIsModalOpen(false)} title="Закрити">×</button>
+                            <button className="close-x" onClick={closeEditModal} title="Закрити">×</button>
                         </div>
 
                         <form onSubmit={handleSaveUser} className="admin-form">
@@ -325,7 +344,7 @@ function AdminUsers() {
                             </div>
 
                             <div className="form-actions">
-                                <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)} disabled={isSaving}>Скасувати</button>
+                                <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isSaving}>Скасувати</button>
                                 <button type="submit" className="save-btn" disabled={isSaving}>
                                     {isSaving ? 'Збереження...' : 'Зберегти користувача'}
                                 </button>
@@ -335,16 +354,16 @@ function AdminUsers() {
                 </div>
             )}
 
-            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ */}
+            {/* 👇 ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (З АНІМАЦІЄЮ) */}
             {userToDelete && (
-                <div className="modal-overlay" onClick={() => setUserToDelete(null)}>
-                    <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
+                    <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
                         <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 10px 0' }}>⚠️ Видалення користувача</h3>
                         <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px' }}>
                             Ви дійсно хочете назавжди видалити цей акаунт? Цю дію неможливо скасувати.
                         </p>
                         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                            <button className="cancel-btn" onClick={() => setUserToDelete(null)}>Скасувати</button>
+                            <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
                             <button className="save-btn" style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }} onClick={executeDelete}>
                                 Так, видалити
                             </button>

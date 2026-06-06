@@ -2,7 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws'; 
 import './Contact.css';
-import { useToast } from '../context/ToastContext';
 
 function Contact() {
   return (
@@ -72,7 +71,7 @@ function Contact() {
                   </div>
               </div>
 
-              {/* 👇 ОНОВЛЕНА СЕКЦІЯ: Карта (зліва) та Відео (справа) */}
+              {/* ОНОВЛЕНА СЕКЦІЯ: Карта (зліва) та Відео (справа) */}
               <div className="location-media-container">
                   
                   {/* Ліва колонка: Карта */}
@@ -105,19 +104,6 @@ function Contact() {
                       >
                           Ваш браузер не підтримує тег video.
                       </video>
-
-                      {/* Варіант 2: Відео з YouTube (якщо потрібно - розкоментуй це, а <video> вище закоментуй) */}
-                      {/* <iframe 
-                          width="100%" 
-                          height="350" 
-                          src="https://www.youtube.com/embed/ТУТ_ІД_ВІДЕО?autoplay=1&mute=1&loop=1&playlist=ТУТ_ІД_ВІДЕО" 
-                          title="YouTube video player" 
-                          frameBorder="0" 
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                          allowFullScreen
-                          style={{ borderRadius: '15px' }}
-                      ></iframe> 
-                      */}
                   </div>
               </div>
 

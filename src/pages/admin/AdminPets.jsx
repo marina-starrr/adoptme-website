@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
+import { useToast } from '../../context/ToastContext'; // 👈 Якщо не було підключено
 
 function CustomDropdown({ options, value, onChange, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -57,16 +58,21 @@ function AdminPets() {
   const [petsList, setPetsList] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPetId, setCurrentPetId] = useState(null);
+  const [petToDelete, setPetToDelete] = useState(null);
+
+  // 👇 ДОДАНО: Стейт для анімації закриття обох модалок
+  const [isModalClosing, setIsModalClosing] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
   const [sortOrder, setSortOrder] = useState('newest');
-  const [toastMsg, setToastMsg] = useState('');
-  const [petToDelete, setPetToDelete] = useState(null);
+  
+  const { showToast } = useToast();
 
   const [petTypes, setPetTypes] = useState(['Кіт', 'Собака']);
   const [newType, setNewType] = useState('');
@@ -142,11 +148,6 @@ function AdminPets() {
       return dateB - dateA;
     });
 
-  const showToast = (message) => {
-    setToastMsg(message);
-    setTimeout(() => setToastMsg(''), 3500);
-  };
-
   const resetFilters = () => {
     setFilterType('Всі');
     setFilterBreed('Всі');
@@ -187,26 +188,7 @@ function AdminPets() {
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   const initialFormState = {
-    Name: '',
-    Type: 'Кіт',
-    Breed: 'Безпородна',
-    Age: '',
-    Gender: 'Хлопчик',
-    ImageName: '',
-    Images: [],
-    Tags: '',
-    Description: '',
-    HomeDescription: null, 
-    Status: 'Шукає дім',
-    OwnerId: null,
-    OwnerName: '',
-    ArrivalDate: getTodayDate(),
-    IsVaccinated: false,
-    MedicalNotes: '',
-    EnergyLevel: 'Середній',
-    Friendliness: 'Дружелюбний до всіх',
-    NeedsTraining: false,
-    Size: 'Середній'
+    Name: '', Type: 'Кіт', Breed: 'Безпородна', Age: '', Gender: 'Хлопчик', ImageName: '', Images: [], Tags: '', Description: '', HomeDescription: null, Status: 'Шукає дім', OwnerId: null, OwnerName: '', ArrivalDate: getTodayDate(), IsVaccinated: false, MedicalNotes: '', EnergyLevel: 'Середній', Friendliness: 'Дружелюбний до всіх', NeedsTraining: false, Size: 'Середній'
   };
 
   const [petFormData, setPetFormData] = useState(initialFormState);
@@ -246,6 +228,24 @@ function AdminPets() {
     }
   }
 
+  // 👇 ДОДАНО: Функція для плавного закриття форми редагування
+  const closeEditModal = () => {
+    setIsModalClosing(true);
+    setTimeout(() => {
+      setIsModalOpen(false);
+      setIsModalClosing(false);
+    }, 300);
+  };
+
+  // 👇 ДОДАНО: Функція для плавного закриття вікна видалення
+  const closeDeleteModal = () => {
+    setIsModalClosing(true);
+    setTimeout(() => {
+      setPetToDelete(null);
+      setIsModalClosing(false);
+    }, 300);
+  };
+
   const handleEditOpen = (e, pet) => {
     e.preventDefault();
     e.stopPropagation();
@@ -254,26 +254,7 @@ function AdminPets() {
     
     setPetFormData({
       ...pet,
-      Name: pet.Name || '',
-      Type: pet.Type || 'Кіт',
-      Breed: pet.Breed || 'Безпородна',
-      Age: pet.Age || '',
-      Gender: pet.Gender || 'Хлопчик',
-      ImageName: pet.ImageName || '',
-      Images: pet.Images || [],
-      Tags: pet.Tags || '',
-      Description: pet.Description || '',
-      HomeDescription: pet.HomeDescription || '', 
-      Status: pet.Status || 'Шукає дім',
-      OwnerId: pet.OwnerId || null,
-      OwnerName: pet.OwnerName || '',
-      ArrivalDate: pet.ArrivalDate || getTodayDate(),
-      IsVaccinated: pet.IsVaccinated || false,
-      MedicalNotes: pet.MedicalNotes || '',
-      EnergyLevel: pet.EnergyLevel || 'Середній',
-      Friendliness: pet.Friendliness || 'Дружелюбний до всіх',
-      NeedsTraining: pet.NeedsTraining || false,
-      Size: pet.Size || 'Середній'
+      Name: pet.Name || '', Type: pet.Type || 'Кіт', Breed: pet.Breed || 'Безпородна', Age: pet.Age || '', Gender: pet.Gender || 'Хлопчик', ImageName: pet.ImageName || '', Images: pet.Images || [], Tags: pet.Tags || '', Description: pet.Description || '', HomeDescription: pet.HomeDescription || '', Status: pet.Status || 'Шукає дім', OwnerId: pet.OwnerId || null, OwnerName: pet.OwnerName || '', ArrivalDate: pet.ArrivalDate || getTodayDate(), IsVaccinated: pet.IsVaccinated || false, MedicalNotes: pet.MedicalNotes || '', EnergyLevel: pet.EnergyLevel || 'Середній', Friendliness: pet.Friendliness || 'Дружелюбний до всіх', NeedsTraining: pet.NeedsTraining || false, Size: pet.Size || 'Середній'
     });
     setSelectedFiles([]);
     setIsModalOpen(true);
@@ -332,7 +313,7 @@ function AdminPets() {
       if (!isHome) {
         dataToSave.OwnerId = null;
         dataToSave.OwnerName = null;
-        dataToSave.HomeDescription = null; // Очищуємо історію родини
+        dataToSave.HomeDescription = null; 
       }
 
       if (editMode) {
@@ -346,16 +327,8 @@ function AdminPets() {
         if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
           const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
-          const { data: favUsers, error: favError } = await supabase
-            .from('Favorites')
-            .select('*') 
-            .eq('PetId', currentPetId);
-
-          if (favError) console.error("❌ Помилка отримання з таблиці Favorites:", favError.message);
-
-          const validFavUsers = favUsers ? favUsers.filter(fav => {
-              return fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-          }) : [];
+          const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', currentPetId);
+          const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
 
           if (validFavUsers.length > 0) {
             const notificationsToInsert = validFavUsers.map(fav => {
@@ -368,12 +341,9 @@ function AdminPets() {
                 IsRead: false
               };
             });
-
-            const { error: insertError } = await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-            if (insertError) console.error("❌ Помилка запису in таблицю FavoriteNotifications:", insertError.message);
+            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
           }
         }
-
         showToast("✅ Профіль тваринки успішно оновлено!");
       } else {
         const { data: newPetData, error } = await supabase.from('Pets').insert([dataToSave]).select();
@@ -395,18 +365,13 @@ function AdminPets() {
                     };
                 });
                 
-                const { error: notifError } = await supabase
-                    .from('FavoriteNotifications')
-                    .insert(notificationsToInsert);
-
-                if (notifError) console.error("❌ Помилка розсилки сповіщень:", notifError.message);
+                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
             }
         }
-
         showToast("🎉 Нового хвостика успішно додано!");
       }
 
-      setIsModalOpen(false);
+      closeEditModal(); // 👈 Плавне закриття після збереження
       fetchPets();
     } catch (error) {
       showToast("❌ Помилка: " + error.message);
@@ -423,25 +388,19 @@ function AdminPets() {
 
   const executeDelete = async () => {
     if (!petToDelete) return;
+    closeDeleteModal(); // 👈 Плавне закриття вікна під час видалення
     try {
       const { error } = await supabase.from('Pets').delete().eq('Id', petToDelete);
       if (error) throw error;
       showToast("🗑️ Профіль успішно видалено!");
-      setPetToDelete(null);
-      fetchPets();
+      setPetsList(prev => prev.filter(p => p.Id !== petToDelete)); // Миттєве видалення зі стейту
     } catch (err) {
       showToast("❌ Помилка видалення: " + err.message);
-      setPetToDelete(null);
     }
   };
 
   return (
     <div style={{ position: 'relative', width: '100%' }}>
-      {toastMsg && (
-        <div className="custom-toast" style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: '#4A148C', color: '#fff', padding: '15px 30px', borderRadius: '30px', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-          {toastMsg}
-        </div>
-      )}
       <div className="admin-page-layout">
         <aside className="admin-sidebar" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
           <div className="sidebar-header">
@@ -453,7 +412,7 @@ function AdminPets() {
             <label>Вид тварини</label>
             <CustomDropdown 
               options={[
-                { value: 'Всі', label: 'Всі виды' },
+                { value: 'Всі', label: 'Всі види' },
                 ...petTypes.map(type => ({ value: type, label: type }))
               ]} 
               value={filterType} 
@@ -465,7 +424,7 @@ function AdminPets() {
             <label>Порода</label>
             <CustomDropdown 
               options={[
-                { value: 'Всі', label: 'Будь-яка порода' },
+                { value: 'Всі', label: 'Будь-яка' },
                 ...petBreeds.map(breed => ({ value: breed, label: breed }))
               ]} 
               value={filterBreed} 
@@ -518,7 +477,7 @@ function AdminPets() {
             <label>Вік</label>
             <CustomDropdown 
               options={[
-                { value: 'Всі', label: 'Будь-який вік' },
+                { value: 'Всі', label: 'Будь-який' },
                 { value: 'До 6 місяців', label: 'До 6 місяців (Малюки)' },
                 { value: 'Від 6 міс. до 1 року', label: 'Від 6 міс. до 1 року' },
                 { value: 'Від 1 до 3 років', label: 'Від 1 до 3 років' },
@@ -625,12 +584,13 @@ function AdminPets() {
         </div>
       </div>
 
+      {/* 👇 ОНОВЛЕНО: Вікно додавання/редагування з анімацією */}
       {isModalOpen && (
-        <div className="modal-overlay" onClick={() => !isUploading && setIsModalOpen(false)}>
-          <div className="admin-modal" onClick={e => e.stopPropagation()}>
+        <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={() => !isUploading && closeEditModal()}>
+          <div className={`admin-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{editMode ? "Редагування профілю" : "Новий підопічний"}</h3>
-              <button className="close-x" onClick={() => setIsModalOpen(false)} title="Закрити">×</button>
+              <button className="close-x" onClick={closeEditModal} title="Закрити">×</button>
             </div>
 
             <form onSubmit={handleSavePet} className="admin-form">
@@ -738,7 +698,6 @@ function AdminPets() {
                     rows="3"
                     maxLength={300}
                   />
-                  {/* Лічильник символів для адмінки */}
                   <div className="char-counter">
                     {petFormData.MedicalNotes?.length || 0} / 300
                   </div>
@@ -758,7 +717,7 @@ function AdminPets() {
                         updatedFormData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
                       }
                     } else {
-                      updatedFormData.HomeDescription = null; // Очищення історії родини при поверненні
+                      updatedFormData.HomeDescription = null; 
                     }
                     setPetFormData(updatedFormData);
                   }} 
@@ -833,7 +792,6 @@ function AdminPets() {
                 )}
               </div>
 
-              {/* 👇 ОНОВЛЕНО: Відображення ДВОХ незалежних полів історії */}
               <div className="pet-story-block">
                 <div style={{ marginBottom: '20px' }}>
                   <h3 className="section-subtitle" style={{ fontSize: '15px' }}>📖 Опис історії та характеру в притулку:</h3>
@@ -844,7 +802,11 @@ function AdminPets() {
                       className="inline-input input-desc" 
                       required
                       rows="4"
+                      maxLength={700}
                     />
+                  </div>
+                  <div className="char-counter">
+                    {petFormData.Description?.length || 0} / 700
                   </div>
                 </div>
 
@@ -858,14 +820,18 @@ function AdminPets() {
                         className="inline-input input-desc" 
                         required
                         rows="4"
+                        maxLength={700}
                       />
+                    </div>
+                    <div className="char-counter">
+                      {petFormData.HomeDescription?.length || 0} / 700
                     </div>
                   </div>
                 )}
               </div>
 
               <div className="form-actions">
-                <button type="button" className="cancel-btn" onClick={() => setIsModalOpen(false)} disabled={isUploading}>Скасувати</button>
+                <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isUploading}>Скасувати</button>
                 <button type="submit" className="save-btn" disabled={isUploading}>
                   {isUploading ? 'Завантаження...' : 'Зберегти зміни'}
                 </button>
@@ -875,15 +841,16 @@ function AdminPets() {
         </div>
       )}
 
+      {/* 👇 ОНОВЛЕНО: Вікно видалення з анімацією */}
       {petToDelete && (
-        <div className="modal-overlay" onClick={() => setPetToDelete(null)}>
-          <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+        <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
+          <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ color: '#ef4444', fontSize: '24px', marginBottom: '10px' }}>⚠️ Видалення</h3>
             <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.5' }}>
               Ви дійсно хочете назавжди видалити профіль цієї тваринки? Цю дію неможливо скасувати.
             </p>
             <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button className="cancel-btn" onClick={() => setPetToDelete(null)}>Скасувати</button>
+              <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
               <button className="save-btn" style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }} onClick={executeDelete}>
                 Так, видалити
               </button>

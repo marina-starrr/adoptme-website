@@ -1,15 +1,17 @@
 // src/layouts/UserLayout.jsx
 import { Outlet } from 'react-router-dom';
-import UserHeader from '../components/UserHeader'; // або просто Header, якщо ти не змінювала назву файлу
+import UserHeader from '../components/UserHeader'; 
 import Footer from '../components/Footer';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // Підключаємо для доступу до showToast
 
 function UserLayout() {
+  // Дістаємо функцію, якщо раптом захочеш її використати безпосередньо тут
+  const { showToast } = useToast(); 
+
   return (
     <div className="app-container">
       <UserHeader />
       <main>
-         {/* Сюди автоматично підставлятимуться Home, Pets, About і т.д. */}
         <Outlet />
       </main>
       <Footer />

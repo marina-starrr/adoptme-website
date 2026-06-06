@@ -1,5 +1,4 @@
 import './Footer.css';
-import { useToast } from '../context/ToastContext';
 
 function Footer() {
   return (

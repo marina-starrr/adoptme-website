@@ -2,14 +2,14 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import './AdminLayout.css'; 
-import { useToast } from '../context/ToastContext'; // 👈 Глобальний контекст
+import { useToast } from '../context/ToastContext'; // Глобальний контекст
 import { supabase } from '../supabaseClient'; 
 
 function AdminLayout() {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const { showToast } = useToast(); // 👈 Дістаємо функцію
+    const { showToast } = useToast(); 
     
     const [newRequestsCount, setNewRequestsCount] = useState(0);
 
@@ -19,7 +19,7 @@ function AdminLayout() {
         }
     }, [location.pathname, navigate]);
 
-    // 👇 Показуємо глобальний тост замість локального стейту
+    // Показуємо глобальний тост після редіректу з логіну
     useEffect(() => {
         if (location.state?.welcomeMsg) {
             showToast(location.state.welcomeMsg);
@@ -77,8 +77,8 @@ function AdminLayout() {
 
     return (
         <div className="admin-layout-container">
-            {/* ❌ Видалено <div className="custom-toast">...</div> */}
-
+            {/* ❌ <div className="custom-toast">...</div> ВИДАЛЕНО, бо працює глобальний ToastContext */}
+            
             <header className="admin-header">
                 <div className="admin-logo-section">
                     <img src="/logo.png" alt="Logo" className="admin-logo" />

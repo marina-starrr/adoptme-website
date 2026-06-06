@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import './AdminReviews.css'; // Створимо цей файл наступним
+import './AdminReviews.css'; 
 import { useToast } from '../../context/ToastContext';
 
 function AdminReviews() {
@@ -14,12 +14,9 @@ function AdminReviews() {
 
     // Стейти для видалення
     const [reviewToDelete, setReviewToDelete] = useState(null);
-    const [toastMsg, setToastMsg] = useState('');
+    const [isModalClosing, setIsModalClosing] = useState(false); 
 
-    const showToast = (message) => {
-        setToastMsg(message);
-        setTimeout(() => setToastMsg(''), 3500);
-    };
+    const { showToast } = useToast();
 
     useEffect(() => {
         fetchReviews();
@@ -31,7 +28,7 @@ function AdminReviews() {
             const { data, error } = await supabase
                 .from('Reviews')
                 .select('*')
-                .order('Id', { ascending: false }); // Нові зверху
+                .order('Id', { ascending: false }); 
 
             if (error) throw error;
             setReviews(data || []);
@@ -45,7 +42,7 @@ function AdminReviews() {
     // --- ЛОГІКА ВІДПОВІДІ ---
     const handleOpenReply = (review) => {
         setActiveReplyId(review.Id);
-        setReplyText(review.AdminReply || ''); // Якщо вже є відповідь, показуємо її
+        setReplyText(review.AdminReply || ''); 
     };
 
     const handleSaveReply = async (id) => {
@@ -61,7 +58,8 @@ function AdminReviews() {
             showToast("✅ Відповідь успішно збережено!");
             setActiveReplyId(null);
             setReplyText('');
-            fetchReviews(); // Оновлюємо список
+            // Локальне оновлення замість fetchReviews, щоб не блимало "Завантаження"
+            setReviews(prev => prev.map(r => r.Id === id ? { ...r, AdminReply: replyText } : r));
         } catch (err) {
             showToast("❌ Помилка збереження: " + err.message);
         } finally {
@@ -74,27 +72,33 @@ function AdminReviews() {
         setReviewToDelete(id);
     };
 
+    // Універсальна функція для плавного закриття модалки
+    const closeConfirmDialog = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setReviewToDelete(null);
+            setIsModalClosing(false);
+        }, 300); 
+    };
+
     const executeDelete = async () => {
         if (!reviewToDelete) return;
+        closeConfirmDialog(); // Плавно закриваємо вікно перед видаленням
         try {
             const { error } = await supabase.from('Reviews').delete().eq('Id', reviewToDelete);
             if (error) throw error;
 
             showToast("🗑️ Відгук успішно видалено!");
-            setReviewToDelete(null);
-            fetchReviews();
+            // 👇 БАГФІКС: Локальне видалення замість fetchReviews()
+            setReviews(prev => prev.filter(r => r.Id !== reviewToDelete));
         } catch (err) {
             showToast("❌ Помилка видалення: " + err.message);
-            setReviewToDelete(null);
         }
     };
 
     return (
         <div className="admin-main" style={{ position: 'relative' }}>
-            {toastMsg && <div className="custom-toast" style={{ zIndex: 100000 }}>{toastMsg}</div>}
-
             <div className="admin-page-layout">
-                {/* В цій секції сайдбар не потрібен, віддаємо весь простір контенту */}
                 <div className="admin-content-area" style={{ width: '100%' }}>
                     <div className="admin-card">
                         <div className="admin-header-box">
@@ -197,16 +201,24 @@ function AdminReviews() {
                 </div>
             </div>
 
-            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (Взято з твого AdminPets для однакового дизайну) */}
+            {/* 👇 ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ З ЧИСТИМ CSS */}
             {reviewToDelete && (
-                <div className="modal-overlay" onClick={() => setReviewToDelete(null)}>
-                    <div className="admin-modal" style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ color: '#ef4444', fontSize: '24px', marginBottom: '10px' }}>⚠️ Видалення відгуку</h3>
-                        <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px' }}>
+                <div 
+                    className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+                    onClick={closeConfirmDialog}
+                    style={{ zIndex: 10000 }}
+                >
+                    <div 
+                        className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} 
+                        style={{ maxWidth: '400px', textAlign: 'center' }} 
+                        onClick={e => e.stopPropagation()}
+                    >
+                        <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800' }}>⚠️ Видалення відгуку</h3>
+                        <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.6' }}>
                             Ви дійсно хочете назавжди видалити цей відгук? Цю дію неможливо скасувати.
                         </p>
                         <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                            <button className="cancel-btn" onClick={() => setReviewToDelete(null)}>Скасувати</button>
+                            <button className="cancel-btn" onClick={closeConfirmDialog}>Скасувати</button>
                             <button
                                 className="save-btn"
                                 style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}

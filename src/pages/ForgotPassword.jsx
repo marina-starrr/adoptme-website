@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './Login.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
 function ForgotPassword() {
     const [step, setStep] = useState(1);
@@ -13,13 +13,8 @@ function ForgotPassword() {
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
 
-    const [toastMsg, setToastMsg] = useState('');
+    const { showToast } = useToast();
     const navigate = useNavigate();
-
-    const showToast = (message) => {
-        setToastMsg(message);
-        setTimeout(() => setToastMsg(''), 3500);
-    };
 
     // Крок 1: Шукаємо користувача за нікнеймом
     const handleFindUser = async (e) => {
@@ -62,43 +57,41 @@ function ForgotPassword() {
 
     // Крок 3: Зміна пароля
     const handleResetPassword = async (e) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    // ДОДАЙ ЦЮ ПЕРЕВІРКУ:
-    if (newPassword !== confirmPassword) {
-        showToast('❌ Паролі не збігаються!');
-        return;
-    }
-
-    if (newPassword.length < 6) {
-        showToast('❌ Пароль має містити мінімум 6 символів!');
-        return;
-    }
-
-    try {
-        const { error } = await supabase
-            .from('Users')
-            .update({ Password: newPassword })
-            .eq('Nickname', nickname.trim());
-
-        if (error) {
-            console.error("Помилка Supabase:", error); // Це допоможе побачити, що саме не так
-            showToast('❌ Помилка при зміні пароля! Перевірте RLS.');
+        if (newPassword !== confirmPassword) {
+            showToast('❌ Паролі не збігаються!');
             return;
         }
 
-        navigate('/login', {
-            state: { welcomeMsg: '✅ Пароль успішно змінено! Тепер ви можете увійти.' }
-        });
+        if (newPassword.length < 6) {
+            showToast('❌ Пароль має містити мінімум 6 символів!');
+            return;
+        }
 
-    } catch (err) {
-        showToast('❌ Сталася помилка!');
-    }
-};
+        try {
+            const { error } = await supabase
+                .from('Users')
+                .update({ Password: newPassword })
+                .eq('Nickname', nickname.trim());
+
+            if (error) {
+                console.error("Помилка Supabase:", error); 
+                showToast('❌ Помилка при зміні пароля! Перевірте RLS.');
+                return;
+            }
+
+            navigate('/login', {
+                state: { welcomeMsg: '✅ Пароль успішно змінено! Тепер ви можете увійти.' }
+            });
+
+        } catch (err) {
+            showToast('❌ Сталася помилка!');
+        }
+    };
 
     return (
         <div className="login-page" style={{ position: 'relative' }}>
-            {toastMsg && <div className="custom-toast">{toastMsg}</div>}
 
             <div className="login-card">
                 <h2>Відновлення пароля 🔐</h2>

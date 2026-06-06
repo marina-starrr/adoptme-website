@@ -3,6 +3,7 @@ import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './UserPets.css';
+import { useToast } from '../context/ToastContext'; // 👈 Підключаємо глобальні сповіщення
 
 // КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК
 function CustomDropdown({ options, value, onChange, placeholder }) {
@@ -74,6 +75,8 @@ function UserPets() {
 
   const [sortOrder, setSortOrder] = useState('newest');
 
+  const { showToast } = useToast(); // 👈 Ініціалізуємо тости
+
   useEffect(() => {
     fetchPets();
   }, []);
@@ -106,6 +109,7 @@ function UserPets() {
       setPetsList(data || []);
     } catch (err) {
       console.error("❌ Помилка завантаження: ", err.message);
+      showToast("❌ Помилка завантаження каталогу: " + err.message); // 👈 Додано красиве сповіщення про помилку
     } finally {
       setLoading(false);
     }

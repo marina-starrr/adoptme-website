@@ -1,9 +1,9 @@
 import SplashScreen from './components/SplashScreen';
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext'; // 👈 Наш глобальний провайдер тостів
 import { AnimatePresence, motion } from 'framer-motion';
 import { useEffect } from 'react';
-import { ToastProvider } from './context/ToastContext';
 
 import UserLayout from './layouts/UserLayout';
 import AdminLayout from './layouts/AdminLayout';
@@ -95,7 +95,6 @@ function AppRoutes() {
             <ProtectedRoute requireAdmin={true}><AdminLayout /></ProtectedRoute>
           }>
             <Route index element={<Navigate to="adoptions" replace />} />
-
             <Route path="adoptions" element={<AdminAdoptions />} />
             <Route path="pets" element={<AdminPets />} />
             <Route path="pets/:id" element={<PetDetails />} />
@@ -106,6 +105,7 @@ function AppRoutes() {
           </Route>
         </Routes>
 
+        {/* Анімація переходу між сторінками */}
         <motion.div
           variants={overlayVariants}
           style={{
@@ -136,7 +136,7 @@ function AppRoutes() {
 function App() {
   return (
     <AuthProvider>
-      <ToastProvider>
+      <ToastProvider> {/* 👈 Глобальний провайдер сповіщень */}
         <BrowserRouter>
           <AppRoutes />
         </BrowserRouter>

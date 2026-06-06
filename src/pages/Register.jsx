@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient'; 
 import './Login.css';
-import { useToast } from '../context/ToastContext'; 
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
 function Register() {
   const [nickname, setNickname] = useState('');
@@ -17,14 +17,9 @@ function Register() {
   const [secretQuestion, setSecretQuestion] = useState('Як звали вашого першого домашнього улюбленця?');
   const [secretAnswer, setSecretAnswer] = useState('');
 
-  const [toastMsg, setToastMsg] = useState(''); 
   const navigate = useNavigate();
   const { login } = useAuth(); 
-
-  const showToast = (message) => {
-      setToastMsg(message);
-      setTimeout(() => setToastMsg(''), 3500);
-  };
+  const { showToast } = useToast(); // 👈 Підключаємо функцію з контексту
 
   const handlePhoneChange = (e) => {
     const rawDigits = e.target.value.replace(/\D/g, '');
@@ -62,10 +57,10 @@ function Register() {
     try {
         const cleanedNickname = nickname.trim();
         const cleanedEmail = email.trim();
-        // 👇 Очищаємо телефон від дужок, плюсів та пробілів
+        // Очищаємо телефон від дужок, плюсів та пробілів
         const cleanedPhone = phone.replace(/\D/g, ''); 
 
-        // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ (використовуємо очищені дані)
+        // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ
         const { data: existingUsers, error: checkError } = await supabase
             .from('Users')
             .select('Nickname, Email, Phone')
@@ -83,7 +78,7 @@ function Register() {
             return; 
         }
 
-        // 2. РЕЄСТРАЦІЯ (записуємо очищений телефон)
+        // 2. РЕЄСТРАЦІЯ
         const { error: insertError } = await supabase
             .from('Users')
             .insert([
@@ -91,7 +86,7 @@ function Register() {
                   Nickname: cleanedNickname, 
                   FirstName: firstName.trim(), 
                   LastName: lastName.trim(), 
-                  Phone: cleanedPhone, // 👇 Зберігаємо тільки цифри
+                  Phone: cleanedPhone,
                   Email: cleanedEmail, 
                   Password: password,
                   SecretQuestion: secretQuestion,
@@ -105,7 +100,7 @@ function Register() {
             return;
         }
 
-        // 👇 КРОК 3: УСПІШНИЙ ВХІД
+        // 3. УСПІШНИЙ ВХІД
         localStorage.setItem('userNickname', cleanedNickname);
         localStorage.setItem('userRole', 'user'); 
         login(); 
@@ -123,8 +118,6 @@ function Register() {
 
   return (
     <div className="login-page" style={{ position: 'relative' }}>
-      {toastMsg && <div className="custom-toast">{toastMsg}</div>}
-
       <div className="login-card" style={{ maxWidth: '450px' }}>
         <h2>Реєстрація 🐾</h2>
         <p>Створіть акаунт за індивідуальним нікнеймом</p>

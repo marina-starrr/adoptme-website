@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './Help.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
+import { AnimatePresence, motion } from 'framer-motion'; // 👈 Анімації
 
 function Help() {
   const navigate = useNavigate();
@@ -27,6 +28,8 @@ function Help() {
 
   const [isHelpTypeOpen, setIsHelpTypeOpen] = useState(false);
   const [isPetDropdownOpen, setIsPetDropdownOpen] = useState(false);
+
+  const { showToast } = useToast();
 
   const todayObj = new Date();
   const todayStr = todayObj.toISOString().split('T')[0];
@@ -75,7 +78,7 @@ function Help() {
     const localNickname = localStorage.getItem('userNickname');
 
     if (!localNickname || localNickname === 'Гість') {
-      alert('Будь ласка, увійдіть або зареєструйтесь, щоб надіслати заявку на волонтерство!');
+      showToast('⚠️ Будь ласка, увійдіть або зареєструйтесь, щоб надіслати заявку на волонтерство!');
       navigate('/login'); 
       return; 
     }
@@ -171,7 +174,7 @@ function Help() {
     e.preventDefault();
 
     if (!helpType || !preferredDay || (helpType === 'Інше' && !customHelpType.trim())) {
-      alert("Будь ласка, заповніть усі необхідні поля.");
+      showToast("⚠️ Будь ласка, заповніть усі необхідні поля.");
       return;
     }
 
@@ -196,7 +199,7 @@ function Help() {
     if (!error) {
       setIsSuccessScreen(true);
     } else {
-      alert("Помилка відправки заявки: " + error.message);
+      showToast("❌ Помилка відправки заявки: " + error.message);
     }
   };
 
@@ -222,7 +225,7 @@ function Help() {
 
   const faqs = [
     { question: "В які дні та години можна відвідати притулок?", answer: "Ми завжди раді гостям з понеділка по п'ятницю, з 08:30 до 16:30." },
-    { question: "Чи потрібно попереджати про свій візит?", answer: "Так, заповнюйте анкету або телефонувати нам заздалегідь." },
+    { question: "Чи потрібно попереджати про свій візит?", answer: "Так, заповнюйте анкету або телефонуйте нам заздалегідь." },
     { question: "Чи можна приходити до притулку з дітьми?", answer: "Звісно! Але діти до 16 років повинні бути з дорослими." },
     { question: "Як краще одягнутися?", answer: "Обирайте зручний, закритий одяг, який не шкода забруднити." },
     { question: "Чи можу я вигуляти собаку, якщо в мене немає досвіду?", answer: "Так! Наші куратори підберуть спокійну собачку та все розкажуть." }
@@ -296,166 +299,181 @@ function Help() {
         </div>
       </div>
 
-      {isModalOpen && (
-        <div className={`help-modal-overlay ${isModalClosing ? 'closing' : ''}`}>
-          <div className={`help-modal-content ${isModalClosing ? 'closing' : ''}`}>
-            <span className="close-btn" onClick={closeModal}>&times;</span>
+      {/* 👇 ДОДАНО: Анімація Framer Motion для модалки анкети волонтера */}
+      <AnimatePresence>
+          {isModalOpen && (
+            <motion.div 
+                className={`help-modal-overlay ${isModalClosing ? 'closing' : ''}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+            >
+              <motion.div 
+                  className={`help-modal-content ${isModalClosing ? 'closing' : ''}`}
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              >
+                <span className="close-btn" onClick={closeModal}>&times;</span>
 
-            {isSuccessScreen ? (
-              <div className="success-message-container fade-view">
-                <div className="success-icon">🙌</div>
-                <h3 className="success-title">Дякуємо, {volunteerName}!</h3>
-                <p className="success-text">Ваша заявка успішно надіслана.</p>
-                <p className="success-text">Наш куратор зв'яжеться з вами найближчим часом для підтвердження часу та деталей.</p>
-                <button className="volunteer-action-btn" style={{ marginTop: '25px' }} onClick={closeModal}>Чудово!</button>
-              </div>
-            ) : (
-              <div className="fade-view">
-                <div className="modal-header">
-                  <h3>Анкета волонтера</h3>
-                </div>
-                
-                <form className="volunteer-form" onSubmit={handleSubmit}>
-                  <div className="input-group">
-                    <input 
-                      type="text" 
-                      placeholder="Ваше ім'я" 
-                      value={volunteerName} 
-                      onChange={(e) => setVolunteerName(e.target.value)} 
-                      required 
-                      className="vol-input" 
-                    />
+                {isSuccessScreen ? (
+                  <div className="success-message-container fade-view">
+                    <div className="success-icon">🙌</div>
+                    <h3 className="success-title">Дякуємо, {volunteerName}!</h3>
+                    <p className="success-text">Ваша заявка успішно надіслана.</p>
+                    <p className="success-text">Наш куратор зв'яжеться з вами найближчим часом для підтвердження часу та деталей.</p>
+                    <button className="volunteer-action-btn" style={{ marginTop: '25px' }} onClick={closeModal}>Чудово!</button>
                   </div>
-                  <div className="input-group">
-                    <input 
-                      type="text" 
-                      placeholder="+38(0__) ___ __ __" 
-                      value={volunteerPhone} 
-                      onChange={handlePhoneChange}
-                      onFocus={() => {
-                        if (volunteerPhone === '') setVolunteerPhone('+38(0');
-                      }}
-                      onBlur={() => {
-                        if (volunteerPhone === '+38(0') setVolunteerPhone('');
-                      }}
-                      required 
-                      className="vol-input" 
-                    />
-                  </div>
-                  
-                  <div className="input-group">
-                    <div className="custom-dropdown">
-                      <div 
-                        className={`vol-input dropdown-display ${isHelpTypeOpen ? 'open-down' : ''}`}
-                        onClick={() => toggleDropdown('help')}
-                      >
-                        {helpType ? <span className="dropdown-selected">{helpType}</span> : <span className="dropdown-placeholder">Як ви хочете допомогти?</span>}
-                        <span className="dropdown-arrow">{isHelpTypeOpen ? '▲' : '▼'}</span>
+                ) : (
+                  <div className="fade-view">
+                    <div className="modal-header">
+                      <h3>Анкета волонтера</h3>
+                    </div>
+                    
+                    <form className="volunteer-form" onSubmit={handleSubmit}>
+                      <div className="input-group">
+                        <input 
+                          type="text" 
+                          placeholder="Ваше ім'я" 
+                          value={volunteerName} 
+                          onChange={(e) => setVolunteerName(e.target.value)} 
+                          required 
+                          className="vol-input" 
+                        />
+                      </div>
+                      <div className="input-group">
+                        <input 
+                          type="text" 
+                          placeholder="+38(0__) ___ __ __" 
+                          value={volunteerPhone} 
+                          onChange={handlePhoneChange}
+                          onFocus={() => {
+                            if (volunteerPhone === '') setVolunteerPhone('+38(0');
+                          }}
+                          onBlur={() => {
+                            if (volunteerPhone === '+38(0') setVolunteerPhone('');
+                          }}
+                          required 
+                          className="vol-input" 
+                        />
                       </div>
                       
-                      {isHelpTypeOpen && (
-                        <div className="dropdown-list down">
-                          {['Вигул собак', 'Прибирання та догляд', 'Соціалізація тварин', 'Інше'].map(option => (
-                            <div key={option} className="dropdown-option" onClick={() => { setHelpType(option); setIsHelpTypeOpen(false); }}>
-                              <span>{option}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {helpType === 'Інше' && (
-                    <div className="input-group fade-view">
-                      <input 
-                        type="text" 
-                        placeholder="Напишіть, як саме ви хочете допомогти..." 
-                        value={customHelpType} 
-                        onChange={(e) => setCustomHelpType(e.target.value)} 
-                        required 
-                        className="vol-input" 
-                      />
-                    </div>
-                  )}
-
-                  <div className="input-group">
-                    <label style={{ display: 'block', fontSize: '13px', color: '#6847DD', fontWeight: 'bold', marginBottom: '6px', marginLeft: '5px' }}>
-                      Оберіть зручний день
-                    </label>
-                    <input
-                      type="date"
-                      value={preferredDay}
-                      min={todayStr}
-                      max={twoWeeksStr}
-                      onChange={(e) => {
-                        const selectedDate = e.target.value;
-                        if (selectedDate) {
-                          const dateObj = new Date(selectedDate);
-                          const dayOfWeek = dateObj.getDay();
-                          // Блокуємо суботу (6) та неділю (0)
-                          if (dayOfWeek === 0) {
-                            alert("❌ Притулок закритий у вихідні дні (неділя). Будь ласка, оберіть будній день.");
-                            setPreferredDay('');
-                            return;
-                          }
-                        }
-                        setPreferredDay(selectedDate);
-                      }}
-                      required
-                      className="vol-input"
-                      style={{ color: preferredDay ? '#333' : '#757575', cursor: 'pointer' }}
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <div className="custom-dropdown">
-                      <div 
-                        className={`vol-input dropdown-display ${isPetDropdownOpen ? 'open-up' : ''}`}
-                        onClick={() => toggleDropdown('pet')}
-                      >
-                        {selectedPet ? (
-                          <div className="selected-pet-info">
-                            <img src={getPetImage(selectedPet)} alt={selectedPet.Name} className="pet-selector-img" />
-                            <span className="dropdown-selected">{selectedPet.Name}</span>
+                      <div className="input-group">
+                        <div className="custom-dropdown">
+                          <div 
+                            className={`vol-input dropdown-display ${isHelpTypeOpen ? 'open-down' : ''}`}
+                            onClick={() => toggleDropdown('help')}
+                          >
+                            {helpType ? <span className="dropdown-selected">{helpType}</span> : <span className="dropdown-placeholder">Як ви хочете допомогти?</span>}
+                            <span className="dropdown-arrow">{isHelpTypeOpen ? '▲' : '▼'}</span>
                           </div>
-                        ) : (
-                          <span className="dropdown-placeholder">Оберіть хвостика (за бажанням)</span>
-                        )}
-                        <span className="dropdown-arrow">{isPetDropdownOpen ? '▲' : '▼'}</span>
+                          
+                          {isHelpTypeOpen && (
+                            <div className="dropdown-list down">
+                              {['Вигул собак', 'Прибирання та догляд', 'Соціалізація тварин', 'Інше'].map(option => (
+                                <div key={option} className="dropdown-option" onClick={() => { setHelpType(option); setIsHelpTypeOpen(false); }}>
+                                  <span>{option}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {isPetDropdownOpen && (
-                        <div className="dropdown-list up">
-                          <div 
-                            className="dropdown-option" 
-                            onClick={() => { setSelectedPet(null); setIsPetDropdownOpen(false); }}
-                          >
-                            <span className="any-pet-text">Будь-який хвостик</span>
-                          </div>
-                          {pets.map(pet => (
-                            <div 
-                              key={pet.Id} 
-                              className="dropdown-option pet-option-flex" 
-                              onClick={() => { setSelectedPet(pet); setIsPetDropdownOpen(false); }}
-                            >
-                              <img src={getPetImage(pet)} alt={pet.Name} className="pet-option-img" />
-                              <span>{pet.Name}</span>
-                            </div>
-                          ))}
+                      {helpType === 'Інше' && (
+                        <div className="input-group fade-view">
+                          <input 
+                            type="text" 
+                            placeholder="Напишіть, як саме ви хочете допомогти..." 
+                            value={customHelpType} 
+                            onChange={(e) => setCustomHelpType(e.target.value)} 
+                            required 
+                            className="vol-input" 
+                          />
                         </div>
                       )}
-                    </div>
-                  </div>
-                  
-                  <p className="form-note">*Притулок відкритий для відвідувань Пн-Сб 08:30 – 16:30.</p>
 
-                  <button type="submit" className="submit-volunteer-btn">Надіслати заявку</button>
-                </form>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+                      <div className="input-group">
+                        <label style={{ display: 'block', fontSize: '13px', color: '#6847DD', fontWeight: 'bold', marginBottom: '6px', marginLeft: '5px' }}>
+                          Оберіть зручний день
+                        </label>
+                        <input
+                          type="date"
+                          value={preferredDay}
+                          min={todayStr}
+                          max={twoWeeksStr}
+                          onChange={(e) => {
+                            const selectedDate = e.target.value;
+                            if (selectedDate) {
+                              const dateObj = new Date(selectedDate);
+                              const dayOfWeek = dateObj.getDay();
+                              // Блокуємо суботу (6) та неділю (0)
+                              if (dayOfWeek === 0) {
+                                showToast("❌ Притулок закритий у неділю. Будь ласка, оберіть інший день.");
+                                setPreferredDay('');
+                                return;
+                              }
+                            }
+                            setPreferredDay(selectedDate);
+                          }}
+                          required
+                          className="vol-input"
+                          style={{ color: preferredDay ? '#333' : '#757575', cursor: 'pointer' }}
+                        />
+                      </div>
+
+                      <div className="input-group">
+                        <div className="custom-dropdown">
+                          <div 
+                            className={`vol-input dropdown-display ${isPetDropdownOpen ? 'open-up' : ''}`}
+                            onClick={() => toggleDropdown('pet')}
+                          >
+                            {selectedPet ? (
+                              <div className="selected-pet-info">
+                                <img src={getPetImage(selectedPet)} alt={selectedPet.Name} className="pet-selector-img" />
+                                <span className="dropdown-selected">{selectedPet.Name}</span>
+                              </div>
+                            ) : (
+                              <span className="dropdown-placeholder">Оберіть хвостика (за бажанням)</span>
+                            )}
+                            <span className="dropdown-arrow">{isPetDropdownOpen ? '▲' : '▼'}</span>
+                          </div>
+
+                          {isPetDropdownOpen && (
+                            <div className="dropdown-list up">
+                              <div 
+                                className="dropdown-option" 
+                                onClick={() => { setSelectedPet(null); setIsPetDropdownOpen(false); }}
+                              >
+                                <span className="any-pet-text">Будь-який хвостик</span>
+                              </div>
+                              {pets.map(pet => (
+                                <div 
+                                  key={pet.Id} 
+                                  className="dropdown-option pet-option-flex" 
+                                  onClick={() => { setSelectedPet(pet); setIsPetDropdownOpen(false); }}
+                                >
+                                  <img src={getPetImage(pet)} alt={pet.Name} className="pet-option-img" />
+                                  <span>{pet.Name}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <p className="form-note">*Притулок відкритий для відвідувань Пн-Сб 08:30 – 16:30.</p>
+
+                      <button type="submit" className="submit-volunteer-btn">Надіслати заявку</button>
+                    </form>
+                  </div>
+                )}
+              </motion.div>
+            </motion.div>
+          )}
+      </AnimatePresence>
     </>
   );
 }

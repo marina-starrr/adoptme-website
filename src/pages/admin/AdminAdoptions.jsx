@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminAdoptions.css';
-import { useToast } from '../../context/ToastContext'; // 👈 Глобальний контекст
-import { AnimatePresence, motion } from 'framer-motion';
+import { useToast } from '../../context/ToastContext'; 
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);
@@ -11,10 +10,10 @@ function AdminAdoptions() {
     const [openDropdownId, setOpenDropdownId] = useState(null);
     const [filterType, setFilterType] = useState('Всі'); 
 
-    // 👇 Наше єдине красиве кастомне вікно підтвердження (замість window.confirm)
     const [confirmDialog, setConfirmDialog] = useState(null);
+    const [isModalClosing, setIsModalClosing] = useState(false);
 
-    const { showToast } = useToast(); // 👈 Підключаємо нашу магічну функцію
+    const { showToast } = useToast(); 
 
     const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
@@ -37,10 +36,17 @@ function AdminAdoptions() {
         setLoading(false);
     }
 
+    const closeConfirmDialog = () => {
+        setIsModalClosing(true);
+        setTimeout(() => {
+            setConfirmDialog(null);
+            setIsModalClosing(false);
+        }, 300); 
+    };
+
     const handleStatusChange = async (id, newStatus) => {
         const app = applications.find(a => a.Id === id);
 
-        // Допоміжна функція для фінального оновлення статусу самої заявки
         const updateRequestStatus = async (showSuccessMsg = true) => {
             const { error } = await supabase
                 .from('AdoptionRequests')
@@ -66,12 +72,11 @@ function AdminAdoptions() {
                 return;
             }
 
-            // Викликаємо наше красиве вікно замість window.confirm
             setConfirmDialog({
                 message: `Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі та додасть у Щасливчики.`,
                 isDestructive: false,
                 onConfirm: async () => {
-                    setConfirmDialog(null);
+                    closeConfirmDialog(); 
                     try {
                         const { data: userData, error: userError } = await supabase
                             .from('Users')
@@ -123,7 +128,7 @@ function AdminAdoptions() {
                         setOpenDropdownId(null);
                     }
                 },
-                onCancel: () => { setConfirmDialog(null); setOpenDropdownId(null); }
+                onCancel: () => { closeConfirmDialog(); setOpenDropdownId(null); }
             });
             return;
         }
@@ -131,10 +136,10 @@ function AdminAdoptions() {
         // 2. СКАСУВАННЯ ПЕРЕДАЧІ
         if (app.Status === 'Передано' && newStatus !== 'Передано') {
             setConfirmDialog({
-                message: `Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім".`,
+                message: `Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім", її перша історія відновиться, а домашня історія успіху видалиться.`,
                 isDestructive: true,
                 onConfirm: async () => {
-                    setConfirmDialog(null);
+                    closeConfirmDialog(); 
                     try {
                         const petIds = app.PetIds || [];
                         if (petIds.length > 0) {
@@ -164,14 +169,14 @@ function AdminAdoptions() {
                                 }
                             }
                         }
-                        showToast('🔙 Тваринку повернуто до статусу "Шукає дім"!');
+                        showToast('🔙 Тваринку повернуто до статусу "Шукає дім", а початковий опис відновлено!');
                         await updateRequestStatus(false);
                     } catch (err) {
                         showToast('❌ Помилка скасування передачі: ' + err.message);
                         setOpenDropdownId(null);
                     }
                 },
-                onCancel: () => { setConfirmDialog(null); setOpenDropdownId(null); }
+                onCancel: () => { closeConfirmDialog(); setOpenDropdownId(null); }
             });
             return;
         }
@@ -221,7 +226,6 @@ function AdminAdoptions() {
                     if (petIds.length > 0) {
                         for (const petId of petIds) {
                             await supabase.from('Pets').update({ Status: 'Шукає дім' }).eq('Id', petId);
-                            // ... логіка сповіщень
                         }
                     }
                     showToast('🔓 Бронь знято. Тваринка знову шукає дім.');
@@ -231,7 +235,7 @@ function AdminAdoptions() {
             }
         }
 
-        // Всі інші статуси (розглядається, відхилено)
+        // Всі інші статуси
         await updateRequestStatus(true);
     };
 
@@ -240,16 +244,17 @@ function AdminAdoptions() {
             message: 'Ви впевнені, що хочете назавжди видалити цю заявку?',
             isDestructive: true,
             onConfirm: async () => {
-                setConfirmDialog(null);
+                closeConfirmDialog(); 
                 const { error } = await supabase.from('AdoptionRequests').delete().eq('Id', id);
                 if (error) {
                     showToast('❌ Помилка видалення: ' + error.message);
                 } else {
                     showToast('🗑️ Заявку успішно видалено!');
-                    fetchApplications();
+                    // 👇 БАГФІКС: Локальне видалення замість fetchApplications()
+                    setApplications(prev => prev.filter(app => app.Id !== id));
                 }
             },
-            onCancel: () => setConfirmDialog(null)
+            onCancel: closeConfirmDialog
         });
     };
 
@@ -386,43 +391,26 @@ function AdminAdoptions() {
                 </div>
             </div>
 
-            {/* 👇 НАШЕ КРАСИВЕ ВІКНО ПІДТВЕРДЖЕННЯ З АНІМАЦІЄЮ */}
-            <AnimatePresence>
-                {confirmDialog && (
-                    <motion.div 
-                        className="modal-overlay" 
-                        onClick={confirmDialog.onCancel}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <motion.div 
-                            className="admin-modal confirm-modal" 
-                            onClick={e => e.stopPropagation()}
-                            /* Анімація появи з центру (scale) */
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.8, opacity: 0 }}
-                            transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                        >
-                            <h3 className="confirm-title">
-                                {confirmDialog.isDestructive ? '⚠️ Увага' : '🐾 Підтвердження'}
-                            </h3>
-                            <p className="confirm-text">{confirmDialog.message}</p>
-                            <div className="confirm-buttons">
-                                <button className="cancel-btn" onClick={confirmDialog.onCancel}>Скасувати</button>
-                                <button 
-                                    className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"} 
-                                    onClick={confirmDialog.onConfirm}
-                                >
-                                    Підтвердити
-                                </button>
-                            </div>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* НАШЕ КРАСИВЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
+            {confirmDialog && (
+                <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeConfirmDialog} style={{ zIndex: 10000 }}>
+                    <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
+                        <h3 className="confirm-title">
+                            {confirmDialog.isDestructive ? '⚠️ Видалення' : '🐾 Підтвердження'}
+                        </h3>
+                        <p className="confirm-text">{confirmDialog.message}</p>
+                        <div className="confirm-buttons">
+                            <button className="cancel-btn" onClick={closeConfirmDialog}>Скасувати</button>
+                            <button 
+                                className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"} 
+                                onClick={confirmDialog.onConfirm}
+                            >
+                                Підтвердити
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

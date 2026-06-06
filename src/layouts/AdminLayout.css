@@ -5,8 +5,7 @@
     display: flex;
     flex-direction: column;
     position: relative;
-    /* overflow-x: hidden;  <-- ВИДАЛЕНО: саме цей рядок ламав усі sticky-елементи */
-    padding-top: 72px; /* 👇 ДОДАНО: відступ на висоту фіксованого хедера */
+    padding-top: 72px; /* відступ на висоту фіксованого хедера */
 }
 
 /* --- ЛАПКИ НА ФОНІ --- */
@@ -34,11 +33,11 @@
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
-    position: fixed; /* 👇 ЗМІНЕНО: з sticky на fixed */
+    position: fixed; 
     top: 0;
-    left: 0;         /* 👇 ДОДАНО: притискаємо до лівого краю */
+    left: 0;         
     z-index: 1000;
-    box-sizing: border-box; /* 👇 ДОДАНО: щоб padding не розтягував хедер за межі екрану */
+    box-sizing: border-box; 
 }
 
 .admin-logo-section {
@@ -118,7 +117,7 @@
 .admin-main {
     flex: 1;
     padding: 40px 5%;
-    max-width: 1550px; /* 🌟 РОЗШИРЕНО ДЛЯ ТОГО, ЩОБ ВЛІЗ САЙДБАР ТА ШИРОКА КАРТКА */
+    max-width: 1550px; 
     margin: 0 auto;
     width: 100%;
     position: relative;
@@ -220,43 +219,9 @@
     transition: background-color 0.2s ease;
 }
 
-/* --- TOAST ПОВІДОМЛЕННЯ --- */
-.custom-toast {
-    position: fixed !important; 
-    top: 25px;                    
-    left: 50%;                    
-    transform: translateX(-50%);  
-    z-index: 99999 !important; 
-    will-change: transform;    
-    
-    background: white;
-    color: #21064A;               
-    padding: 14px 30px;
-    border-radius: 30px;          
-    font-weight: 700;
-    font-size: 16px;
-    box-shadow: 0 10px 30px rgba(17, 2, 41, 0.15); 
-    border: 2px solid #6847DD;    
-    
-    animation: toastAnimation 3.5s ease-in-out forwards;
-    
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;          
-}
-
-@keyframes toastAnimation {
-    0% { opacity: 0; top: -50px; transform: translateX(-50%); }
-    10% { opacity: 1; top: 25px; transform: translateX(-50%); }
-    90% { opacity: 1; top: 25px; transform: translateX(-50%); }
-    100% { opacity: 0; top: -50px; transform: translateX(-50%); }
-}
-
-/* Додайте до існуючого файлу AdminLayout.css */
-
+/* 👇 ДОДАНО/ЗБЕРЕЖЕНО: Бейджик для нових заявок */
 .admin-nav-badge {
-position: absolute;
+    position: absolute;
     top: -5px;
     right: -5px;
     background-color: #ff4d4d;
@@ -271,4 +236,10 @@ position: absolute;
     align-items: center;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+    0% { transform: scale(0); }
+    80% { transform: scale(1.2); }
+    100% { transform: scale(1); }
 }

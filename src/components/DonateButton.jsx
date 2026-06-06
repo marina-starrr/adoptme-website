@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './DonateButton.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
 function DonateButton() {
     const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
     const [isClosing, setIsClosing] = useState(false);
     const navigate = useNavigate(); 
+    const { showToast } = useToast(); // 👈 Ініціалізуємо тости
 
     const copyToClipboard = (text) => {
         navigator.clipboard.writeText(text);
-        alert('Реквізити скопійовано!');
+        showToast('✅ Реквізити скопійовано!'); // 👈 Замінено alert
     };
 
     // Закриття модалки на хрестик або клік по фону
@@ -22,15 +23,15 @@ function DonateButton() {
         }, 300);
     };
 
-    // 🌟 Спеціальна функція для посилання
+    // Спеціальна функція для посилання
     const handleHelpClick = (e) => {
         e.preventDefault(); 
-        setIsClosing(true); // 1. Спочатку плавно ховаємо модалку
+        setIsClosing(true); 
         
         setTimeout(() => {
             setIsDonateModalOpen(false);
             setIsClosing(false);
-            navigate('/help'); // 2. Робимо перехід, який запустить твоє серце з App.jsx
+            navigate('/help'); 
         }, 300);
     };
 
@@ -82,7 +83,6 @@ function DonateButton() {
                         </div>
 
                         <div className="extra-help-section">
-                            {/* Використовуємо звичайний тег <a> з нашою функцією затримки */}
                             <a 
                                 href="/help" 
                                 onClick={handleHelpClick}

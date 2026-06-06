@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні сповіщення
 import './PetDetails.css';
 
 const isVideoFile = (urlOrName) => {
@@ -27,11 +28,12 @@ function PetDetails() {
   const [isEditing, setIsEditing] = useState(false);
   const [editFormData, setEditFormData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [isStoryExpanded, setIsStoryExpanded] = useState(false); // Стан для кнопки "Читати далі"
+  const [isStoryExpanded, setIsStoryExpanded] = useState(false);
 
   const [editableImages, setEditableImages] = useState([]);
 
   const { userRole, userEmail } = useAuth();
+  const { showToast } = useToast(); // 👈 Підключаємо глобальний хук
   const isAdminPath = location.pathname.includes('/admin/');
 
   const getDbImages = (petData) => {
@@ -127,7 +129,7 @@ function PetDetails() {
 
       const todayStr = new Date().toISOString().split('T')[0];
       if (finalData.ArrivalDate > todayStr) {
-        alert("❌ Дата прибуття в притулок не може бути в майбутньому!");
+        showToast("❌ Дата прибуття в притулок не може бути в майбутньому!");
         setIsSaving(false);
         return;
       }
@@ -148,7 +150,7 @@ function PetDetails() {
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
-        finalData.HomeDescription = null; // Очищуємо історію родини при поверненні
+        finalData.HomeDescription = null; 
         finalData.ShowInLucky = true;
       } else {
         finalData.ShowInLucky = finalData.ShowInLucky !== false;
@@ -163,12 +165,12 @@ function PetDetails() {
       if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
         const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
-        const { data: favUsers, error: favError } = await supabase
+        const { data: favUsers } = await supabase
           .from('Favorites')
-          .select('*')
+          .select('*') 
           .eq('PetId', pet.Id);
 
-        if (!favError && favUsers) {
+        if (favUsers) {
           const validFavUsers = favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname);
 
           if (validFavUsers.length > 0) {
@@ -191,9 +193,9 @@ function PetDetails() {
       setIsEditing(false);
       setEditableImages([]);
       setActiveImageIndex(0);
-      alert("✅ Зміни та медіафайли успішно збережено!");
+      showToast("✅ Зміни та медіафайли успішно збережено!");
     } catch (err) {
-      alert("❌ Помилка збереження: " + err.message);
+      showToast("❌ Помилка збереження: " + err.message);
     } finally {
       setIsSaving(false);
     }
@@ -225,7 +227,7 @@ function PetDetails() {
   const handleNotifyWhenHealthyClick = async () => {
     const userNickname = localStorage.getItem('userNickname');
     if (!userNickname) {
-      alert("🐾 Будь ласка, увійдіть в систему, щоб підписатися на сповіщення!");
+      showToast("🐾 Будь ласка, увійдіть в систему, щоб підписатися на сповіщення!");
       return;
     }
 
@@ -240,9 +242,9 @@ function PetDetails() {
     ]);
 
     if (!error) {
-      alert(`🔔 Дякуємо! Администратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
+      showToast(`🔔 Дякуємо! Администратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
     } else {
-      alert("❌ Сталася помилка: " + error.message);
+      showToast("❌ Сталася помилка: " + error.message);
     }
   };
 
@@ -278,7 +280,6 @@ function PetDetails() {
   const safeActiveIndex = activeImageIndex >= displayMedia.length ? Math.max(0, displayMedia.length - 1) : activeImageIndex;
   const currentMedia = displayMedia[safeActiveIndex];
 
-  // Логіка обмеження символів для історії
   const rawStoryText = pet.Status === 'Вже вдома' 
     ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!") 
     : (pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!");
@@ -365,7 +366,6 @@ function PetDetails() {
               </div>
             )}
 
-            {/* Блок з кнопками ПЕРЕНЕСЕНО під фото */}
             <div className="action-area">
               {isAdminPath ? (
                 <div className="admin-actions-block">
@@ -386,8 +386,8 @@ function PetDetails() {
                         {currentStatus === 'Вже вдома' 
                           ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
                           : currentStatus === 'Не вдалось врятувати'
-                            ? '🌈 На жаль, ця тваринка більше не з нами.'
-                            : '🔒 Ця тваринка вже заброньована іншою родиною!'}
+                          ? '🌈 На жаль, ця тваринка більше не з нами.'
+                          : '🔒 Ця тваринка вже заброньована іншою родиною!'}
                       </p>
                     </div>
                   ) : currentStatus === 'На лікуванні' ? (
@@ -531,14 +531,11 @@ function PetDetails() {
               )}
             </div>
 
-            {/* Історія з обмеженням символів */}
             <div className="pet-story-block">
               {isEditing ? (
                 <>
                   <div style={{ marginBottom: '20px' }}>
-                    <h3 className="section-subtitle">📖 Опис історії та характеру в притулку:</h3>
-                    
-                    {/* 👇 ДОДАЄМО ОБГОРТКУ story-content ОСЬ ТУТ 👇 */}
+                    <h3 className="section-subtitle" style={{ fontSize: '15px' }}>📖 Опис історії та характеру в притулку:</h3>
                     <div className="story-content">
                       <div className="editable-container">
                         <textarea 
@@ -558,7 +555,7 @@ function PetDetails() {
 
                   {editFormData.Status === 'Вже вдома' && (
                     <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
-                      <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px' }}>🏡 Історія успіху:</h3>
+                      <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px', fontSize: '15px' }}>🏡 Історія успіху:</h3>
                       <div className="editable-container">
                         <textarea 
                           value={editFormData.HomeDescription || ''} 
@@ -569,7 +566,6 @@ function PetDetails() {
                           maxLength={700}
                         />
                       </div>
-                      {/* Лічильник символів для історії успіху */}
                       <div className="char-counter">
                         {editFormData.HomeDescription?.length || 0} / 700
                       </div>
@@ -596,7 +592,6 @@ function PetDetails() {
             </div>
 
             {(pet.MedicalNotes || isEditing) && (
-              /* Прибрали marginTop: '20px', щоб зменшити візуальний розрив між блоками */
               <div className="pet-story-block" style={{ marginTop: '0' }}>
                 <h3 className="section-subtitle" style={{ color: '#D32F2F' }}>🩺 Медичні примітки:</h3>
                 <div className="story-content" style={{ borderLeftColor: '#D32F2F', background: '#FFEBEE' }}>
@@ -612,7 +607,6 @@ function PetDetails() {
                           rows="3"
                         />
                       </div>
-                      {/* Додано лічильник на 300 символів */}
                       <div className="char-counter">
                         {editFormData.MedicalNotes?.length || 0} / 300
                       </div>
@@ -639,7 +633,7 @@ function PetDetails() {
                           updatedData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
                         }
                       } else {
-                        updatedData.HomeDescription = null; // Очищення історії родини при поверненні
+                        updatedData.HomeDescription = null;
                       }
                       setEditFormData(updatedData);
                     }}

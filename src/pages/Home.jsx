@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Home.css';
 import { supabase } from '../supabaseClient';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні сповіщення
 
 // 🌟 МІНІ-КОМПОНЕНТ ДЛЯ КАРТКИ ЗІ СЛАЙДЕРОМ
 function LuckyCard({ pet }) {
@@ -57,7 +57,8 @@ function LuckyCard({ pet }) {
 
 function Home() {
   const location = useLocation();
-  const [toastMsg, setToastMsg] = useState('');
+  const { showToast } = useToast(); // 👈 Підключаємо тости
+  
   const [happyPets, setHappyPets] = useState([]);
   
   const [allNewArrivals, setAllNewArrivals] = useState([]); 
@@ -76,16 +77,13 @@ function Home() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
+  // 👇 Показуємо глобальний тост після переходу з інших сторінок
   useEffect(() => {
     if (location.state?.welcomeMsg) {
-      setToastMsg(location.state.welcomeMsg);
-      const timer = setTimeout(() => {
-        setToastMsg('');
-      }, 3000);
+      showToast(location.state.welcomeMsg);
       window.history.replaceState({}, document.title);
-      return () => clearTimeout(timer);
     }
-  }, [location]);
+  }, [location, showToast]);
 
   useEffect(() => {
     const fetchHappyPets = async () => {
@@ -199,16 +197,9 @@ function Home() {
 
   return (
     <div className="home-page-container">
-      {/* 👇 Глобальний контейнер для лапок, щоб вони були на фоні всієї сторінки */}
       <div className="fixed-background-paws">
         <BackgroundPaws />
       </div>
-
-      {toastMsg && (
-        <div className="custom-toast" style={{ zIndex: 9999 }}>
-          {toastMsg}
-        </div>
-      )}
 
       <div className="hero">
         <div className="hero-left">

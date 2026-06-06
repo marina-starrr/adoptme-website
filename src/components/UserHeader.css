@@ -230,12 +230,14 @@
     overflow-y: auto;
     text-align: center;
     position: relative;
-    animation-name: animatetop;
-    animation-duration: 0.4s;
+    
+    /* 👇 ОНОВЛЕНО: Додано cubic-bezier для ефекту пружності (bouncy) */
+    animation: animatetop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
+/* 👇 ОНОВЛЕНО: Анімація появи з центру зі збільшенням */
 @keyframes animatetop {
-    from { transform: scale(0.9); opacity: 0; }
+    from { transform: scale(0.85); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
 }
 
@@ -277,9 +279,10 @@
     animation: animateclose 0.3s forwards;
 }
 
+/* 👇 ОНОВЛЕНО: Анімація закриття до центру */
 @keyframes animateclose {
     from { transform: scale(1); opacity: 1; }
-    to { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(0.85); opacity: 0; }
 }
 
 @keyframes fadeInModal {
@@ -454,7 +457,6 @@
     padding-bottom: 8px;
 }
 
-/* 👇 ОНОВЛЕНО: Додано input[type="email"] щоб стилі застосувались до пошти */
 .adoption-form input[type="text"],
 .adoption-form input[type="email"],
 .form-select,

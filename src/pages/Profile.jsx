@@ -4,7 +4,8 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
+import { AnimatePresence, motion } from 'framer-motion'; // 👈 Анімації
 
 function Profile() {
   const [activeTab, setActiveTab] = useState('favorites');
@@ -14,14 +15,17 @@ function Profile() {
   const [applications, setApplications] = useState([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [favorites, setFavorites] = useState([]);
-  const [toastMsg, setToastMsg] = useState('');
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
+  // Стейт для модалок
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isModalClosing, setIsModalClosing] = useState(false); // Для плавного закриття модалки видалення
   const [selectedApp, setSelectedApp] = useState(null);
+  const [isAppModalClosing, setIsAppModalClosing] = useState(false); // Для модалки заявки
 
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
+  const { showToast } = useToast(); // 👈 Підключаємо тости
 
   const [userData, setUserData] = useState({
     nickname: '',
@@ -32,12 +36,7 @@ function Profile() {
     avatarUrl: '/ava.png'
   });
 
-  const showToast = (message) => {
-    setToastMsg(message);
-    setTimeout(() => setToastMsg(''), 3500);
-  };
-
-  // 👇 ЗАХИСТ МАРШРУТУ: Якщо адмін заходить на /profile, кидаємо його в адмінку
+  // ЗАХИСТ МАРШРУТУ: Якщо адмін заходить на /profile, кидаємо його в адмінку
   useEffect(() => {
     if (localStorage.getItem('userRole') === 'admin') {
       navigate('/admin/adoptions', { replace: true });
@@ -107,7 +106,6 @@ function Profile() {
       }
     };
 
-    // Виконуємо запит, тільки якщо це не адмін
     if (localStorage.getItem('userRole') !== 'admin') {
       fetchProfileAndApplications();
     }
@@ -142,7 +140,7 @@ function Profile() {
     if (location.state) {
       window.history.replaceState({}, document.title);
     }
-  }, [location, applications]);
+  }, [location, applications, showToast]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -191,6 +189,24 @@ function Profile() {
     });
   };
 
+  // 👇 Плавне закриття модалки видалення
+  const closeDeleteModal = () => {
+    setIsModalClosing(true);
+    setTimeout(() => {
+      setIsDeleteModalOpen(false);
+      setIsModalClosing(false);
+    }, 300);
+  };
+
+  // 👇 Плавне закриття модалки заявки
+  const closeAppModal = () => {
+    setIsAppModalClosing(true);
+    setTimeout(() => {
+      setSelectedApp(null);
+      setIsAppModalClosing(false);
+    }, 300);
+  };
+
   const confirmDeleteAccount = async () => {
     const currentNickname = localStorage.getItem('userNickname');
 
@@ -211,7 +227,7 @@ function Profile() {
       window.dispatchEvent(new Event('cartUpdated'));
       logout();
 
-      setIsDeleteModalOpen(false);
+      closeDeleteModal();
 
       navigate('/', {
         state: { welcomeMsg: '😢 Ваш акаунт видалено. Нам дуже шкода, повертайтесь знову!' }
@@ -263,112 +279,8 @@ function Profile() {
   return (
     <div className="profile-page" style={{ position: 'relative' }}>
 
-      {toastMsg && (
-        <div className="custom-toast">
-          {toastMsg}
-        </div>
-      )}
-
-      {isDeleteModalOpen && (
-        <div className="modal profile-modal-overlay" onClick={() => setIsDeleteModalOpen(false)}>
-          <div className="modal-content fade-view" onClick={e => e.stopPropagation()} style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}>
-            <div style={{ fontSize: '50px', marginBottom: '15px' }}>🐾😢</div>
-            <h3 style={{ color: '#4A148C', fontSize: '22px', marginBottom: '15px', fontWeight: 'bold' }}>Видалення акаунту</h3>
-            <p style={{ color: '#555', fontSize: '15px', lineHeight: '1.6', marginBottom: '30px' }}>
-              Ви впевнені, що хочете назавжди покинути родину <strong>AdoptMe</strong>? Усі ваші обрані тваринки та історія заявок будуть втрачені.
-            </p>
-            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-              <button className="back-to-favorites-btn" onClick={() => setIsDeleteModalOpen(false)} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px' }}>
-                Скасувати
-              </button>
-              <button className="adopt-pet-btn" onClick={confirmDeleteAccount} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px', background: '#d32f2f', boxShadow: '0 5px 15px rgba(211, 47, 47, 0.3)' }}>
-                Так, видалити
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedApp && (
-        <div className="modal profile-modal-overlay" onClick={() => setSelectedApp(null)}>
-          <div className="modal-content fade-view app-details-modal" onClick={e => e.stopPropagation()}>
-            <span className="profile-close-btn" onClick={() => setSelectedApp(null)}>&times;</span>
-            
-            {(() => {
-              const { isVolunteer, appType, petName } = parseAppInfo(selectedApp);
-              return (
-                <>
-                  <h3 className="modal-title">Деталі заявки №{selectedApp.Id}</h3>
-                  <div className="app-details-grid">
-                    <div className="detail-row">
-                      <strong>Тип заявки:</strong> 
-                      <span className="highlight-text">{appType}</span>
-                    </div>
-                    <div className="detail-row">
-                      <strong>Ім'я заявника:</strong> 
-                      <span>{selectedApp.AdopterName}</span>
-                    </div>
-                    <div className="detail-row">
-                      <strong>Телефон:</strong> 
-                      <span>{selectedApp.AdopterPhone}</span>
-                    </div>
-                    <div className="detail-row">
-                      <strong>Тваринка:</strong> 
-                      <span>
-                        {selectedApp.PetId ? (
-                           <Link to={`/pets/${selectedApp.PetId}`} onClick={() => setSelectedApp(null)} className="app-pet-link">
-                             {petName}
-                           </Link>
-                        ) : petName}
-                      </span>
-                    </div>
-                    <div className="detail-row">
-                      <strong>Статус:</strong> 
-                      <span className={`status-badge ${selectedApp.Status || 'Нова'}`} style={{ display: 'inline-block', padding: '4px 12px', fontSize: '13px' }}>
-                        {selectedApp.Status || 'Нова'}
-                      </span>
-                    </div>
-
-                    {isVolunteer ? (
-                      <div className="detail-row full-width">
-                        <strong>Деталі допомоги:</strong>
-                        <div className="detail-box">{selectedApp.Reason}</div>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="detail-row">
-                          <strong>Досвід утримання:</strong> 
-                          <span>{selectedApp.HasExperience ? 'Так' : 'Ні'}</span>
-                        </div>
-                        <div className="detail-row">
-                          <strong>Інші тварини вдома:</strong> 
-                          <span>{selectedApp.HasOtherPets ? 'Так' : 'Ні'}</span>
-                        </div>
-                        <div className="detail-row full-width">
-                          <strong>Умови проживання:</strong>
-                          <div className="detail-box">{selectedApp.LivingConditions}</div>
-                        </div>
-                        {selectedApp.Reason && selectedApp.Reason !== 'будь-який хвостик' && (
-                          <div className="detail-row full-width">
-                            <strong>Коментар / Чому хочете прихистити:</strong>
-                            <div className="detail-box">{selectedApp.Reason}</div>
-                          </div>
-                        )}
-                      </>
-                    )}
-                  </div>
-                  <button className="save-profile-btn" style={{ width: '100%', marginTop: '20px' }} onClick={() => setSelectedApp(null)}>Закрити</button>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      )}
-
       <div className="profile-container">
-
         <aside className="profile-sidebar">
-
           <div className="profile-sidebar-banner">
             <BackgroundPaws customClass="sidebar-paws" />
           </div>
@@ -410,7 +322,6 @@ function Profile() {
         </aside>
 
         <section className="profile-content-area">
-
           {activeTab === 'favorites' && (
             <div className="profile-tab-content fade-in">
               <h3>Мої улюбленці</h3>
@@ -544,10 +455,139 @@ function Profile() {
 
             </div>
           )}
-
         </section>
-
       </div>
+
+      {/* 👇 Модальне вікно підтвердження видалення акаунту */}
+      <AnimatePresence>
+        {isDeleteModalOpen && (
+          <motion.div 
+            className={`modal profile-modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+            onClick={closeDeleteModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div 
+              className={`modal-content fade-view ${isModalClosing ? 'closing' : ''}`} 
+              onClick={e => e.stopPropagation()} 
+              style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <div style={{ fontSize: '50px', marginBottom: '15px' }}>🐾😢</div>
+              <h3 style={{ color: '#4A148C', fontSize: '22px', marginBottom: '15px', fontWeight: 'bold' }}>Видалення акаунту</h3>
+              <p style={{ color: '#555', fontSize: '15px', lineHeight: '1.6', marginBottom: '30px' }}>
+                Ви впевнені, що хочете назавжди покинути родину <strong>AdoptMe</strong>? Усі ваші обрані тваринки та історія заявок будуть втрачені.
+              </p>
+              <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                <button className="back-to-favorites-btn" onClick={closeDeleteModal} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px' }}>
+                  Скасувати
+                </button>
+                <button className="adopt-pet-btn" onClick={confirmDeleteAccount} style={{ padding: '12px 25px', fontSize: '15px', borderRadius: '25px', background: '#d32f2f', boxShadow: '0 5px 15px rgba(211, 47, 47, 0.3)' }}>
+                  Так, видалити
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 👇 Модальне вікно перегляду деталей заявки */}
+      <AnimatePresence>
+        {selectedApp && (
+          <motion.div 
+            className={`modal profile-modal-overlay ${isAppModalClosing ? 'closing' : ''}`} 
+            onClick={closeAppModal}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div 
+              className={`modal-content fade-view app-details-modal ${isAppModalClosing ? 'closing' : ''}`} 
+              onClick={e => e.stopPropagation()}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            >
+              <span className="profile-close-btn" onClick={closeAppModal}>&times;</span>
+              
+              {(() => {
+                const { isVolunteer, appType, petName } = parseAppInfo(selectedApp);
+                return (
+                  <>
+                    <h3 className="modal-title">Деталі заявки №{selectedApp.Id}</h3>
+                    <div className="app-details-grid">
+                      <div className="detail-row">
+                        <strong>Тип заявки:</strong> 
+                        <span className="highlight-text">{appType}</span>
+                      </div>
+                      <div className="detail-row">
+                        <strong>Ім'я заявника:</strong> 
+                        <span>{selectedApp.AdopterName}</span>
+                      </div>
+                      <div className="detail-row">
+                        <strong>Телефон:</strong> 
+                        <span>{selectedApp.AdopterPhone}</span>
+                      </div>
+                      <div className="detail-row">
+                        <strong>Тваринка:</strong> 
+                        <span>
+                          {selectedApp.PetId ? (
+                             <Link to={`/pets/${selectedApp.PetId}`} onClick={closeAppModal} className="app-pet-link">
+                               {petName}
+                             </Link>
+                          ) : petName}
+                        </span>
+                      </div>
+                      <div className="detail-row">
+                        <strong>Статус:</strong> 
+                        <span className={`status-badge ${selectedApp.Status || 'Нова'}`} style={{ display: 'inline-block', padding: '4px 12px', fontSize: '13px' }}>
+                          {selectedApp.Status || 'Нова'}
+                        </span>
+                      </div>
+
+                      {isVolunteer ? (
+                        <div className="detail-row full-width">
+                          <strong>Деталі допомоги:</strong>
+                          <div className="detail-box">{selectedApp.Reason}</div>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="detail-row">
+                            <strong>Досвід утримання:</strong> 
+                            <span>{selectedApp.HasExperience ? 'Так' : 'Ні'}</span>
+                          </div>
+                          <div className="detail-row">
+                            <strong>Інші тварини вдома:</strong> 
+                            <span>{selectedApp.HasOtherPets ? 'Так' : 'Ні'}</span>
+                          </div>
+                          <div className="detail-row full-width">
+                            <strong>Умови проживання:</strong>
+                            <div className="detail-box">{selectedApp.LivingConditions}</div>
+                          </div>
+                          {selectedApp.Reason && selectedApp.Reason !== 'будь-який хвостик' && (
+                            <div className="detail-row full-width">
+                              <strong>Коментар / Чому хочете прихистити:</strong>
+                              <div className="detail-box">{selectedApp.Reason}</div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    <button className="save-profile-btn" style={{ width: '100%', marginTop: '20px' }} onClick={closeAppModal}>Закрити</button>
+                  </>
+                );
+              })()}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

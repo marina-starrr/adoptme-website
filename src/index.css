@@ -73,73 +73,43 @@ main {
     background-size: contain;
     background-repeat: no-repeat;
     opacity: 0.1;
-    /* 👈 ЗМІНЕНО: Ідеальна напівпрозорість */
 }
 
-.paw-1 {
-    width: 70vw;
-    height: 70vh;
-    top: 10%;
-    right: -15%;
-    transform: rotate(-30deg);
-}
-
-.paw-2 {
-    width: 60vw;
-    height: 60vh;
-    bottom: 5%;
-    right: -10%;
-    transform: rotate(70deg);
-}
-
-.paw-3 {
-    width: 80vw;
-    height: 80vh;
-    top: 25%;
-    right: 15%;
-    transform: rotate(50deg);
-}
-
-.paw-4 {
-    width: 75vw;
-    height: 75vh;
-    top: 55%;
-    right: -10%;
-    transform: rotate(-10deg);
-}
+.paw-1 { width: 70vw; height: 70vh; top: 10%; right: -15%; transform: rotate(-30deg); }
+.paw-2 { width: 60vw; height: 60vh; bottom: 5%; right: -10%; transform: rotate(70deg); }
+.paw-3 { width: 80vw; height: 80vh; top: 25%; right: 15%; transform: rotate(50deg); }
+.paw-4 { width: 75vw; height: 75vh; top: 55%; right: -10%; transform: rotate(-10deg); }
 
 /* =========================================
    5. ГЛОБАЛЬНА АДАПТИВНІСТЬ
    ========================================= */
 @media (max-width: 768px) {
-    body {
-        font-size: 14px;
-    }
-
-    h1,
-    h2,
-    h3 {
-        word-wrap: break-word;
-    }
+    body { font-size: 14px; }
+    h1, h2, h3 { word-wrap: break-word; }
 }
 
-/* --- СТИЛІ ДЛЯ СПЛИВАЮЧИХ ПОВІДОМЛЕНЬ (TOAST) --- */
-/* --- СТИЛІ ДЛЯ СПЛИВАЮЧИХ ПОВІДОМЛЕНЬ (TOAST) --- */
+/* =========================================
+   6. СТИЛІ ДЛЯ ГЛОБАЛЬНИХ СПОВІЩЕНЬ (TOAST)
+   ========================================= */
 .custom-toast {
     position: fixed;
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: #ffffff; /* 👈 Зробили білий фон */
-    color: #472aae;      /* 👈 Зробили фіолетовий текст */
-    border: 1px solid #eee1ff; /* Додали дуже ніжну фіолетову рамочку */
+    background: #ffffff; 
+    color: #472aae;      
+    border: 1px solid #eee1ff; 
     padding: 15px 35px;
     border-radius: 50px;
     font-size: 16px;
     font-weight: 800;
-    box-shadow: 0 10px 30px rgba(104, 71, 221, 0.2); /* 👈 Зробили тінь світлішою та м'якшою */
-    z-index: 9999;
+    box-shadow: 0 10px 30px rgba(104, 71, 221, 0.2); 
+    z-index: 999999; /* Максимальний індекс, щоб було поверх всього */
     animation: slideDownFade 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards, fadeOutToast 0.5s ease 3s forwards;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    white-space: nowrap;
 }
 
 @keyframes slideDownFade {
@@ -148,6 +118,6 @@ main {
 }
 
 @keyframes fadeOutToast {
-    0% { opacity: 1; top: 20px; }
-    100% { opacity: 0; top: 0px; display: none; }
+    0% { opacity: 1; top: 20px; transform: translate(-50%, 0); }
+    100% { opacity: 0; top: -50px; transform: translate(-50%, -20px); display: none; }
 }

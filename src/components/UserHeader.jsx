@@ -4,7 +4,7 @@ import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні сповіщення
 
 function UserHeader() {
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
@@ -40,6 +40,9 @@ function UserHeader() {
     const dropdownRef = useRef(null); 
     const navigate = useNavigate();
     const location = useLocation();
+
+    // 👇 Підключаємо функцію для красивих сповіщень
+    const { showToast } = useToast();
 
     const userRole = localStorage.getItem('userRole');
 
@@ -238,7 +241,9 @@ function UserHeader() {
                 .eq('UserNickname', userNickname)
                 .eq('PetId', id);
 
-            if (error) console.error("Помилка видалення з БД:", error.message);
+            if (error) {
+                showToast("❌ Помилка видалення: " + error.message);
+            }
         }
 
         const newFavs = favorites.filter(pet => pet.id !== id);
@@ -323,7 +328,8 @@ function UserHeader() {
         e.preventDefault();
 
         if (selectedPetIds.length === 0) {
-            alert("❌ Будь ласка, оберіть хоча б одну тваринку, доступну для усиновлення!");
+            // 👇 Замінено alert на showToast
+            showToast("⚠️ Будь ласка, оберіть хоча б одну тваринку, доступну для усиновлення!");
             return;
         }
 
@@ -379,7 +385,8 @@ function UserHeader() {
             setAgreeToTerms(false);
             setSelectedPetIds([]);
         } else {
-            alert("Сталася помилка при відправці: " + error.message);
+            // 👇 Замінено alert на showToast
+            showToast("❌ Сталася помилка при відправці: " + error.message);
         }
     };
 
@@ -437,7 +444,6 @@ function UserHeader() {
     return (
         <header className="header" id="home">
             <div className="header-left">
-                {/* Логотип залишаємо як <Link>, щоб він працював як зазвичай, або можете теж змінити на <a>, якщо потрібно повне перезавантаження */}
                 <Link to="/" onClick={handleLogoClick}>
                     <img src="/logo.png" alt="Adopt Me Logo" className="logo-img" />
                 </Link>
@@ -447,7 +453,6 @@ function UserHeader() {
                 <span className="bar"></span><span className="bar"></span><span className="bar"></span>
             </button>
 
-            {/* 👇 ОНОВЛЕНО: Замінено <Link> на звичайні теги <a> для ПОВНОГО ПЕРЕЗАВАНТАЖЕННЯ */}
             <nav>
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
                     <li><a href="/" className="nav-link" onClick={closeMenu}>Головна</a></li>
