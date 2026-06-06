@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom'; // 👈 ДОДАНО: імпорт createPortal
 import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
-import { useToast } from '../../context/ToastContext'; // 👈 Якщо не було підключено
+import { useToast } from '../../context/ToastContext';
 
 function CustomDropdown({ options, value, onChange, placeholder }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +65,6 @@ function AdminPets() {
   const [currentPetId, setCurrentPetId] = useState(null);
   const [petToDelete, setPetToDelete] = useState(null);
 
-  // 👇 ДОДАНО: Стейт для анімації закриття обох модалок
   const [isModalClosing, setIsModalClosing] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -228,7 +228,6 @@ function AdminPets() {
     }
   }
 
-  // 👇 ДОДАНО: Функція для плавного закриття форми редагування
   const closeEditModal = () => {
     setIsModalClosing(true);
     setTimeout(() => {
@@ -237,7 +236,6 @@ function AdminPets() {
     }, 300);
   };
 
-  // 👇 ДОДАНО: Функція для плавного закриття вікна видалення
   const closeDeleteModal = () => {
     setIsModalClosing(true);
     setTimeout(() => {
@@ -371,7 +369,7 @@ function AdminPets() {
         showToast("🎉 Нового хвостика успішно додано!");
       }
 
-      closeEditModal(); // 👈 Плавне закриття після збереження
+      closeEditModal();
       fetchPets();
     } catch (error) {
       showToast("❌ Помилка: " + error.message);
@@ -388,12 +386,12 @@ function AdminPets() {
 
   const executeDelete = async () => {
     if (!petToDelete) return;
-    closeDeleteModal(); // 👈 Плавне закриття вікна під час видалення
+    closeDeleteModal();
     try {
       const { error } = await supabase.from('Pets').delete().eq('Id', petToDelete);
       if (error) throw error;
       showToast("🗑️ Профіль успішно видалено!");
-      setPetsList(prev => prev.filter(p => p.Id !== petToDelete)); // Миттєве видалення зі стейту
+      setPetsList(prev => prev.filter(p => p.Id !== petToDelete));
     } catch (err) {
       showToast("❌ Помилка видалення: " + err.message);
     }
@@ -584,8 +582,8 @@ function AdminPets() {
         </div>
       </div>
 
-      {/* 👇 ОНОВЛЕНО: Вікно додавання/редагування з анімацією */}
-      {isModalOpen && (
+      {/* 👇 ДОДАНО: Портал для вікна редагування/додавання */}
+      {isModalOpen && createPortal(
         <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={() => !isUploading && closeEditModal()}>
           <div className={`admin-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
@@ -838,11 +836,12 @@ function AdminPets() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body // 👈 Рендеримо поверх усього
       )}
 
-      {/* 👇 ОНОВЛЕНО: Вікно видалення з анімацією */}
-      {petToDelete && (
+      {/* 👇 ДОДАНО: Портал для вікна видалення */}
+      {petToDelete && createPortal(
         <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
           <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <h3 style={{ color: '#ef4444', fontSize: '24px', marginBottom: '10px' }}>⚠️ Видалення</h3>
@@ -856,7 +855,8 @@ function AdminPets() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body // 👈 Рендеримо поверх усього
       )}
     </div>
   );

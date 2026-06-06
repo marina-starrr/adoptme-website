@@ -3,7 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Home.css';
 import { supabase } from '../supabaseClient';
-import { useToast } from '../context/ToastContext'; // 👈 Глобальні сповіщення
+import { useToast } from '../context/ToastContext'; 
 
 // 🌟 МІНІ-КОМПОНЕНТ ДЛЯ КАРТКИ ЗІ СЛАЙДЕРОМ
 function LuckyCard({ pet }) {
@@ -49,7 +49,9 @@ function LuckyCard({ pet }) {
             </Link> 
             <span className="owner-name"> та {pet.ownerName}</span>
         </h3>
-        <p className="lucky-review">"{pet.text}"</p>
+        <div className="lucky-review-box">
+          <p className="lucky-review">{pet.text}</p>
+        </div>
       </div>
     </div>
   );
@@ -57,7 +59,7 @@ function LuckyCard({ pet }) {
 
 function Home() {
   const location = useLocation();
-  const { showToast } = useToast(); // 👈 Підключаємо тости
+  const { showToast } = useToast(); 
   
   const [happyPets, setHappyPets] = useState([]);
   
@@ -77,7 +79,6 @@ function Home() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // 👇 Показуємо глобальний тост після переходу з інших сторінок
   useEffect(() => {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
@@ -197,8 +198,16 @@ function Home() {
 
   return (
     <div className="home-page-container">
+      {/* Лапки */}
       <div className="fixed-background-paws">
         <BackgroundPaws />
+      </div>
+
+      {/* М'які кольорові світіння на фоні */}
+      <div className="ambient-glows">
+        <div className="glow-blob purple-top"></div>
+        <div className="glow-blob pink-right"></div>
+        <div className="glow-blob blue-bottom"></div>
       </div>
 
       <div className="hero">
@@ -252,61 +261,76 @@ function Home() {
       </div>
 
       {allNewArrivals.length > 0 && (
-        <section className="home-news-section">
-          <h2 className="news-section-title">Наші новинки 🌟</h2>
-          <p className="news-section-subtitle">Ці хвостики щойно прибули до притулку за останній тиждень та дуже чекають на знайомство</p>
-          
-          <div className="news-categories-badges">
-            <button 
-               className={`news-type-badge ${selectedCategory === 'Всі' ? 'active' : ''}`}
-               onClick={() => handleCategoryClick('Всі')}
-            >
-              📂 Всі новинки
-            </button>
-            {dynamicTypes.map((type) => (
-              <button 
-                 key={type} 
-                 className={`news-type-badge ${selectedCategory === type ? 'active' : ''}`}
-                 onClick={() => handleCategoryClick(type)}
-              >
-                📂 Розділ: {type}
-                {newTypeNames.includes(type) && <span className="type-new-tag">✨ Новинка</span>}
-              </button>
-            ))}
-          </div>
+        <>
+          <div className="page-separator"><span>🐾</span></div>
 
-          <div className="news-pets-grid">
-            {filteredNewPets.map((pet) => (
-              <Link to={`/pets/${pet.Id}`} key={pet.Id} className="news-pet-card">
-                <div className="news-card-img-wrapper">
-                  <img src={getNewPetImg(pet)} alt={pet.Name} />
-                  <span className="new-arrival-tag">Новенький 🐾</span>
-                </div>
-                <div className="news-card-details">
-                  <h3>{pet.Name}</h3>
-                  <div className="news-card-meta">
-                    <span>{pet.Type}</span> • <span>{pet.Breed}</span>
+          <section className="home-news-section">
+            <div className="section-header">
+              {/* 👇 Оновлений заголовок з мазком */}
+              <div className="brush-title-container">Наші новинки</div>
+              <p className="news-section-subtitle">Ці хвостики щойно прибули до притулку і дуже чекають на знайомство</p>
+            </div>
+            
+            <div className="news-categories-badges">
+              <button 
+                 className={`news-type-badge ${selectedCategory === 'Всі' ? 'active' : ''}`}
+                 onClick={() => handleCategoryClick('Всі')}
+              >
+                Всі хвостики
+              </button>
+              {dynamicTypes.map((type) => (
+                <button 
+                   key={type} 
+                   className={`news-type-badge ${selectedCategory === type ? 'active' : ''}`}
+                   onClick={() => handleCategoryClick(type)}
+                >
+                  {type}
+                  {newTypeNames.includes(type) && <span className="type-new-tag">✨ Новинка</span>}
+                </button>
+              ))}
+            </div>
+
+            <div className="news-pets-grid">
+              {filteredNewPets.map((pet) => (
+                <Link to={`/pets/${pet.Id}`} key={pet.Id} className="news-pet-card">
+                  <div className="news-card-img-wrapper">
+                    <img src={getNewPetImg(pet)} alt={pet.Name} />
+                    <span className="new-arrival-tag">Новенький 🐾</span>
                   </div>
-                  <p className="news-card-age">Вік: {pet.Age}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
+                  <div className="news-card-details">
+                    <h3>{pet.Name}</h3>
+                    <div className="news-card-meta">
+                      <span>{pet.Type}</span> • <span>{pet.Breed}</span>
+                    </div>
+                    <p className="news-card-age">Вік: {pet.Age}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+        </>
       )}
 
       {happyPets.length > 0 && (
-        <section className="lucky-section">
-          <h2 className="lucky-title">Вони вже знайшли свій дім 🏡</h2>
+        <>
+          <div className="page-separator"><span>🐾</span></div>
 
-          <div className="lucky-marquee-container">
-            <div className="lucky-marquee-track">
-              {[...happyPets, ...happyPets, ...happyPets].map((pet, index) => (
-                <LuckyCard key={`${pet.id}-${index}`} pet={pet} />
-              ))}
+          <section className="lucky-section">
+            <div className="section-header">
+              {/* 👇 Оновлений заголовок з мазком */}
+              <div className="brush-title-container">Вони вже знайшли дім 🏡</div>
+              <p className="news-section-subtitle">Надихаючі історії наших випускників та їхніх нових сімей</p>
             </div>
-          </div>
-        </section>
+
+            <div className="lucky-marquee-container">
+              <div className="lucky-marquee-track">
+                {[...happyPets, ...happyPets, ...happyPets].map((pet, index) => (
+                  <LuckyCard key={`${pet.id}-${index}`} pet={pet} />
+                ))}
+              </div>
+            </div>
+          </section>
+        </>
       )}
     </div>
   );
