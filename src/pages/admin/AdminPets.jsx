@@ -804,7 +804,7 @@ function AdminPets() {
 
               <div className="input-group">
                 <label>Теги</label>
-                <input type="text" placeholder="#добра #розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
+                <input type="text" placeholder="добра розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
               </div>
 
               <div className="input-group">
