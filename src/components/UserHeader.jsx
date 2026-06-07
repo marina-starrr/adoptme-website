@@ -4,7 +4,7 @@ import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
-import { useToast } from '../context/ToastContext'; // 👈 Глобальні сповіщення
+import { useToast } from '../context/ToastContext';
 
 function UserHeader() {
     const [isFavoritesOpen, setIsFavoritesOpen] = useState(false);
@@ -41,7 +41,6 @@ function UserHeader() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // 👇 Підключаємо функцію для красивих сповіщень
     const { showToast } = useToast();
 
     const userRole = localStorage.getItem('userRole');
@@ -277,7 +276,7 @@ function UserHeader() {
             navigate('/profile', { 
                 state: { activeTab: 'applications', highlightAppId: notif.Id } 
             });
-        } else if (notif.type === 'favorite_status') {
+        } else if (notif.type === 'favorite_status' && notif.PetName !== 'Модерація') {
             navigate(`/pets/${notif.PetId}`); 
         }
     };
@@ -328,7 +327,6 @@ function UserHeader() {
         e.preventDefault();
 
         if (selectedPetIds.length === 0) {
-            // 👇 Замінено alert на showToast
             showToast("⚠️ Будь ласка, оберіть хоча б одну тваринку, доступну для усиновлення!");
             return;
         }
@@ -385,7 +383,6 @@ function UserHeader() {
             setAgreeToTerms(false);
             setSelectedPetIds([]);
         } else {
-            // 👇 Замінено alert на showToast
             showToast("❌ Сталася помилка при відправці: " + error.message);
         }
     };
@@ -551,7 +548,7 @@ function UserHeader() {
                                         key={notif.uniqueId} 
                                         className="notification-card"
                                         onClick={() => handleNotificationCardClick(notif)}
-                                        style={{ cursor: notif.type !== 'treatment' ? 'pointer' : 'default' }}
+                                        style={{ cursor: notif.type !== 'treatment' && notif.PetName !== 'Модерація' ? 'pointer' : 'default' }}
                                     >
                                         {notif.type === 'treatment' ? (
                                             <p>
@@ -582,6 +579,10 @@ function UserHeader() {
                                                 >
                                                     Дивитися
                                                 </Link>
+                                            </p>
+                                        ) : notif.type === 'favorite_status' && notif.PetName === 'Модерація' ? (
+                                            <p style={{ color: '#ef4444' }}>
+                                                ⚠️ <strong>Модерація:</strong> {notif.NewStatus}
                                             </p>
                                         ) : (
                                             <p>

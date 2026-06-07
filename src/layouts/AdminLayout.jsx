@@ -2,7 +2,7 @@ import { Outlet, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import './AdminLayout.css'; 
-import { useToast } from '../context/ToastContext'; // Глобальний контекст
+import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient'; 
 
 function AdminLayout() {
@@ -12,6 +12,7 @@ function AdminLayout() {
     const { showToast } = useToast(); 
     
     const [newRequestsCount, setNewRequestsCount] = useState(0);
+    const [newTreatmentCount, setNewTreatmentCount] = useState(0); // 👈 Новий стейт для сповіщень
 
     useEffect(() => {
         if (location.pathname === '/admin' || location.pathname === '/admin/') {
@@ -19,7 +20,6 @@ function AdminLayout() {
         }
     }, [location.pathname, navigate]);
 
-    // Показуємо глобальний тост після редіректу з логіну
     useEffect(() => {
         if (location.state?.welcomeMsg) {
             showToast(location.state.welcomeMsg);
@@ -28,6 +28,7 @@ function AdminLayout() {
     }, [location, showToast]);
 
     useEffect(() => {
+        // Підрахунок нових заявок на прихисток/волонтерство
         const fetchNewRequestsCount = async () => {
             try {
                 const { count, error } = await supabase
@@ -35,23 +36,43 @@ function AdminLayout() {
                     .select('*', { count: 'exact', head: true })
                     .eq('Status', 'Нова');
 
-                if (!error) {
-                    setNewRequestsCount(count || 0);
-                }
+                if (!error) setNewRequestsCount(count || 0);
             } catch (err) {
                 console.error("Помилка отримання кількості нових заявок:", err.message);
             }
         };
 
-        fetchNewRequestsCount();
+        // 👇 Підрахунок нових сповіщень про лікування
+        const fetchNewTreatmentCount = async () => {
+            try {
+                const { count, error } = await supabase
+                    .from('TreatmentNotifications')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('Status', 'Нова');
 
-        const subscription = supabase
+                if (!error) setNewTreatmentCount(count || 0);
+            } catch (err) {
+                console.error("Помилка отримання кількості сповіщень:", err.message);
+            }
+        };
+
+        fetchNewRequestsCount();
+        fetchNewTreatmentCount();
+
+        // Підписка на зміни в обох таблицях
+        const subscriptionRequests = supabase
             .channel('public:AdoptionRequests')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'AdoptionRequests' }, fetchNewRequestsCount)
             .subscribe();
 
+        const subscriptionTreatments = supabase
+            .channel('public:TreatmentNotifications')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'TreatmentNotifications' }, fetchNewTreatmentCount)
+            .subscribe();
+
         return () => {
-            supabase.removeChannel(subscription);
+            supabase.removeChannel(subscriptionRequests);
+            supabase.removeChannel(subscriptionTreatments);
         };
     }, []);
 
@@ -77,8 +98,6 @@ function AdminLayout() {
 
     return (
         <div className="admin-layout-container">
-            {/* ❌ <div className="custom-toast">...</div> ВИДАЛЕНО, бо працює глобальний ToastContext */}
-            
             <header className="admin-header">
                 <div className="admin-logo-section">
                     <img src="/logo.png" alt="Logo" className="admin-logo" />
@@ -94,9 +113,17 @@ function AdminLayout() {
                             </span>
                         )}
                     </Link>
-                    <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`}>
+                    
+                    {/* 👇 Додано бейдж для сповіщень */}
+                    <Link to="/admin/notifications" className={`admin-nav-link ${location.pathname === '/admin/notifications' ? 'active' : ''}`} style={{ position: 'relative' }}>
                         Сповіщення
+                        {newTreatmentCount > 0 && (
+                            <span className="admin-nav-badge">
+                                {newTreatmentCount}
+                            </span>
+                        )}
                     </Link>
+
                     <Link to="/admin/reviews" className={`admin-nav-link ${location.pathname === '/admin/reviews' ? 'active' : ''}`}>
                         Відгуки
                     </Link>

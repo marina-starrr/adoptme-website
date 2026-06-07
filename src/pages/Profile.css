@@ -451,6 +451,7 @@
     text-align: center;
     background-color: white;
     transition: all 0.3s ease;
+    position: relative; /* Додано для правильного позиціонування хрестика */
 }
 
 .fav-profile-card:hover {
@@ -474,6 +475,65 @@
     font-size: 18px;
 }
 
+/* 👇 СТИЛІ ІКОНКИ ВИДАЛЕННЯ З ОБРАНОГО */
+.remove-favorite-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ffffff;
+    color: #ff4d4d;
+    border: 2px solid #ff4d4d;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: all 0.2s ease;
+    opacity: 0; 
+}
+
+.fav-profile-card:hover .remove-favorite-icon {
+    opacity: 1;
+}
+
+.remove-favorite-icon:hover {
+    background-color: #ff4d4d;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* 👇 СТИЛІ НОВОЇ КНОПКИ ТА ТЕКСТУ ПІД ОБРАНИМ */
+.success-favorites-text {
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.adopt-pet-btn {
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    border: none;
+    padding: 14px 35px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.adopt-pet-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
+}
+
+/* --- ІНШЕ --- */
 .badge {
     background-color: #ef4444;
     color: white;
@@ -584,7 +644,7 @@
     font-size: 14px;
     line-height: 1.5;
     color: #4a5568;
-    white-space: pre-line; /* 👈 ДОДАНО: Цей рядок змушує HTML бачити \n і робити перенос */
+    white-space: pre-line; 
 }
 
 /* --- АДАПТИВНІСТЬ --- */
@@ -621,4 +681,17 @@
 @keyframes fadeOutModal {
     from { opacity: 1; }
     to { opacity: 0; }
+}
+
+.empty-link-purple {
+    color: #6847DD; 
+    font-weight: 700;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.empty-link-purple:hover {
+    color: #4A148C; 
+    text-decoration: underline; 
 }

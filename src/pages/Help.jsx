@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom'; // 👈 Додано Link
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './Help.css';
-import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
-import { AnimatePresence, motion } from 'framer-motion'; // 👈 Анімації
+import { useToast } from '../context/ToastContext';
+import { AnimatePresence, motion } from 'framer-motion';
 
 function Help() {
   const navigate = useNavigate();
@@ -268,6 +268,8 @@ function Help() {
             <button className="volunteer-action-btn" onClick={openModal}>Записатися</button>
           </div>
 
+          <div className="page-separator"><span>🐾</span></div>
+
           <div className="needs-block">
             <h3 className="section-title">Що завжди потрібно притулку?</h3>
             <p className="needs-subtitle">Ви можете принести ці речі особисто або відправити поштою.</p>
@@ -279,6 +281,8 @@ function Help() {
               <div className="need-item"><img src="/toys.png" alt="Іграшки" className="need-img" /><h5>Іграшки та амуніція</h5></div>
             </div>
           </div>
+
+          <div className="page-separator"><span>🐾</span></div>
 
           <div className="faq-block">
             <h3 className="section-title">Правила відвідування (FAQ)</h3>
@@ -295,11 +299,18 @@ function Help() {
                 </div>
               ))}
             </div>
+            
+            {/* 👇 ДОДАНИЙ БЛОК ПІД FAQ */}
+            <div className="faq-contact-prompt">
+              <p>
+                Не знайшли відповіді на своє запитання? <Link to="/contact">Зв'яжіться з нами</Link>
+              </p>
+            </div>
           </div>
+
         </div>
       </div>
 
-      {/* 👇 ДОДАНО: Анімація Framer Motion для модалки анкети волонтера */}
       <AnimatePresence>
           {isModalOpen && (
             <motion.div 

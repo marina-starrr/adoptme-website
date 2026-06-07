@@ -1,8 +1,60 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminHappyPets.css';
-import { useToast } from '../../context/ToastContext'; // 👈 Глобальні тости
-import { AnimatePresence, motion } from 'framer-motion'; // 👈 Анімації для модалки
+import { useToast } from '../../context/ToastContext'; 
+import { AnimatePresence, motion } from 'framer-motion'; 
+
+// 👇 Універсальний компонент випадаючого списку додано сюди
+function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+  
+    useEffect(() => {
+      const handleClickOutside = (event) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setIsOpen(false);
+        }
+      };
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+  
+    const selectedOption = options.find(opt => opt.value === value);
+  
+    return (
+      <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
+        <div 
+          className={`custom-dropdown-header ${isOpen ? 'open' : ''}`} 
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          style={{ padding: '12px 15px', border: isOpen ? '1px solid #6847DD' : '1px solid #d1d1e9', borderRadius: '10px', background: '#fff', fontSize: '15px', fontWeight: 'normal', color: '#333' }}
+        >
+          <span>{selectedOption ? selectedOption.label : <span style={{color: '#999'}}>{placeholder}</span>}</span>
+          <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
+        </div>
+        
+        {isOpen && !disabled && (
+          <div className="custom-dropdown-list-wrapper" style={{ position: 'absolute', top: 'calc(100% + 5px)', left: 0, right: 0, zIndex: 1000, background: '#fff', borderRadius: '10px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', border: '1px solid #e0d4f5', padding: '5px', maxHeight: '250px', overflowY: 'auto' }}>
+            <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {options.map((opt) => (
+                <li 
+                  key={opt.value} 
+                  style={{ padding: '10px 15px', cursor: 'pointer', borderRadius: '6px', background: value === opt.value ? '#f0edff' : 'transparent', color: value === opt.value ? '#6847DD' : '#333', fontWeight: value === opt.value ? 'bold' : 'normal' }}
+                  onClick={() => {
+                    onChange(opt.value);
+                    setIsOpen(false);
+                  }}
+                  onMouseEnter={(e) => e.target.style.background = '#fcfbfe'}
+                  onMouseLeave={(e) => e.target.style.background = value === opt.value ? '#f0edff' : 'transparent'}
+                >
+                  {opt.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+    );
+  }
 
 function AdminHappyPets() {
     const [happyPets, setHappyPets] = useState([]);
@@ -11,7 +63,6 @@ function AdminHappyPets() {
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
 
-    // Стейт для модалки видалення
     const [petToDelete, setPetToDelete] = useState(null);
     const [isModalClosing, setIsModalClosing] = useState(false);
 
@@ -73,8 +124,7 @@ function AdminHappyPets() {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handlePetChange = (e) => {
-        const selectedPetId = e.target.value;
+    const handlePetChange = (selectedPetId) => {
         const chosenPet = availablePets.find(p => p.Id.toString() === selectedPetId);
         
         if (chosenPet) {
@@ -89,8 +139,7 @@ function AdminHappyPets() {
         }
     };
 
-    const handleUserChange = (e) => {
-        const selectedUserId = e.target.value;
+    const handleUserChange = (selectedUserId) => {
         const selectedUser = availableUsers.find(u => u.Id.toString() === selectedUserId);
         
         setFormData((prev) => ({
@@ -185,7 +234,6 @@ function AdminHappyPets() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    // 👇 ДОДАНО: Логіка відкриття і закриття модалки видалення
     const closeDeleteModal = () => {
         setIsModalClosing(true);
         setTimeout(() => {
@@ -201,7 +249,7 @@ function AdminHappyPets() {
     const deletePetHistory = async () => {
         if (!petToDelete) return;
         
-        closeDeleteModal(); // Плавне закриття
+        closeDeleteModal(); 
 
         try {
             const { error } = await supabase
@@ -216,7 +264,6 @@ function AdminHappyPets() {
             
             if (!error) {
                 showToast("🗑️ Історію видалено. Тваринка повернута в статус 'Шукає дім'.");
-                // Локальне оновлення списку
                 setHappyPets(prev => prev.filter(p => p.Id !== petToDelete));
                 fetchAvailablePets();
                 resetForm();
@@ -233,6 +280,17 @@ function AdminHappyPets() {
         setIsEditing(false);
         setFormData({ petId: '', userId: '', ownerName: '', homeDescription: '', images: [], showInLucky: true });
     };
+
+    // Підготовка даних для CustomDropdown
+    const petOptions = availablePets.map(pet => ({
+        value: pet.Id.toString(),
+        label: `${pet.Name} (${pet.Status})`
+    }));
+
+    const userOptions = availableUsers.map(user => ({
+        value: user.Id.toString(),
+        label: `${user.FirstName} ${user.LastName} (@${user.Nickname})`
+    }));
 
     return (
         <div className="admin-happy-pets" style={{ position: 'relative' }}>
@@ -251,37 +309,25 @@ function AdminHappyPets() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Оберіть тваринку:</label>
-                            <select 
-                                name="petId" 
-                                value={formData.petId} 
-                                onChange={handlePetChange} 
-                                required
+                            {/* 👇 Замінено на CustomDropdown */}
+                            <CustomDropdown 
+                                options={petOptions}
+                                value={formData.petId}
+                                onChange={handlePetChange}
+                                placeholder="-- Виберіть тваринку --"
                                 disabled={isEditing}
-                            >
-                                <option value="">-- Виберіть тваринку --</option>
-                                {availablePets.map(pet => (
-                                    <option key={pet.Id} value={pet.Id}>
-                                        {pet.Name} ({pet.Status})
-                                    </option>
-                                ))}
-                            </select>
+                            />
                         </div>
                         
                         <div className="form-group">
                             <label>Оберіть користувача (Нова сім'я):</label>
-                            <select 
-                                name="userId" 
-                                value={formData.userId} 
-                                onChange={handleUserChange} 
-                                required
-                            >
-                                <option value="">-- Виберіть власника --</option>
-                                {availableUsers.map(user => (
-                                    <option key={user.Id} value={user.Id}>
-                                        {user.FirstName} {user.LastName} (@{user.Nickname})
-                                    </option>
-                                ))}
-                            </select>
+                            {/* 👇 Замінено на CustomDropdown */}
+                            <CustomDropdown 
+                                options={userOptions}
+                                value={formData.userId}
+                                onChange={handleUserChange}
+                                placeholder="-- Виберіть власника --"
+                            />
                         </div>
                     </div>
 
@@ -385,7 +431,7 @@ function AdminHappyPets() {
                 </div>
             </div>
 
-            {/* 👇 ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ З ЧИСТИМ CSS */}
+            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ З ЧИСТИМ CSS */}
             {petToDelete && (
                 <div 
                     className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} 
@@ -397,7 +443,7 @@ function AdminHappyPets() {
                         style={{ maxWidth: '450px', textAlign: 'center' }} 
                         onClick={e => e.stopPropagation()}
                     >
-                        <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800' }}>⚠️ Прибрати історію?</h3>
+                        <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800', marginTop: 0 }}>⚠️ Прибрати історію?</h3>
                         <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.6' }}>
                             Ви впевнені, що хочете видалити історію цієї тваринки зі списку щасливчиків? 
                             Сама тваринка не видалиться, але її статус зміниться на "Шукає дім", а її домашня історія зітреться.

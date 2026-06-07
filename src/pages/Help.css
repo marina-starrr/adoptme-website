@@ -683,3 +683,59 @@
     .help-modal-content { padding: 20px; }
     .modal-header h3 { font-size: 22px; }
 }
+
+/* =========================================
+   РОЗДІЛЮВАЧІ СЕКЦІЙ
+   ========================================= */
+.page-separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 40px auto 60px;
+    max-width: 1200px;
+    position: relative;
+    z-index: 2;
+}
+
+.page-separator::before,
+.page-separator::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, rgba(104, 71, 221, 0.2), transparent);
+}
+
+.page-separator span {
+    margin: 0 20px;
+    font-size: 24px;
+    color: #6847DD;
+    opacity: 0.5;
+}
+
+/* =========================================
+   ДОДАТКОВИЙ БЛОК ПІСЛЯ FAQ
+   ========================================= */
+.faq-contact-prompt {
+    margin-top: 30px;
+    text-align: center;
+    font-size: 16px;
+    color: #555;
+    animation: fadeInView 0.5s ease-out forwards;
+}
+
+.faq-contact-prompt p {
+    margin: 0;
+}
+
+.faq-contact-prompt a {
+    color: #6847DD;
+    font-weight: 700;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    margin-left: 5px;
+}
+
+.faq-contact-prompt a:hover {
+    color: #49109f;
+    text-decoration: underline;
+}

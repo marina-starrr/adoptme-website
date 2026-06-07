@@ -51,6 +51,12 @@ function LuckyCard({ pet }) {
         </h3>
         <div className="lucky-review-box">
           <p className="lucky-review">{pet.text}</p>
+          {/* 👇 Кнопка з'являється, якщо текст достатньо довгий */}
+          {pet.text && pet.text.length > 100 && (
+              <Link to={`/pets/${pet.id}`} className="read-more-link">
+                  Читати далі »
+              </Link>
+          )}
         </div>
       </div>
     </div>
@@ -266,7 +272,6 @@ function Home() {
 
           <section className="home-news-section">
             <div className="section-header">
-              {/* 👇 Оновлений заголовок з мазком */}
               <div className="brush-title-container">Наші новинки</div>
               <p className="news-section-subtitle">Ці хвостики щойно прибули до притулку і дуже чекають на знайомство</p>
             </div>
@@ -317,7 +322,6 @@ function Home() {
 
           <section className="lucky-section">
             <div className="section-header">
-              {/* 👇 Оновлений заголовок з мазком */}
               <div className="brush-title-container">Вони вже знайшли дім 🏡</div>
               <p className="news-section-subtitle">Надихаючі історії наших випускників та їхніх нових сімей</p>
             </div>

@@ -1,10 +1,11 @@
 import './About.css';
+import { Link } from 'react-router-dom';
 
 function About() {
     return (
         <div className="about-us">
             <div className="about-us-relative-wrapper">
-                
+
                 {/* БЛОК 1: ВІЗУАЛЬНА ЧАСТИНА (Збережено вашу стилістику) */}
                 <div className="absolute-visuals-container">
                     <div className="adopt-me-title-block">
@@ -14,30 +15,30 @@ function About() {
 
                     <div className="overlay-text-container">
                         Ми не просто притулок — ми перевалочний пункт між минулим, сповненим болю, та щасливим майбутнім. Ми даруємо прихисток, лікування та безмежну любов тим, хто втратив усе.
-                    </div>   
-                    
+                    </div>
+
                     <img src="/1.png" alt="Зображення 1" className="image-1-positioned" />
                     <img src="/2.png" alt="Зображення 2" className="image-2-positioned" />
-                    
+
                     <div className="image-12-positioned">
                         Наша місія — не тільки врятувати життя, а й знайти для кожного пухнастого друга його справжню, люблячу сім'ю.
                     </div>
-                    
+
                     <img src="/4.png" alt="Зображення 4" className="image-4-positioned" />
-                    
+
                     <div className="image-13-positioned">
                         Кожна тварина, яка потрапляє до нас, проходить повний ветеринарний огляд, отримує необхідні щеплення, обробку від паразитів та стерилізацію.
                     </div>
-                    
+
                     <img src="/3.png" alt="Зображення 3" className="image-3-positioned" />
-                    
+
                     <div className="image-14-positioned">
                         Наші волонтери щодня працюють з хвостиками: соціалізують їх, вчать довіряти людям та готують до комфортного життя в домі.
                     </div>
-                    
+
                     <img src="/5.png" alt="Зображення 5" className="image-5-positioned" />
-                    <img src="/6.png" alt="Зображення 6" className="image-6-positioned" /> 
-                    
+                    <img src="/6.png" alt="Зображення 6" className="image-6-positioned" />
+
                     <div className="image-15-positioned">
                         Завдяки вашій підтримці ми даруємо їм другий шанс. Допоможіть нам змінити їхню долю — прихистіть друга!
                     </div>
@@ -86,6 +87,14 @@ function About() {
                             <h3>Життя в родині</h3>
                             <p>Встановіть чіткий графік годування та прогулянок — рутина дає тваринам відчуття безпеки. Забезпечте якісний корм та безмежну любов. Пам'ятайте: куратори притулку завжди на зв'язку, щоб підтримати вас!</p>
                         </div>
+                    </div>
+                </div>
+
+                <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div className="more-help-container">
+                        <Link to="/help" className="more-help-btn">
+                            Як можна допомогти?
+                        </Link>
                     </div>
                 </div>
 

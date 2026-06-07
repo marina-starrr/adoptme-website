@@ -186,6 +186,8 @@
 
 .admin-header-box {
   margin-bottom: 30px;
+  position: relative;
+  z-index: 50; /* 👈 Виправляє перекриття першого пункту меню картками */
 }
 
 .admin-title-row {
@@ -577,4 +579,17 @@
 @keyframes fadeOutModal {
   from { opacity: 1; }
   to { opacity: 0; }
+}
+
+/* 1. Розширюємо загальний контейнер сторінки, знімаючи ліміт у 1550px */
+.admin-main:has(.admin-page-layout) {
+  max-width: none !important;
+  padding: 40px 3% !important; 
+}
+
+/* 2. Дозволяємо білій обгортці розтягуватися на всю ширину, зберігаючи її дизайн */
+.admin-content-area .admin-card {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
 }

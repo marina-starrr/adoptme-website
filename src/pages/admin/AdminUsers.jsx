@@ -1,7 +1,57 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
 import './AdminUsers.css';
 import { useToast } from '../../context/ToastContext';
+
+// Універсальний компонент випадаючого списку
+function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef}>
+      <div 
+        className={`custom-dropdown-header ${isOpen ? 'open' : ''}`} 
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+      >
+        <span>{selectedOption ? selectedOption.label : <span style={{color: '#999'}}>{placeholder}</span>}</span>
+        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
+      </div>
+      
+      {isOpen && !disabled && (
+        <div className="custom-dropdown-list-wrapper">
+          <ul className="custom-dropdown-list">
+            {options.map((opt) => (
+              <li 
+                key={opt.value} 
+                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
+                onClick={() => {
+                  onChange(opt.value);
+                  setIsOpen(false);
+                }}
+              >
+                {opt.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
@@ -13,9 +63,6 @@ function AdminUsers() {
     const [isSaving, setIsSaving] = useState(false);
 
     const [userToDelete, setUserToDelete] = useState(null);
-    const [toastMsg, setToastMsg] = useState('');
-
-    // 👇 ДОДАНО: Стан для керування плавною анімацією закриття
     const [isModalClosing, setIsModalClosing] = useState(false);
 
     const initialFormState = {
@@ -25,11 +72,12 @@ function AdminUsers() {
         Phone: '',
         Email: '',
         Password: '',
-        Role: 'user'
+        Role: 'user',
+        SecretQuestion: 'Як звали вашого першого домашнього улюбленця?',
+        SecretAnswer: ''
     };
 
     const [userFormData, setUserFormData] = useState(initialFormState);
-
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -53,7 +101,6 @@ function AdminUsers() {
         }
     }
 
-    // 👇 ДОДАНО: Функції для плавного закриття модалок
     const closeEditModal = () => {
         setIsModalClosing(true);
         setTimeout(() => {
@@ -70,7 +117,6 @@ function AdminUsers() {
         }, 300);
     };
 
-    // --- ЛОГІКА ДОДАВАННЯ / РЕДАГУВАННЯ ---
     const handleAddOpen = () => {
         setEditMode(false);
         setUserFormData(initialFormState);
@@ -87,7 +133,9 @@ function AdminUsers() {
             Phone: user.Phone || '',
             Email: user.Email || '',
             Password: user.Password || '',
-            Role: user.Role || 'user'
+            Role: user.Role || 'user',
+            SecretQuestion: user.SecretQuestion || 'Як звали вашого першого домашнього улюбленця?',
+            SecretAnswer: user.SecretAnswer || ''
         });
         setIsModalOpen(true);
     };
@@ -96,8 +144,13 @@ function AdminUsers() {
         e.preventDefault();
         setIsSaving(true);
 
+        if (!userFormData.SecretAnswer.trim()) {
+            showToast('❌ Будь ласка, введіть відповідь на секретне запитання!');
+            setIsSaving(false);
+            return;
+        }
+
         try {
-            // Захист: не можна зняти адмінку з останнього адміністратора
             if (editMode && userFormData.Role === 'user') {
                 const userBeingEdited = users.find(u => u.Id === currentUserId);
                 if (userBeingEdited.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
@@ -107,22 +160,24 @@ function AdminUsers() {
                 }
             }
 
+            const dataToSave = {
+                ...userFormData,
+                SecretAnswer: userFormData.SecretAnswer.trim().toLowerCase()
+            };
+
             if (editMode) {
-                // ОНОВЛЕННЯ
                 const { error } = await supabase
                     .from('Users')
-                    .update(userFormData)
+                    .update(dataToSave)
                     .eq('Id', currentUserId);
                 
                 if (error) throw error;
                 showToast("✅ Дані користувача успішно оновлено!");
             } else {
-                // СТВОРЕННЯ
-                // 1. Перевіряємо чи є вже такий нікнейм
                 const { data: existingUser } = await supabase
                     .from('Users')
                     .select('Id')
-                    .eq('Nickname', userFormData.Nickname.trim())
+                    .eq('Nickname', dataToSave.Nickname.trim())
                     .maybeSingle();
 
                 if (existingUser) {
@@ -131,16 +186,15 @@ function AdminUsers() {
                     return;
                 }
 
-                // 2. Зберігаємо нового
                 const { error } = await supabase
                     .from('Users')
-                    .insert([userFormData]);
+                    .insert([dataToSave]);
                 
                 if (error) throw error;
                 showToast("🎉 Нового користувача успішно створено!");
             }
 
-            closeEditModal(); // 👈 Плавне закриття після успішного збереження
+            closeEditModal(); 
             fetchUsers();
         } catch (error) {
             showToast("❌ Помилка: " + error.message);
@@ -149,29 +203,22 @@ function AdminUsers() {
         }
     };
 
-    // --- ЛОГІКА ВИДАЛЕННЯ ---
     const confirmDeleteClick = (id) => {
         setUserToDelete(id);
     };
 
     const executeDelete = async () => {
         if (!userToDelete) return;
-        
-        closeDeleteModal(); // 👈 Плавно закриваємо модалку перед початком видалення
-        
+        closeDeleteModal(); 
         try {
             const user = users.find(u => u.Id === userToDelete);
             if (user?.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
                 showToast("❌ Не можна видалити єдиного адміністратора!");
                 return;
             }
-
             const { error } = await supabase.from('Users').delete().eq('Id', userToDelete);
             if (error) throw error;
-
             showToast("🗑️ Користувача успішно видалено!");
-            
-            // 👇 Локальне оновлення замість fetchUsers(), щоб уникнути блимання
             setUsers(prev => prev.filter(u => u.Id !== userToDelete));
         } catch (err) {
             showToast("❌ Помилка видалення: " + err.message);
@@ -180,12 +227,9 @@ function AdminUsers() {
 
     return (
         <div className="admin-main" style={{ position: 'relative' }}>
-            {toastMsg && <div className="custom-toast" style={{ zIndex: 100000 }}>{toastMsg}</div>}
-
             <div className="admin-page-layout">
                 <div className="admin-content-area" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="admin-card">
-                        
                         <div className="admin-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                                 <h2 className="admin-page-title">
@@ -246,20 +290,8 @@ function AdminUsers() {
                                                 </td>
                                                 <td>
                                                     <div className="admin-table-actions">
-                                                        <button 
-                                                            className="edit-icon-btn" 
-                                                            onClick={() => handleEditOpen(user)}
-                                                            title="Редагувати користувача"
-                                                        >
-                                                            ✎
-                                                        </button>
-                                                        <button 
-                                                            className="delete-icon-btn" 
-                                                            onClick={() => confirmDeleteClick(user.Id)}
-                                                            title="Видалити користувача"
-                                                        >
-                                                            ×
-                                                        </button>
+                                                        <button className="edit-icon-btn" onClick={() => handleEditOpen(user)} title="Редагувати">✎</button>
+                                                        <button className="delete-icon-btn" onClick={() => confirmDeleteClick(user.Id)} title="Видалити">×</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -272,8 +304,7 @@ function AdminUsers() {
                 </div>
             </div>
 
-            {/* 👇 МОДАЛЬНЕ ВІКНО ДОДАВАННЯ/РЕДАГУВАННЯ (З АНІМАЦІЄЮ) */}
-            {isModalOpen && (
+            {isModalOpen && createPortal(
                 <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={() => !isSaving && closeEditModal()}>
                     <div className={`admin-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
@@ -285,27 +316,16 @@ function AdminUsers() {
                             <div className="form-row">
                                 <div className="input-group">
                                     <label>Нікнейм (Логін)</label>
-                                    <input 
-                                        type="text" 
-                                        value={userFormData.Nickname} 
-                                        onChange={e => setUserFormData({ ...userFormData, Nickname: e.target.value })} 
-                                        className="form-control" 
-                                        required 
-                                        disabled={editMode} // Забороняємо змінювати нікнейм при редагуванні
-                                        title={editMode ? "Нікнейм не можна змінити, оскільки до нього прив'язані дані" : ""}
-                                        style={editMode ? { backgroundColor: '#f0f0f0', cursor: 'not-allowed' } : {}}
-                                    />
+                                    <input type="text" value={userFormData.Nickname} onChange={e => setUserFormData({ ...userFormData, Nickname: e.target.value })} className="form-control" required disabled={editMode} />
                                 </div>
                                 <div className="input-group">
                                     <label>Роль в системі</label>
-                                    <select 
-                                        value={userFormData.Role} 
-                                        onChange={e => setUserFormData({ ...userFormData, Role: e.target.value })} 
-                                        className="form-control"
-                                    >
-                                        <option value="user">Користувач</option>
-                                        <option value="admin">Адміністратор</option>
-                                    </select>
+                                    <CustomDropdown 
+                                        options={[{value: 'user', label: 'Користувач'}, {value: 'admin', label: 'Адміністратор'}]}
+                                        value={userFormData.Role}
+                                        onChange={val => setUserFormData({ ...userFormData, Role: val })}
+                                        placeholder="Оберіть роль"
+                                    />
                                 </div>
                             </div>
 
@@ -333,43 +353,33 @@ function AdminUsers() {
 
                             <div className="input-group">
                                 <label>Пароль</label>
-                                <input 
-                                    type="text" 
-                                    value={userFormData.Password} 
-                                    onChange={e => setUserFormData({ ...userFormData, Password: e.target.value })} 
-                                    className="form-control" 
-                                    required 
-                                    placeholder="Введіть пароль..."
+                                <input type="text" value={userFormData.Password} onChange={e => setUserFormData({ ...userFormData, Password: e.target.value })} className="form-control" required />
+                            </div>
+
+                            <div className="input-group" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <label style={{ color: '#49109f', marginBottom: '10px' }}>Секретне запитання</label>
+                                <CustomDropdown 
+                                    options={[
+                                        {value: 'Як звали вашого першого домашнього улюбленця?', label: 'Як звали вашого першого домашнього улюбленця?'},
+                                        {value: 'Яка ваша улюблена порода собак/котів?', label: 'Яка ваша улюблена порода собак/котів?'},
+                                        {value: 'Місто, у якому ви народилися?', label: 'Місто, у якому ви народилися?'},
+                                        {value: 'Дівоче прізвище вашої матері?', label: 'Дівоче прізвище вашої матері?'}
+                                    ]}
+                                    value={userFormData.SecretQuestion}
+                                    onChange={val => setUserFormData({ ...userFormData, SecretQuestion: val })}
+                                    placeholder="Оберіть питання"
                                 />
+                                <input type="text" value={userFormData.SecretAnswer} onChange={e => setUserFormData({ ...userFormData, SecretAnswer: e.target.value })} className="form-control" required placeholder="Відповідь..." style={{marginTop: '10px'}} />
                             </div>
 
                             <div className="form-actions">
                                 <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isSaving}>Скасувати</button>
-                                <button type="submit" className="save-btn" disabled={isSaving}>
-                                    {isSaving ? 'Збереження...' : 'Зберегти користувача'}
-                                </button>
+                                <button type="submit" className="save-btn" disabled={isSaving}>{isSaving ? 'Збереження...' : 'Зберегти користувача'}</button>
                             </div>
                         </form>
                     </div>
-                </div>
-            )}
-
-            {/* 👇 ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ (З АНІМАЦІЄЮ) */}
-            {userToDelete && (
-                <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
-                    <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 10px 0' }}>⚠️ Видалення користувача</h3>
-                        <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px' }}>
-                            Ви дійсно хочете назавжди видалити цей акаунт? Цю дію неможливо скасувати.
-                        </p>
-                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                            <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
-                            <button className="save-btn" style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }} onClick={executeDelete}>
-                                Так, видалити
-                            </button>
-                        </div>
-                    </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div>
     );

@@ -107,7 +107,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 900px;
+    height: 700px;
     padding: 20px 5%;
     background-color: transparent;
     z-index: 1;
@@ -656,6 +656,30 @@
     font-style: italic;
     position: relative;
     z-index: 2;
+    /* 👇 Обрізаємо текст на рівні 3 рядків */
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* 👇 Стиль для кнопки "Читати далі" */
+.read-more-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: #6847DD;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    position: relative;
+    z-index: 2;
+    transition: color 0.2s ease;
+}
+
+.read-more-link:hover {
+    color: #49109f;
+    text-decoration: underline;
 }
 
 /* =========================================

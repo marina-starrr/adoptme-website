@@ -135,7 +135,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
 
     const getStatusConfig = (petStatus) => {
         switch(petStatus) {
-            case 'Потребує особливого догляду': return { class: 'status-special', icon: '❤️‍🩹' };
+            case 'Особливий догляд': return { class: 'status-special', icon: '❤️‍🩹' };
             case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
             case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
             case 'Не вдалось врятувати': return { class: 'status-rainbow', icon: '🌈' };

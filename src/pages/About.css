@@ -74,7 +74,7 @@
 .overlay-text-container {
     position: absolute;
     top: 180px;
-    left: -100px;
+    left: -140px;
     width: 740px;
     height: 245px;
     display: flex;
@@ -141,7 +141,7 @@
 }
 
 .image-14-positioned {
-    top: 870px;
+    top: 900px;
     left: -50px;
     width: 635px;
     height: 182px;
@@ -365,4 +365,32 @@
 
     .adaptation-header h2 { font-size: 26px; }
     .adaptation-grid { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   ПОСИЛАННЯ "ЯК ЩЕ ДОПОМОГТИ"
+   ========================================= */
+.more-help-container {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.more-help-btn {
+    display: inline-block;
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 18px 45px;
+    border-radius: 30px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(104, 71, 221, 0.3);
+    transition: all 0.3s ease;
+}
+
+.more-help-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(104, 71, 221, 0.5);
+    color: white; 
 }
