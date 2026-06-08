@@ -77,8 +77,7 @@ function Home() {
     { src: '/mars1.png', id: 1 },
     { src: '/karen1.png', id: 2 },
     { src: '/nensi1.png', id: 3 },
-    { src: '/momo1.png', id: 4 },
-    { src: '/kamila1.png', id: 5 }
+    { src: '/kamila1.png', id: 4 },
   ];
 
   const [currentIndex, setCurrentIndex] = useState(0);
