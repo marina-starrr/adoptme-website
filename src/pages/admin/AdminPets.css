@@ -209,8 +209,11 @@
 }
 
 .pet-card-wrapper.admin-mode {
-  position: relative;
-  transition: transform 0.3s ease;
+    position: relative;
+    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column; 
+    height: 100%; 
 }
 
 .pet-card-wrapper.admin-mode:hover {

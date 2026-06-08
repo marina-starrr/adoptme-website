@@ -117,22 +117,9 @@ function Help() {
     }
   };
 
-  // 👇 ДОДАНО: Правильне закриття вікна без конфлікту анімацій
+  // Виправлене закриття вікна без конфлікту анімацій
   const closeModal = () => {
-    setIsModalOpen(false); // Framer Motion автоматично запустить анімацію зникнення
-    
-    // Очищаємо форму після того, як вікно візуально зникне (300мс)
-    setTimeout(() => {
-      setVolunteerName('');
-      setVolunteerPhone('');
-      setHelpType('');
-      setCustomHelpType(''); 
-      setPreferredDay('');
-      setSelectedPet(null);
-      setIsHelpTypeOpen(false);
-      setIsPetDropdownOpen(false);
-      setIsSuccessScreen(false);
-    }, 300);
+    setIsModalOpen(false); 
   };
 
   const toggleDropdown = (dropdownName) => {
@@ -204,7 +191,6 @@ function Help() {
     }
   };
 
-  // 👇 ДОДАНО: Найбільш надійний спосіб отримання картинок з БД
   const getPetImage = (pet) => {
     if (!pet || !pet.ImageName) return '/paw-placeholder.png';
     
@@ -228,7 +214,6 @@ function Help() {
       if (!fileName) return '/paw-placeholder.png';
       if (fileName.startsWith('http')) return fileName;
 
-      // Використовуємо Supabase Client для отримання 100% правильного URL
       const { data } = supabase.storage.from('pets').getPublicUrl(fileName);
       return data.publicUrl;
       
@@ -325,15 +310,28 @@ function Help() {
         </div>
       </div>
 
-      <AnimatePresence>
+      <AnimatePresence 
+        onExitComplete={() => {
+          setVolunteerName('');
+          setVolunteerPhone('');
+          setHelpType('');
+          setCustomHelpType('');
+          setPreferredDay('');
+          setSelectedPet(null);
+          setIsHelpTypeOpen(false);
+          setIsPetDropdownOpen(false);
+          setIsSuccessScreen(false);
+        }}
+      >
           {isModalOpen && (
             <motion.div 
+                key="modal-overlay"
                 className="help-modal-overlay"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
-                onClick={closeModal} // Закриття при кліку на темний фон
+                onClick={closeModal} 
             >
               <motion.div 
                   className="help-modal-content"
@@ -341,7 +339,7 @@ function Help() {
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                  onClick={(e) => e.stopPropagation()} // Блокуємо закриття при кліку на саму форму
+                  onClick={(e) => e.stopPropagation()} 
               >
                 <span className="close-btn" onClick={closeModal}>&times;</span>
 
@@ -436,7 +434,6 @@ function Help() {
                             if (selectedDate) {
                               const dateObj = new Date(selectedDate);
                               const dayOfWeek = dateObj.getDay();
-                              // Блокуємо суботу (6) та неділю (0)
                               if (dayOfWeek === 0) {
                                 showToast("❌ Притулок закритий у неділю. Будь ласка, оберіть інший день.");
                                 setPreferredDay('');

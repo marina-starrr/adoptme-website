@@ -321,7 +321,7 @@
     align-items: center;
     padding: 16px;
     box-sizing: border-box;
-    animation: fadeInModal 0.3s ease-out forwards;
+    /* Анімація передана Framer Motion */
 }
 
 .help-modal-content {
@@ -333,14 +333,11 @@
     max-width: 500px;
     text-align: center;
     position: relative;
-    animation: animatetop 0.4s forwards;
-    
-    /* 👇 НОВІ ПАРАМЕТРИ 👇 */
-    max-height: 90vh; /* Вікно не буде займати більше 90% висоти екрану */
-    overflow-y: auto; /* Якщо контент не влазить, з'явиться внутрішній скрол */
+    max-height: 90vh;
+    overflow-y: auto; 
+    /* Анімація передана Framer Motion */
 }
 
-/* 👇 Додай це одразу після .help-modal-content, щоб скролбар був у стилі сайту 👇 */
 .help-modal-content::-webkit-scrollbar {
     width: 6px;
 }
@@ -350,58 +347,6 @@
 .help-modal-content::-webkit-scrollbar-thumb {
     background: #d4c5f9;
     border-radius: 10px;
-}
-
-@keyframes animatetop {
-    from {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-
-    to {
-        transform: scale(1);
-        opacity: 1;
-    }
-}
-
-.help-modal-overlay.closing {
-    animation: fadeOutModal 0.3s forwards;
-}
-
-.help-modal-content.closing {
-    animation: animateclose 0.3s forwards;
-}
-
-@keyframes animateclose {
-    from {
-        transform: scale(1);
-        opacity: 1;
-    }
-
-    to {
-        transform: scale(0.9);
-        opacity: 0;
-    }
-}
-
-@keyframes fadeInModal {
-    from {
-        opacity: 0;
-    }
-
-    to {
-        opacity: 1;
-    }
-}
-
-@keyframes fadeOutModal {
-    from {
-        opacity: 1;
-    }
-
-    to {
-        opacity: 0;
-    }
 }
 
 .close-btn {
