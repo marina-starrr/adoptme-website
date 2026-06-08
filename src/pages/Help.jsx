@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; // 👈 Додано Link
+import { useNavigate, Link } from 'react-router-dom'; 
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './Help.css';
@@ -12,7 +12,6 @@ function Help() {
   const [openFaq, setOpenFaq] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isModalClosing, setIsModalClosing] = useState(false);
   const [isSuccessScreen, setIsSuccessScreen] = useState(false);
 
   const [volunteerName, setVolunteerName] = useState('');
@@ -118,11 +117,12 @@ function Help() {
     }
   };
 
+  // 👇 ДОДАНО: Правильне закриття вікна без конфлікту анімацій
   const closeModal = () => {
-    setIsModalClosing(true);
+    setIsModalOpen(false); // Framer Motion автоматично запустить анімацію зникнення
+    
+    // Очищаємо форму після того, як вікно візуально зникне (300мс)
     setTimeout(() => {
-      setIsModalOpen(false);
-      setIsModalClosing(false);
       setVolunteerName('');
       setVolunteerPhone('');
       setHelpType('');
@@ -131,6 +131,7 @@ function Help() {
       setSelectedPet(null);
       setIsHelpTypeOpen(false);
       setIsPetDropdownOpen(false);
+      setIsSuccessScreen(false);
     }, 300);
   };
 
@@ -203,24 +204,38 @@ function Help() {
     }
   };
 
+  // 👇 ДОДАНО: Найбільш надійний спосіб отримання картинок з БД
   const getPetImage = (pet) => {
-    if (!pet.ImageName) return '/paw-placeholder.png';
+    if (!pet || !pet.ImageName) return '/paw-placeholder.png';
+    
     try {
+      let fileName = null;
+
       if (Array.isArray(pet.ImageName)) {
-        return pet.ImageName.length > 0 ? pet.ImageName[0] : '/paw-placeholder.png';
-      }
-      if (typeof pet.ImageName === 'string') {
+        fileName = pet.ImageName.length > 0 ? pet.ImageName[0] : null;
+      } else if (typeof pet.ImageName === 'string') {
         if (pet.ImageName.trim().startsWith('[')) {
           const validJsonString = pet.ImageName.replace(/'/g, '"');
           const parsed = JSON.parse(validJsonString);
-          return parsed.length > 0 ? parsed[0] : '/paw-placeholder.png';
+          fileName = parsed.length > 0 ? parsed[0] : null;
+        } else if (pet.ImageName.includes(',')) {
+          fileName = pet.ImageName.split(',')[0].trim();
+        } else {
+          fileName = pet.ImageName.trim();
         }
-        return pet.ImageName;
       }
+
+      if (!fileName) return '/paw-placeholder.png';
+      if (fileName.startsWith('http')) return fileName;
+
+      // Використовуємо Supabase Client для отримання 100% правильного URL
+      const { data } = supabase.storage.from('pets').getPublicUrl(fileName);
+      return data.publicUrl;
+      
     } catch (e) {
-      console.error("Помилка парсингу фото для:", pet.Name, e);
+      console.error("Помилка обробки фото:", e);
+      return '/paw-placeholder.png';
     }
-    return '/paw-placeholder.png';
   };
 
   const faqs = [
@@ -300,7 +315,6 @@ function Help() {
               ))}
             </div>
             
-            {/* 👇 ДОДАНИЙ БЛОК ПІД FAQ */}
             <div className="faq-contact-prompt">
               <p>
                 Не знайшли відповіді на своє запитання? <Link to="/contact">Зв'яжіться з нами</Link>
@@ -314,18 +328,20 @@ function Help() {
       <AnimatePresence>
           {isModalOpen && (
             <motion.div 
-                className={`help-modal-overlay ${isModalClosing ? 'closing' : ''}`}
+                className="help-modal-overlay"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
+                onClick={closeModal} // Закриття при кліку на темний фон
             >
               <motion.div 
-                  className={`help-modal-content ${isModalClosing ? 'closing' : ''}`}
+                  className="help-modal-content"
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                  onClick={(e) => e.stopPropagation()} // Блокуємо закриття при кліку на саму форму
               >
                 <span className="close-btn" onClick={closeModal}>&times;</span>
 

@@ -103,7 +103,7 @@ function AdminPets() {
   const getAgeInMonths = (ageStr) => {
     if (!ageStr) return 0;
     const lowerStr = ageStr.toLowerCase();
-    const match = lowerStr.match(/(\d+(\.\d+)?)/);
+    const match = lowerStr.match(/(\d+([.,]\d+)?)/);
     if (!match) return 0;
     const num = parseFloat(match[0]);
     if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('річ') || lowerStr.includes('р.')) {
@@ -162,6 +162,11 @@ function AdminPets() {
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterBreed, filterGender, filterAge, filterStatus, filterSize, filterEnergy, filterVaccinated, filterTraining, sortOrder]);
+
+  // 👇 ДОДАНО: Перенесення користувача на самий верх сторінки при перелистуванні сторінок
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
 
   // Логіка зрізу: на першій сторінці беремо на 1 менше (бо є картка «Додати»)
   const totalItems = filteredAndSortedPets.length;

@@ -158,7 +158,7 @@ function AdminUsers() {
         });
         setIsModalOpen(true);
     };
-    
+
     const handlePhoneChange = (e) => {
         const rawDigits = e.target.value.replace(/\D/g, '');
         if (rawDigits.length === 0) {
@@ -484,6 +484,7 @@ function AdminUsers() {
 
                             <div className="input-group" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
                                 <label style={{ color: '#49109f', marginBottom: '10px' }}>Секретне запитання</label>
+                                <p>Для відновлення паролю</p>
                                 <CustomDropdown
                                     options={[
                                         { value: 'Як звали вашого першого домашнього улюбленця?', label: 'Як звали вашого першого домашнього улюбленця?' },

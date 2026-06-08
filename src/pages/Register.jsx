@@ -195,6 +195,7 @@ function Register() {
 
           <div className="input-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
             <label>Секретне запитання</label>
+            <p>Для відновлення паролю</p>
             <select
               value={secretQuestion}
               onChange={(e) => setSecretQuestion(e.target.value)}

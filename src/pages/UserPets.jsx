@@ -91,6 +91,11 @@ function UserPets() {
     setCurrentPage(1);
   }, [filterType, filterBreed, filterGender, filterAge, filterStatus, filterSize, filterEnergy, filterVaccinated, filterTraining, sortOrder]);
 
+  // 👇 ДОДАНО: Перенесення користувача на самий верх сторінки при перелистуванні сторінок
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentPage]);
+
   // Збираємо унікальні види та породи для фільтрів
   useEffect(() => {
     if (petsList.length > 0) {

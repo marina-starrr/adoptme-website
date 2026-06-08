@@ -109,7 +109,7 @@ function AdminAdoptions() {
                                             return {
                                                 UserNickname: nick,
                                                 PetId: petId,
-                                                PetName: app.PetName.split(',')[0].trim(),
+                                                PetName: app.PetName, // Використовуємо всі імена
                                                 NewStatus: 'Вже знайшла дім',
                                                 IsRead: false
                                             };
@@ -160,7 +160,7 @@ function AdminAdoptions() {
                                         return {
                                             UserNickname: nick,
                                             PetId: petId,
-                                            PetName: app.PetName.split(',')[0].trim(),
+                                            PetName: app.PetName, // Використовуємо всі імена
                                             NewStatus: 'Шукає дім',
                                             IsRead: false
                                         };
@@ -202,7 +202,7 @@ function AdminAdoptions() {
                                     return {
                                         UserNickname: nick,
                                         PetId: petId,
-                                        PetName: app.PetName.split(',')[0].trim(),
+                                        PetName: app.PetName, // Використовуємо всі імена
                                         NewStatus: 'Заброньована',
                                         IsRead: false
                                     };
@@ -250,7 +250,6 @@ function AdminAdoptions() {
                     showToast('❌ Помилка видалення: ' + error.message);
                 } else {
                     showToast('🗑️ Заявку успішно видалено!');
-                    // 👇 БАГФІКС: Локальне видалення замість fetchApplications()
                     setApplications(prev => prev.filter(app => app.Id !== id));
                 }
             },
@@ -302,12 +301,11 @@ function AdminAdoptions() {
                         filteredApplications.map(app => {
                             const isVolunteer = app.PetName?.includes('Волонтерство');
                             
-                            let displayPetName = app.PetName;
+                            // 👇 БАГФІКС: Більше не відрізаємо все після першої коми!
+                            let displayPetName = app.PetName || 'Не вказано';
                             if (isVolunteer) {
-                                const match = app.PetName.match(/\((.*?)\)/);
+                                const match = app.PetName?.match(/\((.*?)\)/);
                                 displayPetName = match ? match[1] : 'Будь-який хвостик';
-                            } else {
-                                displayPetName = app.PetName.split(',')[0].trim();
                             }
 
                             return (
@@ -321,9 +319,9 @@ function AdminAdoptions() {
 
                                     <div className="app-card-body">
                                         <div className="app-info-grid">
-                                            <div className="info-item">
-                                                <span className="info-label">{isVolunteer ? '🐾 Бажана тваринка:' : '🐾 Тваринка:'}</span>
-                                                <span className="info-value highlight">{displayPetName}</span>
+                                            <div className="info-item" style={{ gridColumn: displayPetName.length > 20 ? '1 / -1' : 'auto' }}>
+                                                <span className="info-label">{isVolunteer ? '🐾 Бажана тваринка:' : '🐾 Тваринки:'}</span>
+                                                <span className="info-value highlight" style={{ wordBreak: 'break-word' }}>{displayPetName}</span>
                                             </div>
                                             <div className="info-item">
                                                 <span className="info-label">👤 Заявник:</span>
