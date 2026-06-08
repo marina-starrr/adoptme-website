@@ -566,7 +566,7 @@ function PetDetails() {
               {isEditing ? (
                 <>
                   <CustomDropdown
-                     options={['Дружелюбний до всіх', 'Любить дітей', 'Добре поводиться з іншими тваринами', 'Обережний / Потребує часу'].map(f => ({value: f, label: f}))}
+                     options={['Дружелюбний до всіх', 'Любить дітей', 'Добрий/а до інших тварин', 'Обережний / Потребує часу'].map(f => ({value: f, label: f}))}
                      value={editFormData.Friendliness || 'Дружелюбний до всіх'}
                      onChange={val => handleChange('Friendliness', val)}
                   />

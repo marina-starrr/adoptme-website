@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../../supabaseClient';
 import { useToast } from '../../context/ToastContext';
+import './AdminNotifications.css';
 
 function AdminNotifications() {
     const [notifications, setNotifications] = useState([]);
@@ -78,7 +79,7 @@ function AdminNotifications() {
     if (loading) return <h2 className="loading-message">Завантаження сповіщень... 🐾</h2>;
 
     return (
-        <div style={{ position: 'relative', width: '100%' }}>
+        <div className="admin-page-wrap">
             <div className="admin-card">
                 <h2 className="admin-page-title">
                     <div className="admin-page-title-icon">🔔</div>
@@ -87,7 +88,7 @@ function AdminNotifications() {
 
                 <div className="admin-table-container">
                     {notifications.length === 0 ? (
-                        <p style={{ textAlign: 'center', padding: '20px', color: '#666' }}>Сповіщень поки немає.</p>
+                        <p className="admin-notifications-empty">Сповіщень поки немає.</p>
                     ) : (
                         <table className="admin-table">
                             <thead>
@@ -113,20 +114,23 @@ function AdminNotifications() {
                                             </span>
                                         </td>
                                         <td>
-                                            <button 
-                                                onClick={() => handleStatusChange(n.Id, n.Status)}
-                                                className="btn-save" 
-                                                style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '10px', marginRight: '10px', width: 'auto', display: 'inline-block' }}
-                                            >
-                                                {n.Status === 'Нова' ? '✓ Оброблено' : '↩ Відновити'}
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDeleteClick(n.Id)}
-                                                className="btn-cancel" 
-                                                style={{ padding: '6px 12px', fontSize: '13px', borderRadius: '10px', width: 'auto', display: 'inline-block', background: '#ff6b6b', color: 'white' }}
-                                            >
-                                                🗑️
-                                            </button>
+                                            <div className="admin-notifications-actions">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleStatusChange(n.Id, n.Status)}
+                                                    className="btn-notify-action process"
+                                                >
+                                                    {n.Status === 'Нова' ? '✓ Оброблено' : '↩ Відновити'}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteClick(n.Id)}
+                                                    className="btn-notify-action delete"
+                                                    title="Видалити"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

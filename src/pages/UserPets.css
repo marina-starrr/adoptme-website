@@ -57,7 +57,6 @@
     position: sticky;
     top: 100px;
     z-index: 10;
-    /* Додано обмеження висоти та скрол для великої кількості фільтрів */
     max-height: calc(100vh - 120px);
     overflow-y: auto;
 }
@@ -135,11 +134,20 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 10px;
     cursor: pointer;
     color: #333;
     font-weight: 500;
     font-size: 15px;
     transition: all 0.3s ease;
+}
+
+.custom-dropdown-header span:first-child {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .custom-dropdown-header:hover {
@@ -268,6 +276,41 @@
     color: #21064A;
 }
 
+.sort-dropdown {
+    width: 220px;
+    min-width: 0;
+    flex-shrink: 0;
+}
+
+.filters-toggle-btn {
+    display: none;
+    width: 100%;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+    border: 2px solid rgba(104, 71, 221, 0.15);
+    border-radius: 18px;
+    background: #ffffff;
+    color: #21064A;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(104, 71, 221, 0.08);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filters-toggle-btn.open {
+    border-color: #6847DD;
+    box-shadow: 0 8px 24px rgba(104, 71, 221, 0.12);
+}
+
+.filters-toggle-icon {
+    color: #6847DD;
+    font-size: 12px;
+}
+
 /* СІТКА */
 .pet-grid {
     display: grid;
@@ -320,63 +363,273 @@
 }
 
 /* =========================================
+   СТИЛІ ПАГІНАЦІЇ (ПЕРЕМИКАЧА СТОРІНОК)
+   ========================================= */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 45px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.pagination-btn {
+    background-color: #ffffff;
+    color: #6847DD;
+    border: 2px solid rgba(104, 71, 221, 0.15);
+    padding: 10px 16px;
+    border-radius: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 15px;
+    min-width: 44px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f0edff;
+    border-color: #6847DD;
+}
+
+.pagination-btn.active {
+    background: linear-gradient(135deg, #6847DD 0%, #4A148C 100%);
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(104, 71, 221, 0.25);
+}
+
+.pagination-btn:disabled {
+    background-color: #f4f5fa;
+    color: #ccc;
+    border-color: #e2e4f0;
+    cursor: not-allowed;
+}
+
+/* =========================================
    АДАПТИВНІСТЬ
    ========================================= */
+@media (max-width: 1200px) {
+    .catalog-layout {
+        gap: 28px;
+    }
+
+    .pet-grid {
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+    }
+}
+
 @media (max-width: 1024px) {
+    .pets-section {
+        padding: 50px 4%;
+    }
+
     .catalog-layout {
         flex-direction: column;
+        gap: 24px;
     }
 
     .catalog-sidebar {
-        width: 240px;
-        flex-shrink: 0;
-        background: #ffffff;
-        border-radius: 24px;
-        padding: 25px;
-        box-shadow: 0 10px 40px rgba(104, 71, 221, 0.08);
-        position: sticky;
-        top: 100px;
-        z-index: 50;
-        overflow: visible !important;
+        width: 100%;
+        position: static;
+        max-height: none;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 20px;
+        overflow: visible;
     }
 
     .sidebar-header {
-        grid-column: span 2;
-        margin-bottom: 10px;
+        grid-column: 1 / -1;
+        margin-bottom: 4px;
     }
 
     .filter-block {
         margin-bottom: 0;
     }
+
+    .catalog-top-bar {
+        padding: 16px 20px;
+    }
 }
 
 @media (max-width: 768px) {
-    .catalog-sidebar {
-        grid-template-columns: 1fr;
+    .pets-section {
+        padding: 32px 16px 48px;
     }
 
-    .sidebar-header {
-        grid-column: 1;
-    }
-
-    .catalog-top-bar {
-        flex-direction: column;
-        gap: 15px;
-        align-items: flex-start;
-    }
-
-    .sort-control {
-        width: 100%;
-        justify-content: space-between;
-    }
-
-    .sort-control>div {
-        flex: 1;
+    .loading-message {
+        padding: 60px 20px;
+        font-size: 18px;
     }
 
     .pets-title-container {
         background-size: 100% 100%;
         height: auto;
-        padding: 40px 20px;
+        min-height: 100px;
+        padding: 28px 16px;
+        margin-bottom: 24px;
+        line-height: 1.2;
+    }
+
+    .filters-toggle-btn {
+        display: flex;
+    }
+
+    .catalog-sidebar {
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .catalog-sidebar.open {
+        display: grid;
+    }
+
+    .catalog-top-bar {
+        flex-direction: column;
+        gap: 14px;
+        align-items: stretch;
+        padding: 16px 18px;
+        margin-bottom: 20px;
+    }
+
+    .results-count {
+        font-size: 15px;
+        text-align: center;
+    }
+
+    .results-count strong {
+        font-size: 17px;
+    }
+
+    .sort-control {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .sort-label {
+        text-align: center;
+    }
+
+    .sort-dropdown {
+        width: 100%;
+    }
+
+    .pet-grid {
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 20px;
+    }
+
+    .empty-catalog {
+        padding: 48px 16px;
+    }
+
+    .empty-catalog h3 {
+        font-size: 20px;
+    }
+
+    .reset-large-btn {
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .custom-dropdown-header {
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+
+    .custom-dropdown-item {
+        padding: 11px 12px;
+        font-size: 13px;
+    }
+
+    .pagination-btn {
+        padding: 8px 14px;
+        font-size: 14px;
+        min-width: 38px;
+        border-radius: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .pets-section {
+        padding: 24px 12px 40px;
+    }
+
+    .pets-title-container {
+        min-height: 88px;
+        padding: 22px 12px;
+        font-size: clamp(20px, 6vw, 28px);
+        margin-bottom: 20px;
+    }
+
+    .filters-toggle-btn {
+        padding: 12px 14px;
+        font-size: 15px;
+        margin-bottom: 12px;
+    }
+
+    .catalog-sidebar {
+        padding: 16px;
+        border-radius: 18px;
+    }
+
+    .sidebar-header h3 {
+        font-size: 18px;
+    }
+
+    .filter-block label {
+        font-size: 13px;
+        margin-bottom: 8px;
+    }
+
+    .catalog-top-bar {
+        border-radius: 16px;
+        margin-bottom: 16px;
+    }
+
+    .pet-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .empty-catalog h3 {
+        font-size: 18px;
+    }
+
+    .empty-catalog p {
+        font-size: 14px;
+    }
+
+    .reset-large-btn {
+        padding: 14px 20px;
+        font-size: 15px;
+    }
+}
+
+@media (max-width: 360px) {
+    .pets-title-container {
+        min-height: 80px;
+        padding: 18px 10px;
+    }
+
+    .custom-dropdown-header {
+        padding: 10px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (hover: none) {
+    .reset-large-btn:hover {
+        transform: none;
     }
 }

@@ -65,6 +65,9 @@ function AdminUsers() {
     const [userToDelete, setUserToDelete] = useState(null);
     const [isModalClosing, setIsModalClosing] = useState(false);
 
+    // Стан для кнопки "ока"
+    const [showPassword, setShowPassword] = useState(false);
+
     const initialFormState = {
         Nickname: '',
         FirstName: '',
@@ -106,6 +109,7 @@ function AdminUsers() {
         setTimeout(() => {
             setIsModalOpen(false);
             setIsModalClosing(false);
+            setShowPassword(false); // Скидаємо стан "ока"
         }, 300);
     };
 
@@ -126,11 +130,26 @@ function AdminUsers() {
     const handleEditOpen = (user) => {
         setEditMode(true);
         setCurrentUserId(user.Id);
+
+        // Форматуємо телефон для відображення в інпуті
+        let rawPhone = (user.Phone || '').replace(/\D/g, '');
+        if (rawPhone.length > 0 && !rawPhone.startsWith('380')) rawPhone = '380' + rawPhone;
+
+        let formattedPhone = '';
+        if (rawPhone.length > 0) {
+            formattedPhone = '+';
+            if (rawPhone.length > 0) formattedPhone += rawPhone.substring(0, 2);
+            if (rawPhone.length > 2) formattedPhone += '(' + rawPhone.substring(2, 5);
+            if (rawPhone.length > 5) formattedPhone += ') ' + rawPhone.substring(5, 8);
+            if (rawPhone.length > 8) formattedPhone += ' ' + rawPhone.substring(8, 10);
+            if (rawPhone.length > 10) formattedPhone += ' ' + rawPhone.substring(10, 12);
+        }
+
         setUserFormData({
             Nickname: user.Nickname || '',
             FirstName: user.FirstName || '',
             LastName: user.LastName || '',
-            Phone: user.Phone || '',
+            Phone: formattedPhone, // Записуємо форматований номер
             Email: user.Email || '',
             Password: user.Password || '',
             Role: user.Role || 'user',
@@ -139,6 +158,27 @@ function AdminUsers() {
         });
         setIsModalOpen(true);
     };
+    
+    const handlePhoneChange = (e) => {
+        const rawDigits = e.target.value.replace(/\D/g, '');
+        if (rawDigits.length === 0) {
+            setUserFormData({ ...userFormData, Phone: '' });
+            return;
+        }
+
+        let digits = rawDigits;
+        if (!digits.startsWith('380')) digits = '380' + digits;
+        digits = digits.substring(0, 12);
+
+        let formatted = '+';
+        if (digits.length > 0) formatted += digits.substring(0, 2);
+        if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
+        if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
+        if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
+        if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
+
+        setUserFormData({ ...userFormData, Phone: formatted });
+    };
 
     const handleSaveUser = async (e) => {
         e.preventDefault();
@@ -146,7 +186,8 @@ function AdminUsers() {
 
         // --- БЛОК ВАЛІДАЦІЇ ---
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        const phoneRegex = /^\+?\d{10,15}$/; // Перевірка на 10-15 цифр
+        // Перевіряємо тільки 10 цифр, бо 38 ми доклеїмо самі
+        const rawPhoneDigits = userFormData.Phone.replace(/\D/g, '');
 
         if (!userFormData.Nickname.trim()) {
             showToast('❌ Нікнейм обов’язковий!');
@@ -160,8 +201,8 @@ function AdminUsers() {
             showToast('❌ Введіть коректний Email!');
             setIsSaving(false); return;
         }
-        if (!phoneRegex.test(userFormData.Phone.replace(/\D/g, ''))) {
-            showToast('❌ Введіть коректний номер телефону!');
+        if (rawPhoneDigits.length !== 10) {
+            showToast('❌ Введіть коректний номер телефону (10 цифр після +38)!');
             setIsSaving(false); return;
         }
         if (userFormData.Password.length < 6) {
@@ -184,11 +225,10 @@ function AdminUsers() {
                 }
             }
 
-
             const dataToSave = {
                 ...userFormData,
-                // Очищаємо від форматування і додаємо 38
-                Phone: '38' + userFormData.Phone.replace(/\D/g, ''),
+                // Додаємо 38 і чисті цифри
+                Phone: '38' + rawPhoneDigits,
                 SecretAnswer: userFormData.SecretAnswer.trim().toLowerCase()
             };
 
@@ -201,7 +241,6 @@ function AdminUsers() {
                 if (error) throw error;
                 showToast("✅ Дані користувача успішно оновлено!");
             } else {
-                // Перевірка на унікальність нікнейму при створенні нового
                 const { data: existingUser } = await supabase
                     .from('Users')
                     .select('Id')
@@ -237,41 +276,29 @@ function AdminUsers() {
 
     const executeDelete = async () => {
         if (!userToDelete) return;
-        closeDeleteModal();
         try {
             const user = users.find(u => u.Id === userToDelete);
             if (user?.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
                 showToast("❌ Не можна видалити єдиного адміністратора!");
+                closeDeleteModal();
                 return;
             }
             const { error } = await supabase.from('Users').delete().eq('Id', userToDelete);
             if (error) throw error;
             showToast("🗑️ Користувача успішно видалено!");
             setUsers(prev => prev.filter(u => u.Id !== userToDelete));
+            closeDeleteModal();
         } catch (err) {
             showToast("❌ Помилка видалення: " + err.message);
         }
     };
 
-    const handlePhoneChange = (e) => {
-        // Отримуємо тільки цифри, обмежуємо до 10 (бо +38 вже є статичним)
-        const rawDigits = e.target.value.replace(/\D/g, '').substring(0, 10);
-
-        let formatted = '';
-        if (rawDigits.length > 0) formatted += '(' + rawDigits.substring(0, 3);
-        if (rawDigits.length >= 3) formatted += ') ' + rawDigits.substring(3, 6);
-        if (rawDigits.length >= 6) formatted += ' ' + rawDigits.substring(6, 8);
-        if (rawDigits.length >= 8) formatted += ' ' + rawDigits.substring(8, 10);
-
-        setUserFormData({ ...userFormData, Phone: formatted });
-    };
-
     return (
-        <div className="admin-main" style={{ position: 'relative' }}>
+        <div className="admin-page-wrap">
             <div className="admin-page-layout">
                 <div className="admin-content-area" style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
                     <div className="admin-card">
-                        <div className="admin-header-box" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div className="admin-header-box admin-header-row">
                             <div>
                                 <h2 className="admin-page-title">
                                     <span className="admin-page-title-icon">👥</span> База користувачів
@@ -319,7 +346,7 @@ function AdminUsers() {
                                                 </td>
                                                 <td>
                                                     <div style={{ color: '#333', fontWeight: '500' }}>{user.Email}</div>
-                                                    <div style={{ color: '#666', fontSize: '0.9rem' }}>{user.Phone || 'Не вказано'}</div>
+                                                    <div style={{ color: '#666', fontSize: '0.9rem' }}>{user.Phone ? `+${user.Phone}` : 'Не вказано'}</div>
                                                 </td>
                                                 <td>
                                                     <span className={`user-role-badge ${user.Role === 'admin' ? 'role-admin' : 'role-user'}`}>
@@ -357,7 +384,16 @@ function AdminUsers() {
                             <div className="form-row">
                                 <div className="input-group">
                                     <label>Нікнейм (Логін)</label>
-                                    <input type="text" value={userFormData.Nickname} onChange={e => setUserFormData({ ...userFormData, Nickname: e.target.value })} className="form-control" placeholder="Наприклад: @ivan" required disabled={editMode} />
+                                    <input
+                                        type="text"
+                                        value={userFormData.Nickname}
+                                        onChange={e => setUserFormData({ ...userFormData, Nickname: e.target.value })}
+                                        className="form-control"
+                                        placeholder="Наприклад: @ivan"
+                                        maxLength="20"
+                                        required
+                                        disabled={editMode}
+                                    />
                                 </div>
                                 <div className="input-group">
                                     <label>Роль в системі</label>
@@ -373,92 +409,137 @@ function AdminUsers() {
                             <div className="form-row">
                                 <div className="input-group">
                                     <label>Ім'я</label>
-                                    <input type="text" value={userFormData.FirstName} onChange={e => setUserFormData({ ...userFormData, FirstName: e.target.value })} className="form-control" placeholder="Іван" required />
+                                    <input
+                                        type="text"
+                                        value={userFormData.FirstName}
+                                        onChange={e => setUserFormData({ ...userFormData, FirstName: e.target.value })}
+                                        className="form-control"
+                                        placeholder="Іван"
+                                        maxLength="30"
+                                        required
+                                    />
                                 </div>
                                 <div className="input-group">
                                     <label>Прізвище</label>
-                                    <input type="text" value={userFormData.LastName} onChange={e => setUserFormData({ ...userFormData, LastName: e.target.value })} className="form-control" placeholder="Іваненко" required />
+                                    <input
+                                        type="text"
+                                        value={userFormData.LastName}
+                                        onChange={e => setUserFormData({ ...userFormData, LastName: e.target.value })}
+                                        className="form-control"
+                                        placeholder="Іваненко"
+                                        maxLength="30"
+                                        required
+                                    />
                                 </div>
                             </div>
 
                             <div className="form-row">
                                 <div className="input-group">
                                     <label>Email</label>
-                                    <input type="email" value={userFormData.Email} onChange={e => setUserFormData({ ...userFormData, Email: e.target.value })} className="form-control" placeholder="vash@mail.com" required />
+                                    <input
+                                        type="email"
+                                        value={userFormData.Email}
+                                        onChange={e => setUserFormData({ ...userFormData, Email: e.target.value })}
+                                        className="form-control"
+                                        placeholder="vash@mail.com"
+                                        maxLength="100"
+                                        required
+                                    />
                                 </div>
                                 <div className="input-group">
                                     <label>Телефон</label>
-                                    <div className="phone-input-wrapper">
-                                        <span className="phone-prefix">+38</span>
-                                        <input
-                                            type="tel"
-                                            value={userFormData.Phone}
-                                            onChange={handlePhoneChange}
-                                            placeholder="(0__) ___ __ __"
-                                            maxLength="15"
-                                            required
-                                        />
-                                    </div>
+                                    <input
+                                        type="tel"
+                                        value={userFormData.Phone}
+                                        onChange={handlePhoneChange}
+                                        placeholder="+38(0__) ___ __ __"
+                                        className="form-control"
+                                        maxLength="19"
+                                        required
+                                    />
+                                </div>
                             </div>
-                    </div>
 
-                    <div className="input-group">
-                        <label>Пароль</label>
-                        <input type="text" value={userFormData.Password} onChange={e => setUserFormData({ ...userFormData, Password: e.target.value })} className="form-control" placeholder="Створіть надійний пароль" required />
-                    </div>
+                            <div className="input-group">
+                                <label>Пароль</label>
+                                <div className="password-input-wrapper-admin">
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        value={userFormData.Password}
+                                        onChange={e => setUserFormData({ ...userFormData, Password: e.target.value })}
+                                        className="form-control"
+                                        placeholder="Створіть надійний пароль"
+                                        maxLength="64"
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        className="toggle-password-admin"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                    >
+                                        {showPassword ? "🙉" : "🙈"}
+                                    </button>
+                                </div>
+                            </div>
 
-                    <div className="input-group" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                        <label style={{ color: '#49109f', marginBottom: '10px' }}>Секретне запитання</label>
-                        <CustomDropdown
-                            options={[
-                                { value: 'Як звали вашого першого домашнього улюбленця?', label: 'Як звали вашого першого домашнього улюбленця?' },
-                                { value: 'Яка ваша улюблена порода собак/котів?', label: 'Яка ваша улюблена порода собак/котів?' },
-                                { value: 'Місто, у якому ви народилися?', label: 'Місто, у якому ви народилися?' },
-                                { value: 'Який ваш улюблений колір?', label: 'Який ваш улюблений колір?' }
-                            ]}
-                            value={userFormData.SecretQuestion}
-                            onChange={val => setUserFormData({ ...userFormData, SecretQuestion: val })}
-                            placeholder="Оберіть питання"
-                        />
-                        <input type="text" value={userFormData.SecretAnswer} onChange={e => setUserFormData({ ...userFormData, SecretAnswer: e.target.value })} className="form-control" required placeholder="Ваша відповідь..." style={{ marginTop: '10px' }} />
-                    </div>
+                            <div className="input-group" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <label style={{ color: '#49109f', marginBottom: '10px' }}>Секретне запитання</label>
+                                <CustomDropdown
+                                    options={[
+                                        { value: 'Як звали вашого першого домашнього улюбленця?', label: 'Як звали вашого першого домашнього улюбленця?' },
+                                        { value: 'Яка ваша улюблена порода собак/котів?', label: 'Яка ваша улюблена порода собак/котів?' },
+                                        { value: 'Місто, у якому ви народилися?', label: 'Місто, у якому ви народилися?' },
+                                        { value: 'Який ваш улюблений колір?', label: 'Який ваш улюблений колір?' }
+                                    ]}
+                                    value={userFormData.SecretQuestion}
+                                    onChange={val => setUserFormData({ ...userFormData, SecretQuestion: val })}
+                                    placeholder="Оберіть питання"
+                                />
+                                <input
+                                    type="text"
+                                    value={userFormData.SecretAnswer}
+                                    onChange={e => setUserFormData({ ...userFormData, SecretAnswer: e.target.value })}
+                                    className="form-control"
+                                    required
+                                    placeholder="Ваша відповідь..."
+                                    maxLength="50"
+                                    style={{ marginTop: '10px' }}
+                                />
+                            </div>
 
-                    <div className="form-actions">
-                        <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isSaving}>Скасувати</button>
-                        <button type="submit" className="save-btn" disabled={isSaving}>{isSaving ? 'Збереження...' : 'Зберегти користувача'}</button>
+                            <div className="form-actions">
+                                <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isSaving}>Скасувати</button>
+                                <button type="submit" className="save-btn" disabled={isSaving}>{isSaving ? 'Збереження...' : 'Зберегти користувача'}</button>
+                            </div>
+                        </form>
                     </div>
-                </form>
+                </div>,
+                document.body
+            )}
+
+            {userToDelete && createPortal(
+                <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
+                    <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ color: '#ef4444', fontSize: '24px', marginBottom: '10px', marginTop: 0 }}>⚠️ Видалення</h3>
+                        <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.5' }}>
+                            Ви дійсно хочете назавжди видалити цього користувача? Цю дію неможливо скасувати.
+                        </p>
+                        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+                            <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
+                            <button
+                                className="save-btn"
+                                style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}
+                                onClick={executeDelete}
+                            >
+                                Так, видалити
+                            </button>
+                        </div>
                     </div>
-                </div >,
-        document.body
-            )
-}
+                </div>,
+                document.body
+            )}
 
-{
-    userToDelete && createPortal(
-        <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeDeleteModal}>
-            <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} style={{ maxWidth: '400px', textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-                <h3 style={{ color: '#ef4444', fontSize: '24px', marginBottom: '10px', marginTop: 0 }}>⚠️ Видалення</h3>
-                <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.5' }}>
-                    Ви дійсно хочете назавжди видалити цього користувача? Цю дію неможливо скасувати.
-                </p>
-                <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
-                    <button className="cancel-btn" onClick={closeDeleteModal}>Скасувати</button>
-                    <button
-                        className="save-btn"
-                        style={{ background: '#ef4444', boxShadow: '0 5px 15px rgba(239, 68, 68, 0.3)' }}
-                        onClick={executeDelete}
-                    >
-                        Так, видалити
-                    </button>
-                </div>
-            </div>
-        </div>,
-        document.body
-    )
-}
-
-        </div >
+        </div>
     );
 }
 

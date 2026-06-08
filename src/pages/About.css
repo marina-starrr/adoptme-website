@@ -49,23 +49,21 @@
 
 .adopt-me-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 80px;
+    font-size: clamp(32px, 8vw, 80px);
     font-weight: 900;
     color: var(--black, #000);
     line-height: 1;
     text-transform: lowercase;
-    white-space: nowrap;
 }
 
 .adopt-me-title-reflection {
     font-family: 'Montserrat', sans-serif;
-    font-size: 80px;
+    font-size: clamp(32px, 8vw, 80px);
     font-weight: 900;
     color: rgba(0, 0, 0, 0.3);
     transform: scaleY(-1);
     transform-origin: top;
-    white-space: nowrap;
-    margin-top: 80px;
+    margin-top: clamp(24px, 7vw, 80px);
 }
 
 /* =========================================
@@ -271,13 +269,46 @@
     margin: 0;
 }
 
+.about-help-wrapper {
+    position: relative;
+    z-index: 2;
+}
+
+/* =========================================
+   ПОСИЛАННЯ "ЯК ЩЕ ДОПОМОГТИ"
+   ========================================= */
+.more-help-container {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    text-align: center;
+}
+
+.more-help-btn {
+    display: inline-block;
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 700;
+    padding: 18px 45px;
+    border-radius: 30px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(104, 71, 221, 0.3);
+    transition: all 0.3s ease;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.more-help-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(104, 71, 221, 0.5);
+    color: white;
+}
 
 /* =========================================
    АДАПТИВНІСТЬ (Media Queries)
    ========================================= */
-@media(max-width: 1500px) {
+@media (max-width: 1500px) {
     .absolute-visuals-container { height: 1300px; }
-    .adopt-me-title, .adopt-me-title-reflection { font-size: 70px; }
     .overlay-text-container { left: 0px; width: 650px; height: 220px; font-size: 22px; }
     
     .image-1-positioned { right: 150px; width: 300px; height: 300px; }
@@ -294,103 +325,247 @@
 }
 
 @media (max-width: 1200px) {
-    .absolute-visuals-container { height: auto; display: flex; flex-direction: column; margin-bottom: 60px; }
-    .adopt-me-title-block { position: relative; margin-bottom: 30px; align-items: center; }
-    .overlay-text-container { position: relative; top: 0; left: 0; width: 100%; margin: 20px 0; }
+    .about-us {
+        padding: 80px 4% 60px;
+    }
+
+    .absolute-visuals-container {
+        height: auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 60px;
+    }
+
+    .adopt-me-title-block {
+        position: relative;
+        margin-bottom: 24px;
+        align-items: center;
+        text-align: center;
+    }
+
+    .overlay-text-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        width: min(100%, 740px);
+        height: auto;
+        min-height: 140px;
+        aspect-ratio: 740 / 245;
+        margin: 12px 0 20px;
+        padding: 20px;
+    }
     
-    .image-1-positioned, .image-2-positioned, .image-12-positioned, 
-    .image-4-positioned, .image-13-positioned, .image-3-positioned, 
-    .image-14-positioned, .image-5-positioned, .image-6-positioned, 
+    .image-1-positioned,
+    .image-2-positioned,
+    .image-12-positioned, 
+    .image-4-positioned,
+    .image-13-positioned,
+    .image-3-positioned, 
+    .image-14-positioned,
+    .image-5-positioned,
+    .image-6-positioned, 
     .image-15-positioned {
         position: relative;
-        top: 0; right: 0; left: 0;
-        margin: 20px auto;
-        width: 80%;
+        top: 0;
+        right: 0;
+        left: 0;
+        margin: 16px auto;
+        width: min(90%, 568px);
         height: auto;
     }
     
-    .image-15-positioned { transform: none; margin-top: 30px; } 
-    
-    .image-1-positioned { width: 300px; height: 300px; }
-    .image-2-positioned { width: 200px; height: 200px; }
-    .image-3-positioned { width: 300px; height: 300px; }
-    .image-4-positioned { width: 160px; height: 160px; }
-    .image-5-positioned { width: 220px; height: 220px; }
-    .image-6-positioned { width: 300px; height: 300px; }
+    .image-15-positioned {
+        transform: none;
+        width: min(95%, 875px);
+        min-height: 100px;
+        aspect-ratio: auto;
+        margin-top: 24px;
+    }
 
-    .adaptation-section { padding: 40px 20px; }
-    .adaptation-header h2 { font-size: 30px; }
+    .image-12-positioned { aspect-ratio: 568 / 194; min-height: 120px; }
+    .image-13-positioned { aspect-ratio: 577 / 184; min-height: 120px; }
+    .image-14-positioned { aspect-ratio: 635 / 182; min-height: 120px; }
+    
+    .image-1-positioned { width: min(80%, 300px); aspect-ratio: 1; }
+    .image-2-positioned { width: min(55%, 200px); aspect-ratio: 1; }
+    .image-3-positioned { width: min(80%, 300px); aspect-ratio: 1; }
+    .image-4-positioned { width: min(45%, 160px); aspect-ratio: 1; }
+    .image-5-positioned { width: min(65%, 220px); aspect-ratio: 1; }
+    .image-6-positioned { width: min(85%, 300px); aspect-ratio: 1; }
+
+    .adaptation-section { padding: 40px 24px; }
+    .adaptation-header h2 { font-size: clamp(26px, 4vw, 30px); }
+    .adaptation-header { margin-bottom: 36px; }
+}
+
+@media (max-width: 1024px) {
+    .about-us {
+        padding: 70px 20px 50px;
+    }
+
+    .overlay-text-container,
+    .image-12-positioned,
+    .image-13-positioned,
+    .image-14-positioned,
+    .image-15-positioned {
+        font-size: 20px;
+        width: min(100%, 640px);
+    }
+
+    .adaptation-section {
+        padding: 36px 20px;
+        border-radius: 24px;
+    }
+
+    .adaptation-grid {
+        gap: 24px;
+    }
 }
 
 @media (max-width: 768px) {
-    .about-us { padding: 60px 3%; }
-    .adopt-me-title { font-size: 50px; }
-    .adopt-me-title-reflection { font-size: 50px; margin-top: 40px; }
-    
-    .image-1-positioned { width: 250px; height: 250px; }
-    .image-2-positioned { width: 150px; height: 150px; }
-    .image-3-positioned { width: 250px; height: 250px; }
-    .image-4-positioned { width: 120px; height: 120px; }
-    .image-5-positioned { width: 180px; height: 180px; }
-    .image-6-positioned { width: 250px; height: 250px; }
-    
-    .overlay-text-container, .image-12-positioned, 
-    .image-13-positioned, .image-14-positioned, .image-15-positioned {
-        font-size: 18px;
-        padding: 15px;
-        height: auto;
-        min-height: 120px;
+    .about-us {
+        padding: 56px 16px 40px;
     }
 
-    .adaptation-grid { grid-template-columns: 1fr 1fr; }
-    .adapt-card { padding: 25px 20px; }
+    .absolute-visuals-container {
+        margin-bottom: 40px;
+    }
+
+    .adopt-me-title-block {
+        margin-bottom: 16px;
+    }
+    
+    .image-1-positioned { width: min(85%, 250px); }
+    .image-2-positioned { width: min(50%, 150px); }
+    .image-3-positioned { width: min(85%, 250px); }
+    .image-4-positioned { width: min(40%, 120px); }
+    .image-5-positioned { width: min(60%, 180px); }
+    .image-6-positioned { width: min(85%, 250px); }
+    
+    .overlay-text-container,
+    .image-12-positioned, 
+    .image-13-positioned,
+    .image-14-positioned,
+    .image-15-positioned {
+        font-size: 17px;
+        padding: 16px;
+        min-height: 110px;
+        margin: 12px auto;
+    }
+
+    .adaptation-section {
+        margin-top: 24px;
+        padding: 28px 16px;
+    }
+
+    .adaptation-header {
+        margin-bottom: 28px;
+    }
+
+    .adaptation-header p {
+        font-size: 16px;
+        padding: 0 8px;
+    }
+
+    .adaptation-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .adapt-card {
+        padding: 24px 18px;
+    }
+
+    .adapt-card h3 {
+        font-size: 18px;
+    }
+
+    .adapt-card p {
+        font-size: 14px;
+    }
+
+    .more-help-container {
+        margin-top: 40px;
+        margin-bottom: 24px;
+        padding: 0 8px;
+    }
+
+    .more-help-btn {
+        width: 100%;
+        max-width: 360px;
+        padding: 16px 24px;
+    }
 }
 
 @media (max-width: 480px) {
-    .adopt-me-title { font-size: 36px; }
-    .adopt-me-title-reflection { font-size: 36px; margin-top: 30px; }
-    
-    .image-1-positioned { width: 200px; height: 200px; }
-    .image-2-positioned { width: 120px; height: 120px; }
-    .image-3-positioned { width: 200px; height: 200px; }
-    .image-4-positioned { width: 100px; height: 100px; }
-    .image-5-positioned { width: 150px; height: 150px; }
-    .image-6-positioned { width: 200px; height: 200px; }
-    
-    .image-12-positioned, .image-13-positioned, 
-    .image-14-positioned, .image-15-positioned {
-        font-size: 16px;
+    .about-us {
+        padding: 44px 12px 32px;
+    }
+
+    .overlay-text-container,
+    .image-12-positioned, 
+    .image-13-positioned,
+    .image-14-positioned,
+    .image-15-positioned {
+        font-size: 15px;
+        padding: 12px;
+        min-height: 96px;
+        line-height: 1.35;
+    }
+
+    .image-1-positioned { width: min(90%, 200px); }
+    .image-2-positioned { width: min(48%, 120px); }
+    .image-3-positioned { width: min(90%, 200px); }
+    .image-4-positioned { width: min(38%, 100px); }
+    .image-5-positioned { width: min(58%, 150px); }
+    .image-6-positioned { width: min(90%, 200px); }
+
+    .adaptation-header h2 {
+        font-size: 24px;
+    }
+
+    .adaptation-header p {
+        font-size: 15px;
+    }
+
+    .adapt-icon-wrapper {
+        width: 60px;
+        height: 60px;
+        margin-bottom: 16px;
+    }
+
+    .adapt-icon {
+        font-size: 28px;
+    }
+
+    .more-help-btn {
+        max-width: none;
+        border-radius: 24px;
+    }
+}
+
+@media (max-width: 360px) {
+    .overlay-text-container,
+    .image-12-positioned,
+    .image-13-positioned,
+    .image-14-positioned,
+    .image-15-positioned {
+        font-size: 14px;
         padding: 10px;
-    } 
+    }
 
-    .adaptation-header h2 { font-size: 26px; }
-    .adaptation-grid { grid-template-columns: 1fr; }
+    .adapt-card {
+        padding: 20px 14px;
+    }
 }
 
-/* =========================================
-   ПОСИЛАННЯ "ЯК ЩЕ ДОПОМОГТИ"
-   ========================================= */
-.more-help-container {
-    margin-top: 60px;
-    margin-bottom: 40px;
-    text-align: center;
-}
+@media (hover: none) {
+    .adapt-card:hover {
+        transform: none;
+    }
 
-.more-help-btn {
-    display: inline-block;
-    background: linear-gradient(to right, #6847DD, #382677);
-    color: white;
-    font-size: 20px;
-    font-weight: 700;
-    padding: 18px 45px;
-    border-radius: 30px;
-    text-decoration: none;
-    box-shadow: 0 6px 15px rgba(104, 71, 221, 0.3);
-    transition: all 0.3s ease;
-}
-
-.more-help-btn:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 25px rgba(104, 71, 221, 0.5);
-    color: white; 
+    .more-help-btn:hover {
+        transform: none;
+    }
 }

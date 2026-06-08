@@ -90,7 +90,7 @@ function About() {
                     </div>
                 </div>
 
-                <div style={{ position: 'relative', zIndex: 2 }}>
+                <div className="about-help-wrapper">
                     <div className="more-help-container">
                         <Link to="/help" className="more-help-btn">
                             Як можна допомогти?

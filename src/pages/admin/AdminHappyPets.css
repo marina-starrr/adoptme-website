@@ -52,7 +52,7 @@
     height: 100px;
     border-radius: 10px;
     overflow: hidden;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .image-preview-box img {
@@ -106,8 +106,14 @@
     transition: background 0.3s;
 }
 
-.save-btn:hover { background: #49109f; }
-.save-btn:disabled { background: #b49dff; cursor: not-allowed; }
+.save-btn:hover {
+    background: #49109f;
+}
+
+.save-btn:disabled {
+    background: #b49dff;
+    cursor: not-allowed;
+}
 
 .cancel-btn {
     background: #f4f5fa;
@@ -119,7 +125,9 @@
     cursor: pointer;
 }
 
-.cancel-btn:hover { background: #e2e2f0; }
+.cancel-btn:hover {
+    background: #e2e2f0;
+}
 
 /* ТАБЛИЦЯ */
 .table-img-preview {
@@ -145,7 +153,9 @@
     transition: transform 0.2s;
 }
 
-.action-btn:hover { transform: scale(1.2); }
+.action-btn:hover {
+    transform: scale(1.2);
+}
 
 /* Знайдіть цей блок і додайте .form-group select */
 .form-group input[type="text"],
@@ -157,7 +167,8 @@
     font-family: inherit;
     font-size: 15px;
     transition: border-color 0.3s;
-    background-color: white; /* Для select */
+    background-color: white;
+    /* Для select */
 }
 
 /* Знайдіть цей блок і додайте .form-group select:focus */
@@ -166,4 +177,115 @@
 .form-group select:focus {
     border-color: #6847DD;
     outline: none;
+}
+
+/* Кнопка вибору файлу */
+.custom-file-upload {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    background: #f0edff;
+    color: #6847DD;
+    border: 2px dashed #6847DD;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 15px;
+    transition: all 0.3s ease;
+    margin-bottom: 10px;
+    width: fit-content;
+}
+
+.custom-file-upload:hover {
+    background: #6847DD;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.3);
+}
+
+.upload-icon {
+    font-size: 18px;
+}
+
+/* Статус завантаження */
+.upload-status {
+    color: #6847DD;
+    font-size: 14px;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 1024px) {
+    .form-row {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .text-truncate {
+        max-width: 180px;
+    }
+}
+
+@media (max-width: 768px) {
+    .happy-form {
+        gap: 16px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .form-actions .save-btn,
+    .form-actions .cancel-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .custom-file-upload {
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .image-preview-box {
+        width: 80px;
+        height: 80px;
+    }
+
+    .table-img-preview {
+        width: 48px;
+        height: 48px;
+    }
+
+    .text-truncate {
+        max-width: 140px;
+    }
+
+    .action-btn {
+        margin-right: 6px;
+    }
+}
+
+@media (max-width: 480px) {
+    .text-truncate {
+        max-width: 100px;
+    }
+
+    .form-group label {
+        font-size: 13px;
+    }
+}
+
+@media (hover: none) {
+    .action-btn:hover {
+        transform: none;
+    }
+
+    .custom-file-upload:hover {
+        transform: none;
+    }
 }

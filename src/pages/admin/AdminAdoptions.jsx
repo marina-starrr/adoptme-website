@@ -273,7 +273,7 @@ function AdminAdoptions() {
     if (loading) return <div className="admin-loader">Завантаження заявок...</div>;
 
     return (
-        <div style={{ position: 'relative', maxWidth: '1240px', margin: '0 auto', width: '100%' }}>
+        <div className="admin-page-wrap">
 
             <div className="admin-card">
                 <div className="admin-header-box">

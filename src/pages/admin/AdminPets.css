@@ -19,10 +19,11 @@
   position: sticky;
   top: 100px;
   z-index: 10;
-  overflow: visible; /* Важливо для випадаючих списків */
+  overflow: visible;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
 }
 
-/* Оновлена шапка сайдбару (як у користувачів) */
 .sidebar-header {
   display: flex;
   justify-content: space-between;
@@ -129,15 +130,12 @@
   overflow-y: auto;
 }
 
-/* Кастомний скролбар для списку */
 .custom-dropdown-list::-webkit-scrollbar {
   width: 6px;
 }
-
 .custom-dropdown-list::-webkit-scrollbar-track {
   background: transparent;
 }
-
 .custom-dropdown-list::-webkit-scrollbar-thumb {
   background: #d4cbf9;
   border-radius: 10px;
@@ -187,7 +185,7 @@
 .admin-header-box {
   margin-bottom: 30px;
   position: relative;
-  z-index: 50; /* 👈 Виправляє перекриття першого пункту меню картками */
+  z-index: 50;
 }
 
 .admin-title-row {
@@ -247,7 +245,6 @@
   background: #fff;
   color: #6847DD;
 }
-
 .edit-icon-btn:hover {
   background: #6847DD;
   color: #fff;
@@ -257,7 +254,6 @@
   background: #fff;
   color: #ef4444;
 }
-
 .delete-icon-btn:hover {
   background: #ef4444;
   color: #fff;
@@ -287,17 +283,55 @@
   margin-bottom: 10px;
 }
 
-.admin-mode .favorite-btn,
-.admin-mode .heart-icon,
-.admin-mode [class*="favorite"] {
-  display: none !important;
+/* БЛОК ПАГІНАЦІЇ В АДМІНЦІ */
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.pagination-btn {
+    background-color: #ffffff;
+    color: #49109f;
+    border: 1px solid rgba(104, 71, 221, 0.2);
+    padding: 10px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 14px;
+    min-width: 42px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background-color: #f4f5fa;
+    border-color: #6847DD;
+}
+
+.pagination-btn.active {
+    background: #6847DD;
+    color: #ffffff;
+    border-color: transparent;
+    box-shadow: 0 4px 12px rgba(104, 71, 221, 0.3);
+}
+
+.pagination-btn:disabled {
+    background-color: #f4f5fa;
+    color: #ccc;
+    border-color: #e2e4f0;
+    cursor: not-allowed;
 }
 
 /* =========================================
    НОВИЙ ДИЗАЙН МОДАЛЬНОГО ВІКНА ТА ФОРМИ
    ========================================= */
-
-/* Задній напівпрозорий фон (Об'єднано з анімацією та новим z-index) */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -313,12 +347,10 @@
   animation: fadeInModal 0.3s ease-out forwards;
 }
 
-/* Анімація зникнення фону */
 .modal-overlay.closing {
   animation: fadeOutModal 0.3s forwards;
 }
 
-/* Сама біла картка вікна */
 .admin-modal {
   background: #ffffff;
   padding: 35px 40px;
@@ -330,11 +362,9 @@
   overflow-y: auto;
   position: relative;
   box-sizing: border-box;
-  /* Плавна поява зі збільшенням з центру */
   animation: animatetop 0.3s forwards;
 }
 
-/* Плавне закриття зі зменшенням до центру */
 .admin-modal.closing {
   animation: animateclose 0.3s forwards;
 }
@@ -342,17 +372,14 @@
 .admin-modal::-webkit-scrollbar {
   width: 8px;
 }
-
 .admin-modal::-webkit-scrollbar-track {
   background: transparent;
   margin: 15px 0;
 }
-
 .admin-modal::-webkit-scrollbar-thumb {
   background: #d4cbf9;
   border-radius: 10px;
 }
-
 .admin-modal::-webkit-scrollbar-thumb:hover {
   background: #B49DFF;
 }
@@ -539,7 +566,6 @@
   box-shadow: none;
 }
 
-/* --- СТИЛІ ДЛЯ ЛІЧИЛЬНИКА СИМВОЛІВ У МОДАЛЦІ --- */
 .pet-story-block {
   width: 100%;
 }
@@ -550,46 +576,216 @@
   text-align: right;
   font-size: 0.85rem;
   color: #8b7ca6;
-  margin-top: 8px !important; /* Відступ вниз ВІД поля */
+  margin-top: 8px !important;
   margin-bottom: 5px;
   font-weight: 500;
   padding-right: 5px;
   box-sizing: border-box;
-  clear: both; /* Гарантує, що він буде під усіма елементами */
+  clear: both;
   position: relative;
   z-index: 5;
 }
 
-/* --- KEYFRAMES ДЛЯ АНІМАЦІЙ --- */
 @keyframes animatetop {
   from { transform: scale(0.9); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
-
 @keyframes animateclose {
   from { transform: scale(1); opacity: 1; }
   to { transform: scale(0.9); opacity: 0; }
 }
-
 @keyframes fadeInModal {
   from { opacity: 0; }
   to { opacity: 1; }
 }
-
 @keyframes fadeOutModal {
   from { opacity: 1; }
   to { opacity: 0; }
 }
 
-/* 1. Розширюємо загальний контейнер сторінки, знімаючи ліміт у 1550px */
 .admin-main:has(.admin-page-layout) {
   max-width: none !important;
   padding: 40px 3% !important; 
 }
 
-/* 2. Дозволяємо білій обгортці розтягуватися на всю ширину, зберігаючи її дизайн */
 .admin-content-area .admin-card {
   width: 100% !important;
   max-width: none !important;
   box-sizing: border-box !important;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 1200px) {
+  .admin-page-layout {
+    gap: 20px;
+  }
+
+  .admin-sidebar {
+    width: 260px;
+    padding: 20px;
+  }
+
+  .pet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .admin-page-layout {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    position: static;
+    max-height: none;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 16px;
+  }
+
+  .sidebar-header {
+    grid-column: 1 / -1;
+    margin-bottom: 8px;
+  }
+
+  .filter-block {
+    margin-bottom: 0;
+  }
+
+  .admin-main:has(.admin-page-layout) {
+    padding: 24px 12px !important;
+  }
+
+  .admin-title-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sort-control {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .sort-control > div {
+    width: 100% !important;
+  }
+
+  .pet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+
+  .add-pet-card {
+    min-height: 240px;
+  }
+
+  .admin-modal {
+    width: grid calc(100% - 32px);
+    padding: 24px 20px;
+    border-radius: 18px;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .form-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .form-actions .cancel-btn,
+  .form-actions .save-btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .pet-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+  }
+
+  .add-pet-card {
+    min-height: 200px;
+  }
+
+  .add-pet-card .plus-icon {
+    font-size: 40px;
+  }
+
+  .admin-card-actions {
+    top: 10px;
+    right: 10px;
+  }
+
+  .edit-icon-btn,
+  .delete-icon-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .modal-header h3 {
+    font-size: 20px;
+  }
+
+  .add-type-row {
+    flex-wrap: wrap;
+  }
+
+  .add-type-btn {
+    padding: 0 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pet-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .add-pet-card {
+    min-height: 160px;
+  }
+
+  .admin-modal {
+    width: calc(100% - 20px);
+    padding: 20px 16px;
+    max-height: 92vh;
+  }
+
+  .file-upload-label {
+    padding: 16px 12px;
+  }
+
+  .file-upload-text {
+    font-size: 14px;
+    text-align: center;
+  }
+}
+
+@media (hover: none) {
+  .pet-card-wrapper.admin-mode:hover {
+    transform: none;
+  }
+  .add-pet-card:hover {
+    transform: none;
+  }
+  .save-btn:hover {
+    transform: none;
+  }
 }

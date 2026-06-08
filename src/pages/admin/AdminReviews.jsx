@@ -166,7 +166,7 @@ function AdminReviews() {
     };
 
     return (
-        <div className="admin-main" style={{ position: 'relative' }}>
+        <div className="admin-page-wrap">
             <div className="admin-page-layout">
                 <div className="admin-content-area" style={{ width: '100%' }}>
                     <div className="admin-card">

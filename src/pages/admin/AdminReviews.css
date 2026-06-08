@@ -311,3 +311,98 @@
     color: white;
     transform: scale(1.1);
 }
+
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 1024px) {
+    .empty-reviews-state {
+        padding: 40px 24px;
+        font-size: 16px;
+    }
+
+    .admin-review-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-reviews-list {
+        gap: 16px;
+    }
+
+    .admin-review-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .review-author-info {
+        gap: 10px;
+    }
+
+    .admin-review-text {
+        font-size: 1rem;
+    }
+
+    .reply-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .cancel-reply-btn,
+    .save-reply-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .existing-reply-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .user-reply-item {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .delete-reply-icon-btn {
+        align-self: flex-end;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-review-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .review-author-info strong {
+        font-size: 1rem;
+    }
+
+    .review-date-badge {
+        font-size: 0.8rem;
+    }
+
+    .add-reply-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .reply-textarea {
+        font-size: 0.95rem;
+        padding: 12px;
+    }
+}
+
+@media (hover: none) {
+    .admin-review-card:hover {
+        box-shadow: none;
+    }
+
+    .delete-review-btn:hover,
+    .delete-reply-icon-btn:hover {
+        transform: none;
+    }
+}

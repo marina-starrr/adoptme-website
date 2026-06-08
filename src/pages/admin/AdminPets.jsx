@@ -24,7 +24,7 @@ function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
   const selectedOption = options.find(opt => opt.value === value);
 
   return (
-    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
+    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto', position: 'relative' }}>
       <div
         className={`custom-dropdown-header ${isOpen ? 'open' : ''} form-control`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -35,7 +35,7 @@ function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
       </div>
 
       {isOpen && !disabled && (
-        <div className="custom-dropdown-list-wrapper">
+        <div className="custom-dropdown-list-wrapper" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '100%', zIndex: 1000 }}>
           <ul className="custom-dropdown-list">
             {options.map((opt) => (
               <li
@@ -62,6 +62,10 @@ function AdminPets() {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Пагінація для адмінки (12 карток разом з плюсиком на першій сторінці)
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPetId, setCurrentPetId] = useState(null);
@@ -82,6 +86,10 @@ function AdminPets() {
   const [petBreeds, setPetBreeds] = useState(['Безпородна', 'Не вказано']);
   const [newBreed, setNewBreed] = useState('');
 
+  const defaultFavoriteFoods = ["М'яско", 'Рибка', 'Сухий корм', 'Вологий корм', 'Паштет', 'Смаколики', 'Усе смачненьке'];
+  const [petFavoriteFoods, setPetFavoriteFoods] = useState(defaultFavoriteFoods);
+  const [newFavoriteFood, setNewFavoriteFood] = useState('');
+
   const [filterType, setFilterType] = useState('Всі');
   const [filterBreed, setFilterBreed] = useState('Всі');
   const [filterGender, setFilterGender] = useState('Всі');
@@ -95,9 +103,9 @@ function AdminPets() {
   const getAgeInMonths = (ageStr) => {
     if (!ageStr) return 0;
     const lowerStr = ageStr.toLowerCase();
-    const match = lowerStr.match(/(\d+([.,]\d+)?)/);
+    const match = lowerStr.match(/(\d+(\.\d+)?)/);
     if (!match) return 0;
-    const num = parseFloat(match[0].replace(',', '.'));
+    const num = parseFloat(match[0]);
     if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('річ') || lowerStr.includes('р.')) {
       return num * 12;
     } else if (lowerStr.includes('тиж')) {
@@ -150,6 +158,20 @@ function AdminPets() {
       return dateB - dateA;
     });
 
+  // Автоматичне скидання пагінації на 1 сторінку при зміні фільтрів
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterBreed, filterGender, filterAge, filterStatus, filterSize, filterEnergy, filterVaccinated, filterTraining, sortOrder]);
+
+  // Логіка зрізу: на першій сторінці беремо на 1 менше (бо є картка «Додати»)
+  const totalItems = filteredAndSortedPets.length;
+  const adminPageSize = currentPage === 1 ? ITEMS_PER_PAGE - 1 : ITEMS_PER_PAGE;
+  
+  // Рахуємо правильний зміщення індексів
+  const offset = currentPage === 1 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE - 1;
+  const paginatedPets = filteredAndSortedPets.slice(offset, offset + adminPageSize);
+  const totalPages = Math.ceil((totalItems + 1) / ITEMS_PER_PAGE);
+
   const resetFilters = () => {
     setFilterType('Всі');
     setFilterBreed('Всі');
@@ -187,6 +209,18 @@ function AdminPets() {
     }
   };
 
+  const handleAddNewFavoriteFood = (e) => {
+    e.preventDefault();
+    if (newFavoriteFood.trim() && !petFavoriteFoods.includes(newFavoriteFood.trim())) {
+      setPetFavoriteFoods([...petFavoriteFoods, newFavoriteFood.trim()]);
+      setPetFormData({ ...petFormData, FavoriteFood: newFavoriteFood.trim() });
+      setNewFavoriteFood('');
+      showToast("✨ Нову улюблену їжу додано до списку!");
+    } else {
+      showToast("⚠️ Така їжа вже є в списку або назва порожня");
+    }
+  };
+
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   const initialFormState = {
@@ -207,6 +241,9 @@ function AdminPets() {
 
       const uniqueBreeds = [...new Set(petsList.map(pet => pet.Breed).filter(Boolean))];
       setPetBreeds([...new Set(['Безпородна', 'Не вказано', ...uniqueBreeds])]);
+
+      const uniqueFavoriteFoods = [...new Set(petsList.map(pet => pet.FavoriteFood).filter(Boolean))];
+      setPetFavoriteFoods([...new Set([...defaultFavoriteFoods, ...uniqueFavoriteFoods])]);
     }
   }, [petsList]);
 
@@ -307,15 +344,15 @@ function AdminPets() {
       const processTags = (tagString) => {
         if (!tagString) return '';
         return tagString
-          .split(/[ ,]+/) // Розділяємо по пробілу або комі
-          .filter(t => t.trim() !== '') // Прибираємо порожні елементи
-          .map(t => t.startsWith('#') ? t : `#${t}`) // Додаємо #, якщо його немає
+          .split(/[ ,]+/) 
+          .filter(t => t.trim() !== '') 
+          .map(t => t.startsWith('#') ? t : `#${t}`) 
           .join(' ');
       };
 
       const dataToSave = {
         ...petFormData,
-        Tags: processTags(petFormData.Tags), // Тепер теги завжди будуть форматовані
+        Tags: processTags(petFormData.Tags), 
         ImageName: finalImageName,
         Images: finalImages
       };
@@ -362,7 +399,6 @@ function AdminPets() {
         if (newPetData && newPetData.length > 0) {
           const newPetId = newPetData[0].Id || newPetData[0].id;
 
-          // 👇 ОТРИМУЄМО АКТУАЛЬНИХ КОРИСТУВАЧІВ ДЛЯ СПОВІЩЕНЬ
           const { data: freshUsers } = await supabase.from('Users').select('Nickname');
 
           if (freshUsers && freshUsers.length > 0) {
@@ -413,9 +449,9 @@ function AdminPets() {
   };
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
+    <div className="admin-page-wrap">
       <div className="admin-page-layout">
-        <aside className="admin-sidebar" style={{ maxHeight: 'calc(100vh - 120px)', overflowY: 'auto' }}>
+        <aside className="admin-sidebar">
           <div className="sidebar-header">
             <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
             <button className="reset-btn" onClick={resetFilters}>Скинути</button>
@@ -569,12 +605,15 @@ function AdminPets() {
             </div>
 
             <div className="pet-grid">
-              <div className="add-pet-card" onClick={handleAddOpen}>
-                <div className="plus-icon">+</div>
-                <h3>Додати хвостика</h3>
-              </div>
+              {/* Картка додавання відображається тільки на 1 сторінці */}
+              {currentPage === 1 && (
+                <div className="add-pet-card" onClick={handleAddOpen}>
+                  <div className="plus-icon">+</div>
+                  <h3>Додати хвостика</h3>
+                </div>
+              )}
 
-              {filteredAndSortedPets.map((pet) => (
+              {paginatedPets.map((pet) => (
                 <div key={pet.Id} className="pet-card-wrapper admin-mode" onClick={() => navigate(`/admin/pets/${pet.Id}`)} style={{ cursor: 'pointer' }}>
                   <div className="admin-card-actions">
                     <button className="edit-icon-btn" onClick={(e) => handleEditOpen(e, pet)}>✎</button>
@@ -593,6 +632,38 @@ function AdminPets() {
                 </div>
               ))}
             </div>
+
+            {/* БЛОК ПАГІНАЦІЇ АДМІНІСТРАТОРА */}
+            {totalPages > 1 && (
+              <div className="pagination-container">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="pagination-btn"
+                >
+                  «
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => setCurrentPage(page)}
+                    className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                  >
+                    {page}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="pagination-btn"
+                >
+                  »
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -700,7 +771,7 @@ function AdminPets() {
                     options={[
                       { value: 'Дружелюбний до всіх', label: 'Дружелюбний до всіх' },
                       { value: 'Любить дітей', label: 'Любить дітей' },
-                      { value: 'Добре поводиться з іншими тваринами', label: 'Добре поводиться з іншими тваринами' },
+                      { value: 'Добрий/а до інших тварин', label: 'Добрий/а до інших тварин' },
                       { value: 'Обережний / Потребує часу', label: 'Обережний / Потребує часу' }
                     ]}
                     value={petFormData.Friendliness}
@@ -712,19 +783,17 @@ function AdminPets() {
               <div className="form-row">
                 <div className="input-group">
                   <label>Улюблена їжа</label>
-                  <CustomDropdown
-                    options={[
-                      { value: 'М\'яско', label: 'М\'яско' },
-                      { value: 'Рибка', label: 'Рибка' },
-                      { value: 'Сухий корм', label: 'Сухий корм' },
-                      { value: 'Вологий корм', label: 'Вологий корм' },
-                      { value: 'Паштет', label: 'Паштет' },
-                      { value: 'Смаколики', label: 'Смаколики' },
-                      { value: 'Усе смачненьке', label: 'Усе смачненьке' }
-                    ]}
-                    value={petFormData.FavoriteFood || "М'яско"}
-                    onChange={val => setPetFormData({ ...petFormData, FavoriteFood: val })}
-                  />
+                  <div className="add-type-row">
+                    <CustomDropdown
+                      options={petFavoriteFoods.map(food => ({ value: food, label: food }))}
+                      value={petFormData.FavoriteFood || "М'яско"}
+                      onChange={val => setPetFormData({ ...petFormData, FavoriteFood: val })}
+                    />
+                  </div>
+                  <div className="add-type-row" style={{ marginTop: '10px' }}>
+                    <input type="text" placeholder="Інша їжа..." value={newFavoriteFood} onChange={e => setNewFavoriteFood(e.target.value)} className="form-control" />
+                    <button type="button" className="add-type-btn" onClick={handleAddNewFavoriteFood}>+</button>
+                  </div>
                 </div>
 
                 <div className="input-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingTop: '30px' }}>

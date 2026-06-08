@@ -534,3 +534,124 @@
     from { opacity: 1; }
     to { opacity: 0; }
 }
+
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 1024px) {
+    .admin-filters {
+        gap: 10px;
+        padding-bottom: 16px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .app-card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .app-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-loader {
+        padding: 60px 20px;
+        font-size: 16px;
+    }
+
+    .app-card-body {
+        padding: 16px;
+    }
+
+    .app-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .badges-row {
+        flex-wrap: wrap;
+    }
+
+    .app-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding: 14px 16px;
+    }
+
+    .status-control {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .custom-dropdown-container {
+        width: 100%;
+    }
+
+    .delete-app-btn {
+        align-self: flex-end;
+    }
+
+    .confirm-modal {
+        width: calc(100% - 32px);
+        max-width: none;
+        padding: 28px 20px;
+    }
+
+    .confirm-buttons {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .confirm-buttons button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .app-card-header {
+        padding: 12px 14px;
+    }
+
+    .app-id-badge {
+        font-size: 12px;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .trait-badge {
+        font-size: 12px;
+    }
+
+    .filter-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (hover: none) {
+    .app-card-premium:hover {
+        transform: none;
+    }
+
+    .delete-app-btn:hover {
+        background: white;
+        color: #ef4444;
+    }
+}

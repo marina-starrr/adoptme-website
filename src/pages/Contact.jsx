@@ -10,18 +10,19 @@ function Contact() {
 
                 <BackgroundPaws />
 
-                <div style={{ position: 'relative', zIndex: 2 }}>
+                <div className="contact-content">
                     <div className="contact-header">
                         <img src="/brush4.png" alt="Фон" className="header-brush" />
                         <h2 className="header-text">Зворотній зв'язок</h2>
                     </div>
 
-                    <div className="contact-images-container">
-                        <img src="/catdog.png" alt="Call us" className="contact-image call-image" />
-                        <img src="/line.png" alt="Line" className="contact-image line-image" />
-                    </div>
+                    <div className="contact-cards-wrapper">
+                        <div className="contact-images-container" aria-hidden="true">
+                            <img src="/catdog.png" alt="" className="contact-image call-image" />
+                            <img src="/line.png" alt="" className="contact-image line-image" />
+                        </div>
 
-                    <div className="contact-cards-container">
+                        <div className="contact-cards-container">
                         {/* Картка 1 */}
                         <div className="contact-card">
                             <div className="inner-card">
@@ -53,8 +54,8 @@ function Contact() {
                                     <img src="/sms.png" alt="Іконка листа" className="card-icon" />
                                     <h3 className="card-title">Напишіть нам</h3>
                                 </div>
-                                <p className="card-info">adoptme@gmail.com</p>
-                                <p className="card-info">adoptme@ukr.net</p>
+                                <p className="card-info">adoptme.support.ua@gmail.com</p>
+                                <p className="card-info">adoptme.support.ua@ukr.net</p>
                             </div>
                         </div>
 
@@ -69,6 +70,7 @@ function Contact() {
                                 <p className="card-info">Нд: вихідний</p>
                             </div>
                         </div>
+                        </div>
                     </div>
 
                     {/* ОНОВЛЕНА СЕКЦІЯ: Карта (зліва) та Відео (справа) */}
@@ -79,9 +81,7 @@ function Contact() {
                             <h3 className="section-subtitle">Як нас знайти</h3>
                             <iframe
                                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2540.6913246810614!2d30.456745076403454!3d50.44684997159147!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x40d4ce9d0d667fd7%3A0x1e0670521190adbb!2sPolitekhnichna%20St%2C%2039%2C%20Kyiv%2C%2002000!5e0!3m2!1sen!2sua!4v1780861772319!5m2!1sen!2sua"
-                                width="100%"
-                                height="350"
-                                style={{ border: 0, borderRadius: '15px' }}
+                                className="map-iframe"
                                 allowFullScreen=""
                                 loading="lazy"
                                 referrerPolicy="no-referrer-when-downgrade"

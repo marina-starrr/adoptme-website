@@ -466,14 +466,221 @@
   overflow-wrap: break-word;
 }
 
-/* Мобільна адаптація */
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 1024px) {
+  .pet-details-layout {
+    padding: 40px 4%;
+  }
+
+  .pet-details-layout.admin-mode {
+    padding: 12px 0;
+  }
+
+  .pet-details-content {
+    gap: 40px;
+  }
+
+  .pet-gallery-section {
+    flex: 1 1 50%;
+    max-width: 30%;
+  }
+
+  .pet-info-section {
+    flex: 1 1 50%;
+  }
+
+  .pet-profile-name {
+    font-size: 2.8rem;
+  }
+
+  .input-name {
+    font-size: 2.2rem;
+  }
+}
+
 @media (max-width: 768px) {
-  .pet-details-content { gap: 30px; }
-  .pet-profile-name { font-size: 2.5rem; text-align: center; }
-  .action-area { position: sticky; bottom: 20px; z-index: 100; }
-  .admin-buttons-row { flex-direction: column; }
+  .pet-details-layout {
+    padding: 24px 16px;
+  }
+
+  .pet-details-content {
+    gap: 30px;
+    flex-direction: column;
+  }
+
+  .pet-profile-name {
+    font-size: 2.2rem;
+    text-align: center;
+  }
+
+  .input-name {
+    font-size: 1.8rem;
+    text-align: center;
+  }
+
   .pet-stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px 12px;
+    border-radius: 18px;
+  }
+
+  .stat-icon {
+    font-size: 1.6rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .section-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .story-content {
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .pet-desc-text,
+  .input-desc {
+    font-size: 1rem;
+  }
+
+  .action-area {
+    position: sticky;
+    bottom: 16px;
+    z-index: 100;
+  }
+
+  .btn-adopt,
+  .btn-notify {
+    font-size: 1.1rem;
+    padding: 16px;
+  }
+
+  .admin-buttons-row {
+    flex-direction: column;
+  }
+
+  .admin-extra-settings {
+    padding: 16px;
+  }
+
+  .setting-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .admin-select {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .edit-photo-controls {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: calc(100% - 24px);
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .photo-btn {
+    font-size: 0.85rem;
+    padding: 6px 10px;
+  }
+
+  .thumbnail-wrapper {
+    width: 72px;
+    height: 72px;
+  }
+
+  .main-image-wrapper {
+    border-radius: 20px;
+  }
+
+  .pet-status-badge {
+    top: 12px !important;
+    left: 12px !important;
+    font-size: 0.85rem !important;
+    padding: 6px 14px !important;
+  }
+
+   .pet-gallery-section {
+    flex: 1 1 100%;
+    max-width: 70%;
+  }
+}
+
+@media (max-width: 480px) {
+  .pet-details-layout {
+    padding: 16px 12px;
+  }
+
+  .back-link {
+    font-size: 1rem;
+    margin-bottom: 20px;
+  }
+
+  .pet-profile-name {
+    font-size: 1.9rem;
+  }
+
+  .input-name {
+    font-size: 1.5rem;
+  }
+
+  .pet-stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  .pet-tag {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+  }
+
+  .btn-cancel,
+  .btn-save,
+  .btn-edit {
+    font-size: 1rem;
+    padding: 14px;
+  }
+
+  .loading-message {
+    padding: 60px 20px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .pet-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pet-profile-name {
+    font-size: 1.7rem;
+  }
+}
+
+@media (hover: none) {
+  .stat-card:hover {
+    transform: none;
+  }
+
+  .btn-adopt:hover,
+  .btn-notify:hover {
+    transform: none;
   }
 }
 

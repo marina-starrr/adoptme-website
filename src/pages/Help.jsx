@@ -236,7 +236,7 @@ function Help() {
       <div className="help-section">
         <BackgroundPaws />
 
-        <div style={{ position: 'relative', zIndex: 2 }}>
+        <div className="help-content-wrapper">
           <div className="help-header">
             <img src="/brush4.png" alt="Фон" className="header-brush" />
             <h2 className="header-text">Як допомогти?</h2>
@@ -335,7 +335,7 @@ function Help() {
                     <h3 className="success-title">Дякуємо, {volunteerName}!</h3>
                     <p className="success-text">Ваша заявка успішно надіслана.</p>
                     <p className="success-text">Наш куратор зв'яжеться з вами найближчим часом для підтвердження часу та деталей.</p>
-                    <button className="volunteer-action-btn" style={{ marginTop: '25px' }} onClick={closeModal}>Чудово!</button>
+                    <button type="button" className="volunteer-action-btn success-close-btn" onClick={closeModal}>Чудово!</button>
                   </div>
                 ) : (
                   <div className="fade-view">
@@ -407,7 +407,7 @@ function Help() {
                       )}
 
                       <div className="input-group">
-                        <label style={{ display: 'block', fontSize: '13px', color: '#6847DD', fontWeight: 'bold', marginBottom: '6px', marginLeft: '5px' }}>
+                        <label className="date-input-label">
                           Оберіть зручний день
                         </label>
                         <input
@@ -430,8 +430,7 @@ function Help() {
                             setPreferredDay(selectedDate);
                           }}
                           required
-                          className="vol-input"
-                          style={{ color: preferredDay ? '#333' : '#757575', cursor: 'pointer' }}
+                          className={`vol-input date-input ${preferredDay ? 'has-value' : ''}`}
                         />
                       </div>
 

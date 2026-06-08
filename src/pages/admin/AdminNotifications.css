@@ -1,0 +1,86 @@
+.admin-notifications-empty {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.admin-notifications-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.btn-notify-action {
+    padding: 6px 12px;
+    font-size: 13px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-notify-action.process {
+    background: #6847DD;
+    color: white;
+}
+
+.btn-notify-action.process:hover {
+    background: #49109f;
+}
+
+.btn-notify-action.delete {
+    background: #ff6b6b;
+    color: white;
+}
+
+.btn-notify-action.delete:hover {
+    background: #ef4444;
+}
+
+.pet-tag {
+    display: inline-block;
+    border-radius: 12px;
+    font-weight: 700;
+}
+
+.pet-tag.status-special {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.pet-tag.status-home {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
+@media (max-width: 768px) {
+    .admin-notifications-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .btn-notify-action {
+        width: 100%;
+        text-align: center;
+        padding: 10px 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .btn-notify-action {
+        font-size: 12px;
+    }
+}
+
+@media (hover: none) {
+    .btn-notify-action.process:hover,
+    .btn-notify-action.delete:hover {
+        filter: none;
+    }
+}

@@ -3,7 +3,7 @@ import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './UserPets.css';
-import { useToast } from '../context/ToastContext'; // 👈 Підключаємо глобальні сповіщення
+import { useToast } from '../context/ToastContext';
 
 // КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК
 function CustomDropdown({ options, value, onChange, placeholder }) {
@@ -58,8 +58,12 @@ function UserPets() {
   const [petsList, setPetsList] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Стейт для пагінації (12 тварин на сторінку)
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 12;
+
   // Стейти для динамічних списків
-  const [petTypes, setPetTypes] = useState([{ value: 'Всі', label: 'Всі види' }]);
+  const [petTypes, setPetTypes] = useState([{ value: 'Всі', label: 'Всі виды' }]);
   const [petBreeds, setPetBreeds] = useState([{ value: 'Всі', label: 'Будь-яка порода' }]);
 
   // Стейти фільтрів
@@ -74,12 +78,18 @@ function UserPets() {
   const [filterTraining, setFilterTraining] = useState('Всі');
 
   const [sortOrder, setSortOrder] = useState('newest');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  const { showToast } = useToast(); // 👈 Ініціалізуємо тости
+  const { showToast } = useToast();
 
   useEffect(() => {
     fetchPets();
   }, []);
+
+  // Скидання на 1-шу сторінку при зміні будь-якого фільтра чи сортування
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterType, filterBreed, filterGender, filterAge, filterStatus, filterSize, filterEnergy, filterVaccinated, filterTraining, sortOrder]);
 
   // Збираємо унікальні види та породи для фільтрів
   useEffect(() => {
@@ -109,7 +119,7 @@ function UserPets() {
       setPetsList(data || []);
     } catch (err) {
       console.error("❌ Помилка завантаження: ", err.message);
-      showToast("❌ Помилка завантаження каталогу: " + err.message); // 👈 Додано красиве сповіщення про помилку
+      showToast("❌ Помилка завантаження : " + err.message);
     } finally {
       setLoading(false);
     }
@@ -183,6 +193,12 @@ function UserPets() {
       return dateB - dateA;
     });
 
+  // Логіка зрізу масиву для поточної сторінки
+  const totalItems = filteredAndSortedPets.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedPets = filteredAndSortedPets.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
   const resetFilters = () => {
     setFilterType('Всі');
     setFilterBreed('Всі');
@@ -196,6 +212,11 @@ function UserPets() {
     setSortOrder('newest');
   };
 
+  const handleResetFilters = () => {
+    resetFilters();
+    setFiltersOpen(false);
+  };
+
   if (loading) return <h2 className="loading-message">Шукаємо пухнастиків... 🐾</h2>;
 
   return (
@@ -206,12 +227,23 @@ function UserPets() {
           <div className="pets-title-container">Знайди свого найкращого друга</div>
 
           <div className="catalog-layout">
+
+            <button
+              type="button"
+              className={`filters-toggle-btn ${filtersOpen ? 'open' : ''}`}
+              onClick={() => setFiltersOpen(prev => !prev)}
+              aria-expanded={filtersOpen}
+              aria-controls="catalog-filters"
+            >
+              <span>Фільтри</span>
+              <span className="filters-toggle-icon">{filtersOpen ? '▲' : '▼'}</span>
+            </button>
             
             {/* ⬅️ ЛІВА ПАНЕЛЬ: ФІЛЬТРИ */}
-            <aside className="catalog-sidebar">
+            <aside id="catalog-filters" className={`catalog-sidebar ${filtersOpen ? 'open' : ''}`}>
               <div className="sidebar-header">
                 <h3>Фільтри</h3>
-                <button className="reset-btn" onClick={resetFilters}>Скинути</button>
+                <button type="button" className="reset-btn" onClick={handleResetFilters}>Скинути</button>
               </div>
 
               <div className="filter-block">
@@ -334,11 +366,11 @@ function UserPets() {
               
               <div className="catalog-top-bar">
                 <div className="results-count">
-                  Знайдено пухнастиків: <strong>{filteredAndSortedPets.length}</strong>
+                  Знайдено пухнастиків: <strong>{totalItems}</strong>
                 </div>
                 <div className="sort-control">
                   <span className="sort-label">Сортувати:</span>
-                  <div style={{ width: '200px' }}>
+                  <div className="sort-dropdown">
                     <CustomDropdown 
                       options={[
                         { value: 'newest', label: 'Новенькі спочатку' },
@@ -352,28 +384,62 @@ function UserPets() {
                 </div>
               </div>
 
-              {filteredAndSortedPets.length === 0 ? (
+              {totalItems === 0 ? (
                 <div className="empty-catalog">
                   <h3>За вашими критеріями нікого не знайдено 😔</h3>
                   <p>Спробуйте змінити фільтри або скинути їх.</p>
-                  <button className="reset-large-btn" onClick={resetFilters}>Показати всіх тваринок</button>
+                  <button type="button" className="reset-large-btn" onClick={handleResetFilters}>Показати всіх тваринок</button>
                 </div>
               ) : (
-                <div className="pet-grid">
-                  {filteredAndSortedPets.map((pet) => (
-                    <div key={pet.Id} className="pet-card-wrapper">
-                      <UserPetCard
-                        id={pet.Id}
-                        name={pet.Name}
-                        age={pet.Age}
-                        gender={pet.Gender}
-                        tags={pet.Tags} 
-                        image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
-                        status={pet.Status} 
-                      />
+                <>
+                  <div className="pet-grid">
+                    {paginatedPets.map((pet) => (
+                      <div key={pet.Id} className="pet-card-wrapper">
+                        <UserPetCard
+                          id={pet.Id}
+                          name={pet.Name}
+                          age={pet.Age}
+                          gender={pet.Gender}
+                          tags={pet.Tags} 
+                          image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
+                          status={pet.Status} 
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* БЛОК ПАГІНАЦІЇ КОРИСТУВАЧА */}
+                  {totalPages > 1 && (
+                    <div className="pagination-container">
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                        disabled={currentPage === 1}
+                        className="pagination-btn prev-next"
+                      >
+                        «
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                        <button
+                          key={page}
+                          type="button"
+                          onClick={() => setCurrentPage(page)}
+                          className={`pagination-btn ${currentPage === page ? 'active' : ''}`}
+                        >
+                          {page}
+                        </button>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                        disabled={currentPage === totalPages}
+                        className="pagination-btn prev-next"
+                      >
+                        »
+                      </button>
                     </div>
-                  ))}
-                </div>
+                  )}
+                </>
               )}
             </main>
 
