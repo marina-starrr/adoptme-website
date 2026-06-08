@@ -75,7 +75,7 @@ function Home() {
 
   const sliderPets = [
     { src: '/mars1.png', id: 1 },
-    { src: '/bagir1.png', id: 2 },
+    { src: '/Karen1.png', id: 2 },
     { src: '/nensi1.png', id: 3 },
     { src: '/momo1.png', id: 4 },
     { src: '/kamila1.png', id: 5 }
