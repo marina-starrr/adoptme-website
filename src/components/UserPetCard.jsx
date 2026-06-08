@@ -9,7 +9,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
     const [isFavorite, setIsFavorite] = useState(false);
     const [isNotified, setIsNotified] = useState(false);
     const { userEmail } = useAuth();
-    
+
     // 👇 Підключаємо глобальні сповіщення
     const { showToast } = useToast();
 
@@ -40,14 +40,14 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                         .select('Id')
                         .eq('PetId', id)
                         .eq('UserNickname', userNickname);
-                    
+
                     if (data && data.length > 0) {
                         setIsNotified(true);
                     }
                 }
             }
         };
-        
+
         checkNotificationStatus();
     }, [id, status]);
 
@@ -65,19 +65,19 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                     .delete()
                     .eq('UserNickname', userNickname)
                     .eq('PetId', id);
-                    
+
                 if (error) console.error("❌ Помилка видалення з Favorites:", error.message);
             }
             favorites = favorites.filter(pet => pet.id !== id);
         } else {
             if (userNickname) {
                 const { error } = await supabase.from('Favorites').insert([
-                    { 
+                    {
                         PetId: id,
-                        UserNickname: userNickname 
+                        UserNickname: userNickname
                     }
                 ]);
-                
+
                 if (error) console.error("❌ Помилка вставки в Favorites:", error.message);
             } else {
                 console.warn("⚠️ Користувач не авторизований, зберігаємо лише локально.");
@@ -134,11 +134,11 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
     };
 
     const getStatusConfig = (petStatus) => {
-        switch(petStatus) {
+        switch (petStatus) {
             case 'Особливий догляд': return { class: 'status-special', icon: '❤️‍🩹' };
             case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
             case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
-            case 'Не вдалось врятувати': return { class: 'status-rainbow', icon: '🌈' };
+            case 'Не вдалось врятувати': return { class: 'status-died', icon: '😞' };
             case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
             default: return { class: 'status-looking', icon: '🐾' };
         }
@@ -194,14 +194,16 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                     </div>
                 </div>
                 <div className="pet-info-chatacter">
-                    {tags}
+                    {tags ? tags.split(/[#, ]+/).filter(t => t).map((tag, index) => (
+                        <span key={index} className="pet-tag-pill">#{tag.trim()}</span>
+                    )) : null}
                 </div>
 
                 <Link to={`/pets/${id}`} className="pet-details-btn">
                     Детальніше &raquo;
                 </Link>
             </div>
-        </div>
+        </div >
     );
 }
 

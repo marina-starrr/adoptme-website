@@ -1,19 +1,20 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext'; 
+import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
 import './Login.css';
 
 function Login() {
     const [nickname, setNickname] = useState('');
     const [password, setPassword] = useState('');
-    const [isSubmitting, setIsSubmitting] = useState(false); 
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
 
     const { login } = useAuth();
-    const { showToast } = useToast(); 
+    const { showToast } = useToast();
 
     useEffect(() => {
         if (location.state?.welcomeMsg) {
@@ -73,7 +74,7 @@ function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        setIsSubmitting(true); 
+        setIsSubmitting(true);
 
         try {
             const { data: user, error } = await supabase
@@ -137,14 +138,23 @@ function Login() {
 
                     <div className="input-group" style={{ marginBottom: '5px' }}>
                         <label>Пароль</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Введіть пароль"
-                            required
-                            disabled={isSubmitting}
-                        />
+                        <div className="password-input-wrapper">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="Введіть пароль"
+                                required
+                                disabled={isSubmitting}
+                            />
+                            <button
+                                type="button"
+                                className="toggle-password"
+                                onClick={() => setShowPassword(!showPassword)}
+                            >
+                                {showPassword ? "🙉" : "🙈"}
+                            </button>
+                        </div>
                     </div>
 
                     <div style={{ textAlign: 'right', marginBottom: '20px' }}>

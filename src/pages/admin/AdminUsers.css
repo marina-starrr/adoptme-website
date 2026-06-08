@@ -237,3 +237,37 @@
     to { opacity: 0; }
 }
 
+.phone-input-wrapper {
+  display: flex;
+  align-items: center;
+  background: #fcfbfe;
+  border: 1px solid rgba(104, 71, 221, 0.2);
+  border-radius: 12px;
+  padding: 0 15px;
+  transition: all 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.phone-input-wrapper:focus-within {
+  border-color: #6847DD;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.1);
+}
+
+.phone-prefix {
+  color: #666;
+  font-weight: normal;
+  margin-right: 5px;
+  user-select: none;
+}
+
+.phone-input-wrapper input {
+  background: transparent !important;
+  border: none !important;
+  padding: 14px 0 !important;
+  box-shadow: none !important;
+  flex: 1;
+  font-size: 15px;
+  font-family: inherit;
+}

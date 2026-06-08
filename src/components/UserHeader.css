@@ -6,25 +6,29 @@
     color: var(--white);
     height: 75px;
     width: 100%;
-    padding: 15px 5%;
+    padding: 0 3%;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: sticky;
     top: 0;
     z-index: 1000;
+    box-sizing: border-box;
+    /* Гарантує, що відступи не збільшують ширину */
 }
 
 .header-left {
     display: flex;
     align-items: center;
     position: relative;
+    flex-shrink: 0;
 }
 
 .logo-img {
     height: auto;
     max-height: 72px;
     width: auto;
+    flex-shrink: 0;
 }
 
 .nav-menu {
@@ -32,14 +36,16 @@
     list-style: none;
     flex-grow: 1;
     justify-content: center;
-    gap: 40px;
+    gap: clamp(20px, 2vw, 40px);
+    /* Відступи плавно зменшуються */
 }
 
 .nav-link {
     color: var(--black);
     text-decoration: none;
     font-weight: 700;
-    font-size: 18px;
+    font-size: clamp(13px, 1.4vw, 18px);
+    white-space: nowrap;
     transition: color 0.3s ease;
 }
 
@@ -50,27 +56,40 @@
 .header-right {
     display: flex;
     align-items: center;
+    gap: clamp(10px, 1.5vw, 20px);
+    flex-shrink: 0;
+    margin-left: 20px;
 }
 
 .support-btn {
     background-color: #7e5afd;
     color: var(--white);
     border: none;
-    padding: 15px 30px;
+    /* Кнопка плавно зменшується на середніх екранах */
+    padding: clamp(8px, 1vw, 15px) clamp(15px, 2vw, 30px);
     border-radius: 10px;
     font-weight: 700;
+    font-size: clamp(12px, 1.2vw, 16px);
     text-decoration: none;
+    white-space: nowrap;
     transition: background-color 0.3s ease, color 0.3s ease;
-    margin-right: 15px;
 }
 
 .support-btn:hover {
     background-color: #6646db;
 }
 
+.favorite-icon,
+.account-icon,
+.notification-icon,
+.notification-wrapper {
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
 .favorite-icon {
-    width: 40px;
-    height: 40px;
+    width: clamp(30px, 3vw, 40px);
+    height: clamp(30px, 3vw, 40px);
     transition: filter 0.3s ease;
     cursor: pointer;
 }
@@ -80,15 +99,50 @@
 }
 
 .account-icon {
-    width: 30px;
-    height: 30px;
-    margin-left: 15px;
+    width: clamp(24px, 2.5vw, 30px);
+    height: clamp(24px, 2.5vw, 30px);
     cursor: pointer;
     transition: filter 0.3s ease;
 }
 
 .account-icon:hover {
     filter: invert(100%);
+}
+
+.notification-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.notification-icon {
+    width: clamp(28px, 2.8vw, 35px);
+    height: clamp(28px, 2.8vw, 35px);
+    cursor: pointer;
+    transition: filter 0.3s ease, transform 0.2s ease;
+}
+
+.notification-icon:hover {
+    filter: invert(100%);
+    transform: scale(1.05);
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background-color: #ff4d4d;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* =========================================
@@ -102,7 +156,7 @@
 
 .profile-mini-menu {
     position: absolute;
-    top: 55px; /* Зсув вниз під аватарку */
+    top: 55px;
     right: 0;
     background: #ffffff;
     border-radius: 16px;
@@ -116,8 +170,15 @@
 }
 
 @keyframes dropDownAnim {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .mini-menu-header {
@@ -153,7 +214,7 @@
 .mini-menu-item:hover {
     background-color: #f4f5fa;
     color: #6847DD;
-    padding-left: 25px; /* Легкий ефект руху при наведенні */
+    padding-left: 25px;
 }
 
 .mini-menu-divider {
@@ -174,22 +235,18 @@
 /* =========================================
    МОБІЛЬНЕ МЕНЮ (ГАМБУРГЕР)
    ========================================= */
-.hamburger {
-    display: none; 
-    cursor: pointer;
-}
-
 .hamburger-menu {
     display: none;
     flex-direction: column;
     justify-content: space-around;
     width: 30px;
-    height: 25px;
+    height: 24px;
     background: transparent;
     border: none;
     cursor: pointer;
     padding: 0;
     z-index: 1001;
+    flex-shrink: 0;
 }
 
 .hamburger-menu .bar {
@@ -200,45 +257,61 @@
     transition: all 0.3s ease;
 }
 
+.hamburger-menu.active .bar:nth-child(1) {
+    transform: translateY(10px) rotate(45deg);
+}
+
+.hamburger-menu.active .bar:nth-child(2) {
+    opacity: 0;
+}
+
+.hamburger-menu.active .bar:nth-child(3) {
+    transform: translateY(-11px) rotate(-45deg);
+}
+
 /* =========================================
-   МОДАЛЬНІ ВІКНА (ОБРАНЕ)
+   МОДАЛЬНІ ВІКНА
    ========================================= */
 .modal {
-    display: none; 
+    display: none;
     position: fixed;
-    z-index: 1000; 
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5); 
-    backdrop-filter: blur(3px); 
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
     justify-content: center;
     align-items: center;
-    animation: fadeInModal 0.3s ease-out forwards; 
+    animation: fadeInModal 0.3s ease-out forwards;
 }
 
 .modal-content {
     background-color: #fefefe;
     color: var(--black);
-    padding: 30px; 
-    border-radius: 16px; 
+    padding: 30px;
+    border-radius: 16px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     width: 90%;
-    max-width: 600px; 
+    max-width: 600px;
     max-height: 90vh;
     overflow-y: auto;
     text-align: center;
     position: relative;
-    
-    /* 👇 ОНОВЛЕНО: Додано cubic-bezier для ефекту пружності (bouncy) */
     animation: animatetop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
-/* 👇 ОНОВЛЕНО: Анімація появи з центру зі збільшенням */
 @keyframes animatetop {
-    from { transform: scale(0.85); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.85);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .close-btn {
@@ -261,12 +334,12 @@
 .modal-header {
     padding-bottom: 15px;
     margin-bottom: 20px;
-    border-bottom: 2px solid #eee1ff; 
+    border-bottom: 2px solid #eee1ff;
     text-align: center;
 }
 
 .modal-header h3 {
-    color: #4A148C; 
+    color: #4A148C;
     font-size: 26px;
     margin: 0;
 }
@@ -279,20 +352,36 @@
     animation: animateclose 0.3s forwards;
 }
 
-/* 👇 ОНОВЛЕНО: Анімація закриття до центру */
 @keyframes animateclose {
-    from { transform: scale(1); opacity: 1; }
-    to { transform: scale(0.85); opacity: 0; }
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.85);
+        opacity: 0;
+    }
 }
 
 @keyframes fadeInModal {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes fadeOutModal {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 .fade-view {
@@ -300,8 +389,15 @@
 }
 
 @keyframes fadeInView {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .empty-favorites-text {
@@ -313,7 +409,7 @@
 }
 
 .empty-link-purple {
-    color: #6847DD; 
+    color: #6847DD;
     font-weight: 700;
     text-decoration: none;
     position: relative;
@@ -321,8 +417,8 @@
 }
 
 .empty-link-purple:hover {
-    color: #4A148C; 
-    text-decoration: underline; 
+    color: #4A148C;
+    text-decoration: underline;
 }
 
 .success-favorites-text {
@@ -342,11 +438,11 @@
     justify-content: center;
     gap: 20px;
     padding-bottom: 20px;
-} 
+}
 
 .favorite-card {
     background-color: var(--white);
-    border: 2px solid #e0d4f5; 
+    border: 2px solid #e0d4f5;
     border-radius: 12px;
     padding: 12px;
     text-align: center;
@@ -354,15 +450,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 160px; 
+    width: 160px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
     transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .favorite-card:hover {
-    transform: translateY(-5px); 
+    transform: translateY(-5px);
     box-shadow: 0 8px 20px rgba(104, 71, 221, 0.15);
-    border-color: #6847DD; 
+    border-color: #6847DD;
 }
 
 .favorite-card-image {
@@ -396,9 +492,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    opacity: 0; 
+    opacity: 0;
 }
 
 .favorite-card:hover .remove-favorite-icon {
@@ -411,8 +507,10 @@
     transform: scale(1.1);
 }
 
-.adopt-pet-btn, .submit-adoption-btn, .back-to-favorites-btn {
-    background: linear-gradient(to right, #6847DD, #382677); 
+.adopt-pet-btn,
+.submit-adoption-btn,
+.back-to-favorites-btn {
+    background: linear-gradient(to right, #6847DD, #382677);
     color: var(--white);
     border: none;
     padding: 14px 35px;
@@ -423,7 +521,9 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.adopt-pet-btn:hover, .submit-adoption-btn:hover, .back-to-favorites-btn:hover {
+.adopt-pet-btn:hover,
+.submit-adoption-btn:hover,
+.back-to-favorites-btn:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
@@ -436,7 +536,7 @@
     flex-direction: column;
     gap: 20px;
     padding: 10px 5px;
-    text-align: left; 
+    text-align: left;
 }
 
 .form-step {
@@ -480,14 +580,14 @@
 }
 
 .form-textarea-small {
-    resize: none; 
+    resize: none;
     min-height: 80px;
-    padding-bottom: 25px; 
-    overflow: hidden; 
+    padding-bottom: 25px;
+    overflow: hidden;
 }
 
 .textarea-container {
-    position: relative; 
+    position: relative;
     width: 100%;
 }
 
@@ -496,18 +596,18 @@
     bottom: 8px;
     right: 12px;
     font-size: 12px;
-    color: #999; 
+    color: #999;
     font-weight: 500;
-    pointer-events: none; 
+    pointer-events: none;
     transition: color 0.3s ease;
 }
 
-.form-textarea-small:focus + .char-counter {
-    color: #6847DD; 
+.form-textarea-small:focus+.char-counter {
+    color: #6847DD;
 }
 
 .char-counter.limit-reached {
-    color: #ff4d4d !important; 
+    color: #ff4d4d !important;
     font-weight: 700;
 }
 
@@ -576,51 +676,57 @@
 }
 
 .input-container input[type="text"] {
-    padding-right: 45px; 
+    padding-right: 45px;
 }
 
 .char-counter.input-counter {
-    bottom: auto; 
-    top: 50%; 
-    transform: translateY(-50%); 
+    bottom: auto;
+    top: 50%;
+    transform: translateY(-50%);
 }
 
-.input-container input[type="text"]:focus + .char-counter {
-    color: #6847DD; 
+.input-container input[type="text"]:focus+.char-counter {
+    color: #6847DD;
 }
 
 /* =========================================
    АДАПТИВНІСТЬ ДЛЯ ХЕДЕРА (Media Queries)
    ========================================= */
-@media (max-width: 1024px) {
+
+/* Крок 1: Злегка стискаємо відступи на екранах середнього розміру */
+@media (max-width: 1210px) {
     .header {
-        padding: 1px 3%;
+        justify-content: space-between;
+        padding: 0 2%;
     }
+
     .nav-menu {
-        gap: 20px;
+        gap: 15px;
     }
-    .nav-link {
-        font-size: 16px;
+
+    .header-right {
+        gap: 10px;
     }
+
     .support-btn {
-        padding: 10px 20px;
-        font-size: 14px;
+        padding: 15px 16px;
+        font-size: 13px;
     }
 }
 
-@media (max-width: 768px) {
+/* Крок 2: З'являється гамбургер-меню (вмикаємо раніше, щоб іконки ніколи не випадали) */
+@media (max-width: 1000px) {
     .header {
         justify-content: space-between;
-        padding: 15px;
+        padding: 15px 5%;
     }
-    .header-left, .header-right {
-        margin: 0;
-    }
+
     .nav-menu {
         display: none;
     }
+
     .nav-menu.active {
-        display: flex; 
+        display: flex;
         flex-direction: column;
         position: absolute;
         top: 75px;
@@ -629,20 +735,22 @@
         background-color: var(--header-bg);
         padding: 20px 0;
         text-align: center;
-        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        border-bottom-left-radius: 15px;
+        border-bottom-right-radius: 15px;
     }
-    .hamburger {
-        display: block; 
-    }  
+
     .hamburger-menu {
         display: flex;
     }
-    .hamburger-menu .bar {
-        width: 100%;
-        height: 3px;
-        background-color: var(--black);
-        border-radius: 5px;
-        transition: all 0.3s ease;
+
+    .header-right {
+        margin-left: 0;
+    }
+
+    .logo-img {
+        height: auto;
+        max-height: 65px;
     }
 }
 
@@ -653,16 +761,40 @@
 }
 
 @media (max-width: 480px) {
-    .logo-img {
-        max-height: 50px;
+    .header {
+        padding: 10px 5%;
+        height: auto;
+        min-height: 70px;
     }
-    .support-btn {
-        padding: 8px 15px;
+
+    .logo-img {
+        max-height: 40px;
+    }
+
+    .header-right {
+        gap: 8px;
+    }
+
+    .login-nav-btn {
+        padding: 6px 12px;
         font-size: 12px;
     }
-    .favorite-icon {
-        width: 30px;
-        height: 30px;
+
+    .modal-content {
+        padding: 20px 15px;
+    }
+
+    .form-step {
+        padding: 15px;
+    }
+
+    .name-inputs-row {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
     }
 }
 
@@ -670,11 +802,13 @@
     .nav-link:hover {
         color: var(--black);
     }
+
     .support-btn:hover {
         background-color: #805CFF;
     }
 }
 
+/* Інші стилі нижче залишаються як є */
 .name-inputs-row {
     display: flex;
     gap: 15px;
@@ -682,17 +816,7 @@
 }
 
 .name-inputs-row input {
-    flex: 1; 
-}
-
-@media (max-width: 480px) {
-    .name-inputs-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-    .form-actions {
-        flex-direction: column-reverse;
-    }
+    flex: 1;
 }
 
 .success-message-container {
@@ -724,8 +848,8 @@
 }
 
 .favorite-card-link {
-    text-decoration: none; 
-    color: inherit; 
+    text-decoration: none;
+    color: inherit;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -747,51 +871,14 @@
     text-decoration: none;
     font-weight: 700;
     font-size: 14px;
-    margin-left: 15px;
     transition: all 0.3s ease;
+    white-space: nowrap;
 }
 
 .login-nav-btn:hover {
     background-color: var(--purple-dark);
     color: white;
     transform: translateY(-2px);
-}
-
-.notification-wrapper {
-    position: relative;
-    margin-left: 15px;
-    display: flex;
-    align-items: center;
-}
-
-.notification-icon {
-    width: 35px;
-    height: 35px;
-    cursor: pointer;
-    transition: filter 0.3s ease, transform 0.2s ease;
-}
-
-.notification-icon:hover {
-    filter: invert(100%);
-    transform: scale(1.05);
-}
-
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background-color: #ff4d4d;
-    color: white;
-    font-size: 11px;
-    font-weight: 800;
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .notifications-container {
@@ -903,7 +990,6 @@
     border: 1px solid #fca5a5;
 }
 
-/* Стилі для статусів тварин з обраного у сповіщеннях */
 .status-badge-inline.treatment {
     background-color: #fce7f3;
     color: #be185d;
@@ -916,7 +1002,7 @@
     border: 1px solid #7dd3fc;
 }
 
-.status-badge-inline.rainbow {
+.status-badge-inline.died {
     background-color: #f3f4f6;
     color: #374151;
     border: 1px solid #d1d5db;
@@ -942,10 +1028,10 @@
     text-align: left;
 }
 
-/* Кастомний скролбар для списку вибору */
 .adoption-pet-selection-list::-webkit-scrollbar {
     width: 5px;
 }
+
 .adoption-pet-selection-list::-webkit-scrollbar-thumb {
     background: #d4cbf9;
     border-radius: 10px;
@@ -974,7 +1060,6 @@
     background: #fdfbfe;
 }
 
-/* Стиль заблокованих карток */
 .selection-pet-item.unavailable {
     background: #f5f5f5;
     border-color: #e0e0e0;
@@ -997,7 +1082,6 @@
     color: #888;
 }
 
-/* Текстові бейджі */
 .unavail-badge {
     color: #dc2626;
     font-weight: 800;
@@ -1018,7 +1102,6 @@
     text-transform: uppercase;
 }
 
-/* Стиль для сповіщення, коли тваринка знову ШУКАЄ ДІМ */
 .status-badge-inline.looking {
     background-color: #dcfce7;
     color: #15803d;

@@ -44,9 +44,7 @@ function UserHeader() {
     const { showToast } = useToast();
 
     const userRole = localStorage.getItem('userRole');
-
     const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password';
-    
     const showLoggedInUI = isLoggedIn && !isAuthPage;
 
     useEffect(() => {
@@ -59,13 +57,9 @@ function UserHeader() {
         if (!phoneStr) return '';
         let digits = phoneStr.replace(/\D/g, '');
         
-        if (digits.startsWith('380')) {
-            digits = digits.substring(3);
-        } else if (digits.startsWith('0')) {
-            digits = digits.substring(1);
-        } else if (digits.startsWith('38')) {
-            digits = digits.substring(2);
-        }
+        if (digits.startsWith('380')) digits = digits.substring(3);
+        else if (digits.startsWith('0')) digits = digits.substring(1);
+        else if (digits.startsWith('38')) digits = digits.substring(2);
         
         digits = digits.substring(0, 9); 
         
@@ -78,10 +72,21 @@ function UserHeader() {
         return formatted;
     };
 
-    const fetchNotifications = async () => {
-        const userNickname = localStorage.getItem('userNickname');
-        
-        if (userNickname) {
+    // 👇 Логіка сповіщень тепер всередині useEffect з Realtime
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            const userNickname = localStorage.getItem('userNickname');
+            
+            // Якщо це гість або немає акаунту — блокуємо завантаження
+            if (!userNickname || userNickname === 'Гість') {
+                setNotifications([]);
+                return;
+            }
+
+            // Отримуємо актуальні ID тварин, щоб перевірити, чи не видалили їх
+            const { data: activePets } = await supabase.from('Pets').select('Id');
+            const activePetIds = new Set(activePets?.map(p => p.Id) || []);
+
             const { data: treatmentData, error: treatmentError } = await supabase
                 .from('TreatmentNotifications')
                 .select('*')
@@ -104,9 +109,21 @@ function UserHeader() {
             let combinedNotifications = [];
 
             if (!treatmentError && treatmentData) {
+                const validTreatmentData = [];
+                const invalidTreatmentIds = [];
+                
+                treatmentData.forEach(n => {
+                    if (activePetIds.has(n.PetId)) validTreatmentData.push(n);
+                    else invalidTreatmentIds.push(n.Id);
+                });
+
+                if (invalidTreatmentIds.length > 0) {
+                    await supabase.from('TreatmentNotifications').delete().in('Id', invalidTreatmentIds);
+                }
+
                 combinedNotifications = [
                     ...combinedNotifications, 
-                    ...treatmentData.map(n => ({ ...n, type: 'treatment', uniqueId: `treat_${n.Id}` }))
+                    ...validTreatmentData.map(n => ({ ...n, type: 'treatment', uniqueId: `treat_${n.Id}` }))
                 ];
             }
 
@@ -118,19 +135,50 @@ function UserHeader() {
             }
 
             if (!favoriteError && favoriteData) {
+                const validFavoriteData = [];
+                const invalidFavoriteIds = [];
+                
+                favoriteData.forEach(fav => {
+                    // Модераційні повідомлення не прив'язані до конкретної тварини
+                    if (fav.PetName === 'Модерація' || activePetIds.has(fav.PetId)) {
+                        validFavoriteData.push(fav);
+                    } else {
+                        invalidFavoriteIds.push(fav.Id);
+                    }
+                });
+
+                // Видаляємо всі "биті" сповіщення про видалених тварин
+                if (invalidFavoriteIds.length > 0) {
+                    await supabase.from('FavoriteNotifications').delete().in('Id', invalidFavoriteIds);
+                }
+
                 combinedNotifications = [
                     ...combinedNotifications,
-                    ...favoriteData.map(f => ({ ...f, type: 'favorite_status', uniqueId: `fav_${f.Id}` }))
+                    ...validFavoriteData.map(f => ({ ...f, type: 'favorite_status', uniqueId: `fav_${f.Id}` }))
                 ];
             }
 
             setNotifications(combinedNotifications);
-        }
-    };
+        };
 
-    useEffect(() => {
         if (isLoggedIn) {
             fetchNotifications();
+
+            const userNickname = localStorage.getItem('userNickname');
+            if (!userNickname || userNickname === 'Гість') return;
+
+            // 👇 ПІДПИСКА НА REALTIME: Миттєво реагує на нові сповіщення і видалення тварин
+            const channel = supabase
+                .channel('user-live-notifications')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'FavoriteNotifications' }, fetchNotifications)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'AdoptionRequests' }, fetchNotifications)
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'TreatmentNotifications' }, fetchNotifications)
+                .on('postgres_changes', { event: 'DELETE', schema: 'public', table: 'Pets' }, fetchNotifications)
+                .subscribe();
+
+            return () => {
+                supabase.removeChannel(channel);
+            };
         }
     }, [isLoggedIn]);
 
@@ -264,7 +312,7 @@ function UserHeader() {
             }
         } catch (err) {
             console.error(err);
-            fetchNotifications(); 
+            // fetchNotifications(); // 👈 Не потрібно викликати, бо є Realtime
         }
     };
 
@@ -431,7 +479,7 @@ function UserHeader() {
         switch(statusStr) {
             case 'На лікуванні': return 'treatment';
             case 'Вже вдома': case 'Вже знайшла дім': return 'home';
-            case 'Не вдалось врятувати': return 'rainbow';
+            case 'Не вдалось врятувати': return 'died';
             case 'Заброньована': case 'Заброньовано': return 'reserved';
             case 'Шукає дім': return 'looking'; 
             default: return 'review';
@@ -445,10 +493,6 @@ function UserHeader() {
                     <img src="/logo.png" alt="Adopt Me Logo" className="logo-img" />
                 </Link>
             </div>
-
-            <button className={`hamburger-menu ${isOpen ? 'active' : ''}`} onClick={toggleMenu}>
-                <span className="bar"></span><span className="bar"></span><span className="bar"></span>
-            </button>
 
             <nav>
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
@@ -468,7 +512,7 @@ function UserHeader() {
                     alt="Обране"
                     className="favorite-icon"
                     onClick={openFavorites}
-                    style={{ cursor: 'pointer', marginLeft: '15px' }}
+                    style={{ cursor: 'pointer' }}
                 />
 
                 {showLoggedInUI && (
@@ -529,6 +573,12 @@ function UserHeader() {
                         Увійти
                     </Link>
                 )}
+
+                <button className={`hamburger-menu ${isOpen ? 'active' : ''}`} onClick={toggleMenu}>
+                    <span className="bar"></span>
+                    <span className="bar"></span>
+                    <span className="bar"></span>
+                </button>
             </div>
 
             {/* Модальне вікно для СПОВІЩЕНЬ */}

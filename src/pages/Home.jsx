@@ -5,7 +5,6 @@ import './Home.css';
 import { supabase } from '../supabaseClient';
 import { useToast } from '../context/ToastContext'; 
 
-// 🌟 МІНІ-КОМПОНЕНТ ДЛЯ КАРТКИ ЗІ СЛАЙДЕРОМ
 function LuckyCard({ pet }) {
   const [imgIndex, setImgIndex] = useState(0);
 
@@ -51,7 +50,6 @@ function LuckyCard({ pet }) {
         </h3>
         <div className="lucky-review-box">
           <p className="lucky-review">{pet.text}</p>
-          {/* 👇 Кнопка з'являється, якщо текст достатньо довгий */}
           {pet.text && pet.text.length > 100 && (
               <Link to={`/pets/${pet.id}`} className="read-more-link">
                   Читати далі »
@@ -122,7 +120,7 @@ function Home() {
           return {
             id: pet.Id,
             petName: pet.Name,
-            ownerName: pet.OwnerName || "Нова сім'я",
+            ownerName: pet.OwnerName ? pet.OwnerName.split(' ')[0] : "Нова сім'я",
             text: pet.HomeDescription || "Знайшов свій дім!", 
             images: images
           };
@@ -204,12 +202,10 @@ function Home() {
 
   return (
     <div className="home-page-container">
-      {/* Лапки */}
       <div className="fixed-background-paws">
         <BackgroundPaws />
       </div>
 
-      {/* М'які кольорові світіння на фоні */}
       <div className="ambient-glows">
         <div className="glow-blob purple-top"></div>
         <div className="glow-blob pink-right"></div>
@@ -221,7 +217,8 @@ function Home() {
           <div className="call-to-action-container">
             <Link to="/pets" style={{ textDecoration: 'none' }}>
               <div className="call-to-action">
-                Знайди свого улюбленця
+                {/* 👇 Оновлено: примусове перенесення тексту на два рядки */}
+                <span className="cta-main-text">Знайди свого <br /> улюбленця</span>
                 <div className="blinking-paw"></div>
               </div>
             </Link>

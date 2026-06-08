@@ -247,8 +247,29 @@
     text-align: left;
 }
 
+/* Оновлюємо контейнер для гнучкості */
+.pet-info-chatacter {
+    display: flex;
+    flex-wrap: wrap;      /* Дозволяє перенос */
+    gap: 6px;             /* Відстань між тегами */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    /* Видаліть властивості white-space, overflow, text-overflow, якщо вони були */
+}
+
+/* Стиль для окремого тегу */
+.pet-tag-pill {
+    background: rgba(255, 255, 255, 0.2); /* Напівпрозорий білий фон */
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 .status-looking { background: rgba(76, 175, 80, 0.85); color: white; }
 .status-special { background: rgba(255, 152, 0, 0.85); color: white; }
 .status-treatment { background: rgba(233, 30, 99, 0.85); color: white; }
 .status-home { background: rgba(33, 150, 243, 0.85); color: white; }
-.status-rainbow { background: rgba(45, 45, 45, 0.85); color: white; }
+.status-died { background: rgba(45, 45, 45, 0.85); color: white; }

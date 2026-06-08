@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext'; 
-import { supabase } from '../supabaseClient'; 
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../supabaseClient';
 import './Login.css';
 import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
@@ -13,19 +13,22 @@ function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
   const [secretQuestion, setSecretQuestion] = useState('Як звали вашого першого домашнього улюбленця?');
   const [secretAnswer, setSecretAnswer] = useState('');
 
   const navigate = useNavigate();
-  const { login } = useAuth(); 
+  const { login } = useAuth();
   const { showToast } = useToast(); // 👈 Підключаємо функцію з контексту
 
   const handlePhoneChange = (e) => {
     const rawDigits = e.target.value.replace(/\D/g, '');
     if (rawDigits.length === 0) { setPhone(''); return; }
     let digits = rawDigits;
-    if (!digits.startsWith('38')) digits = '38' + digits;
+    if (!digits.startsWith('380')) digits = '380' + digits;
     digits = digits.substring(0, 12);
     let formatted = '+';
     if (digits.length > 0) formatted += digits.substring(0, 2);
@@ -36,83 +39,90 @@ function Register() {
     setPhone(formatted);
   };
 
-  const handleRegister = async (e) => { 
+  const handleRegister = async (e) => {
     e.preventDefault();
-    
+
+    // 1. Додаємо перевірку формату email (Regex)
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      showToast('❌ Будь ласка, введіть коректну адресу електронної пошти!');
+      return;
+    }
+
     if (password.length < 6) {
-        showToast('❌ Пароль має містити мінімум 6 символів!');
-        return;
+      showToast('❌ Пароль має містити мінімум 6 символів!');
+      return;
     }
 
     if (password !== confirmPassword) {
-        showToast('❌ Паролі не співпадають!');
-        return;
+      showToast('❌ Паролі не співпадають!');
+      return;
     }
 
     if (!secretAnswer.trim()) {
-        showToast('❌ Будь ласка, дайте відповідь на секретне запитання!');
-        return;
+      showToast('❌ Будь ласка, дайте відповідь на секретне запитання!');
+      return;
     }
 
     try {
-        const cleanedNickname = nickname.trim();
-        const cleanedEmail = email.trim();
-        // Очищаємо телефон від дужок, плюсів та пробілів
-        const cleanedPhone = phone.replace(/\D/g, ''); 
+      const cleanedNickname = nickname.trim();
+      const cleanedEmail = email.trim();
+      // Очищаємо телефон від дужок, плюсів та пробілів
+      const cleanedPhone = phone.replace(/\D/g, '');
 
-        // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ
-        const { data: existingUsers, error: checkError } = await supabase
-            .from('Users')
-            .select('Nickname, Email, Phone')
-            .or(`Nickname.eq.${cleanedNickname},Email.eq.${cleanedEmail},Phone.eq.${cleanedPhone}`);
+      // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ
+      const { data: existingUsers, error: checkError } = await supabase
+        .from('Users')
+        .select('Nickname, Email, Phone')
+        .or(`Nickname.eq.${cleanedNickname},Email.eq.${cleanedEmail},Phone.eq.${cleanedPhone}`);
 
-        if (checkError) {
-            showToast('❌ Помилка перевірки даних!');
-            return;
-        }
+      if (checkError) {
+        showToast('❌ Помилка перевірки даних!');
+        return;
+      }
 
-        if (existingUsers && existingUsers.length > 0) {
-            if (existingUsers.some(u => u.Nickname === cleanedNickname)) showToast('❌ Цей Нікнейм вже зайнятий!');
-            else if (existingUsers.some(u => u.Email === cleanedEmail)) showToast('❌ Цей Email вже зареєстровано!');
-            else if (existingUsers.some(u => u.Phone === cleanedPhone)) showToast('❌ Цей номер телефону вже використовується!');
-            return; 
-        }
+      if (existingUsers && existingUsers.length > 0) {
+        if (existingUsers.some(u => u.Nickname === cleanedNickname)) showToast('❌ Цей Нікнейм вже зайнятий!');
+        else if (existingUsers.some(u => u.Email === cleanedEmail)) showToast('❌ Цей Email вже зареєстровано!');
+        else if (existingUsers.some(u => u.Phone === cleanedPhone)) showToast('❌ Цей номер телефону вже використовується!');
+        return;
+      }
 
-        // 2. РЕЄСТРАЦІЯ
-        const { error: insertError } = await supabase
-            .from('Users')
-            .insert([
-                { 
-                  Nickname: cleanedNickname, 
-                  FirstName: firstName.trim(), 
-                  LastName: lastName.trim(), 
-                  Phone: cleanedPhone,
-                  Email: cleanedEmail, 
-                  Password: password,
-                  SecretQuestion: secretQuestion,
-                  SecretAnswer: secretAnswer.trim().toLowerCase()
-                }
-            ]);
+      // 2. РЕЄСТРАЦІЯ
+      const { error: insertError } = await supabase
+        .from('Users')
+        .insert([
+          {
+            Nickname: cleanedNickname,
+            FirstName: firstName.trim(),
+            LastName: lastName.trim(),
+            Phone: cleanedPhone,
+            Email: cleanedEmail,
+            Password: password,
+            SecretQuestion: secretQuestion,
+            SecretAnswer: secretAnswer.trim().toLowerCase()
+          }
+        ]);
 
-        if (insertError) {
-            showToast('❌ Помилка при реєстрації!');
-            console.error("Insert Error:", insertError);
-            return;
-        }
+      if (insertError) {
+        showToast('❌ Помилка при реєстрації!');
+        console.error("Insert Error:", insertError);
+        return;
+      }
 
-        // 3. УСПІШНИЙ ВХІД
-        localStorage.setItem('userNickname', cleanedNickname);
-        localStorage.setItem('userRole', 'user'); 
-        login(); 
-        window.dispatchEvent(new Event('authChanged')); 
+      // 3. УСПІШНИЙ ВХІД
+      localStorage.setItem('userNickname', cleanedNickname);
+      localStorage.setItem('userRole', 'user');
+      login();
+      window.dispatchEvent(new Event('authChanged'));
 
-        navigate('/', { 
-            state: { welcomeMsg: '✅ Реєстрація успішна! Вітаємо в родині AdoptMe 🐾' } 
-        }); 
+      navigate('/', {
+        state: { welcomeMsg: '✅ Реєстрація успішна! Вітаємо в родині AdoptMe 🐾' }
+      });
 
     } catch (err) {
-        showToast('❌ Сталася непередбачувана помилка!');
-        console.error(err);
+      showToast('❌ Сталася непередбачувана помилка!');
+      console.error(err);
     }
   };
 
@@ -121,71 +131,96 @@ function Register() {
       <div className="login-card" style={{ maxWidth: '450px' }}>
         <h2>Реєстрація 🐾</h2>
         <p>Створіть акаунт за індивідуальним нікнеймом</p>
-        
+
         <form onSubmit={handleRegister}>
           <div className="input-group">
             <label>Унікальний Нікнейм</label>
-            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Введіть нікнейм..." required />
+            <input type="text" value={nickname} onChange={(e) => setNickname(e.target.value)} placeholder="Наприклад: @ivan" maxLength="20" required />
           </div>
 
           <div style={{ display: 'flex', gap: '15px' }}>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Ім'я</label>
-                <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Ім'я" required />
-              </div>
-              <div className="input-group" style={{ flex: 1 }}>
-                <label>Прізвище</label>
-                <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Прізвище" required />
-              </div>
+            <div className="input-group" style={{ flex: 1 }}>
+              <label>Ім'я</label>
+              <input type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Ім'я" maxLength="30" required />
+            </div>
+            <div className="input-group" style={{ flex: 1 }}>
+              <label>Прізвище</label>
+              <input type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Прізвище" maxLength="30" required />
+            </div>
           </div>
 
           <div className="input-group">
             <label>Телефон</label>
-            <input type="text" value={phone} onChange={handlePhoneChange} placeholder="+38(0__) ___ __ __" required />
+            <input type="text" value={phone} onChange={handlePhoneChange} placeholder="+38(0__) ___ __ __" maxLength="19" required />
           </div>
 
           <div className="input-group">
             <label>Email</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vash@mail.com" required />
+            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="vash@mail.com" maxLength="30" required />
           </div>
-          
+
           <div className="input-group">
             <label>Пароль</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Створіть пароль" required />
+            <div className="password-input-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Створіть пароль"
+                maxLength="50"
+                required
+              />
+              <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? "🙉" : "🙈"}
+              </button>
+            </div>
           </div>
 
           <div className="input-group">
             <label>Повторіть пароль</label>
-            <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Повторіть пароль" required />
+            <div className="password-input-wrapper">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Повторіть пароль"
+                maxLength="64"
+                required
+              />
+              <button type="button" className="toggle-password" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? "🙉" : "🙈"}
+              </button>
+            </div>
           </div>
 
           <div className="input-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-            <label>Секретне запитання (для відновлення пароля)</label>
-            <select 
-                value={secretQuestion} 
-                onChange={(e) => setSecretQuestion(e.target.value)}
-                style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
+            <label>Секретне запитання</label>
+            <select
+              value={secretQuestion}
+              onChange={(e) => setSecretQuestion(e.target.value)}
+              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
             >
-                <option value="Як звали вашого першого домашнього улюбленця?">Як звали вашого першого домашнього улюбленця?</option>
-                <option value="Яка ваша улюблена порода собак/котів?">Яка ваша улюблена порода собак/котів?</option>
-                <option value="Місто, у якому ви народилися?">Місто, у якому ви народилися?</option>
-                <option value="Дівоче прізвище вашої матері?">Дівоче прізвище вашої матері?</option>
+              <option value="Як звали вашого першого домашнього улюбленця?">Як звали вашого першого домашнього улюбленця?</option>
+              <option value="Яка ваша улюблена порода собак/котів?">Яка ваша улюблена порода собак/котів?</option>
+              <option value="Місто, у якому ви народилися?">Місто, у якому ви народилися?</option>
+              <option value="Який ваш улюблений колір?">Який ваш улюблений колір?</option>
             </select>
-            
-            <input 
-                type="text" 
-                value={secretAnswer} 
-                onChange={(e) => setSecretAnswer(e.target.value)} 
-                placeholder="Ваша відповідь..." 
-                required 
+
+            <input
+              type="text"
+              value={secretAnswer}
+              onChange={(e) => setSecretAnswer(e.target.value)}
+              placeholder="Ваша відповідь..."
+              maxLength="30"
+              required
             />
           </div>
-          
+
           <button type="submit" className="login-submit-btn" style={{ marginTop: '15px' }}>Зареєструватися</button>
         </form>
 
         <div className="register-link-container" style={{ marginTop: '15px', textAlign: 'center' }}>
-            <p>Вже маєте акаунт? <Link to="/login" style={{ color: '#6d4ce4', fontWeight: 'bold' }}>Увійти</Link></p>
+          <p>Вже маєте акаунт? <Link to="/login" style={{ color: '#6d4ce4', fontWeight: 'bold' }}>Увійти</Link></p>
         </div>
       </div>
     </div>

@@ -298,7 +298,7 @@ function PetDetails() {
       case 'Особливий догляд': return { class: 'status-special', icon: '❤️‍🩹' };
       case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
       case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
-      case 'Не вдалось врятувати': return { class: 'status-rainbow', icon: '🌈' };
+      case 'Не вдалось врятувати': return { class: 'status-died', icon: '😞' };
       case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
       default: return { class: 'status-looking', icon: '🐾' };
     }
@@ -430,7 +430,7 @@ function PetDetails() {
                         {currentStatus === 'Вже вдома' 
                           ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
                           : currentStatus === 'Не вдалось врятувати'
-                          ? '🌈 На жаль, ця тваринка більше не з нами.'
+                          ? '😞 На жаль, ця тваринка більше не з нами.'
                           : '🔒 Ця тваринка вже заброньована іншою родиною!'}
                       </p>
                     </div>

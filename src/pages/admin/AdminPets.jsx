@@ -25,21 +25,21 @@ function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
 
   return (
     <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto' }}>
-      <div 
-        className={`custom-dropdown-header ${isOpen ? 'open' : ''} form-control`} 
+      <div
+        className={`custom-dropdown-header ${isOpen ? 'open' : ''} form-control`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         style={{ padding: '14px 18px', border: isOpen ? '1px solid #6847DD' : '1px solid rgba(104, 71, 221, 0.2)' }}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
         <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
       </div>
-      
+
       {isOpen && !disabled && (
         <div className="custom-dropdown-list-wrapper">
           <ul className="custom-dropdown-list">
             {options.map((opt) => (
-              <li 
-                key={opt.value} 
+              <li
+                key={opt.value}
                 className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
                 onClick={() => {
                   onChange(opt.value);
@@ -61,7 +61,7 @@ function AdminPets() {
   const [petsList, setPetsList] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
-  
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentPetId, setCurrentPetId] = useState(null);
@@ -73,7 +73,7 @@ function AdminPets() {
   const [isUploading, setIsUploading] = useState(false);
 
   const [sortOrder, setSortOrder] = useState('newest');
-  
+
   const { showToast } = useToast();
 
   const [petTypes, setPetTypes] = useState(['Кіт', 'Собака']);
@@ -251,7 +251,7 @@ function AdminPets() {
     e.stopPropagation();
     setEditMode(true);
     setCurrentPetId(pet.Id);
-    
+
     setPetFormData({
       ...pet,
       Name: pet.Name || '', Type: pet.Type || 'Кіт', Breed: pet.Breed || 'Безпородна', Age: pet.Age || '', Gender: pet.Gender || 'Хлопчик', ImageName: pet.ImageName || '', Images: pet.Images || [], Tags: pet.Tags || '', Description: pet.Description || '', HomeDescription: pet.HomeDescription || '', Status: pet.Status || 'Шукає дім', OwnerId: pet.OwnerId || null, OwnerName: pet.OwnerName || '', ArrivalDate: pet.ArrivalDate || getTodayDate(), IsVaccinated: pet.IsVaccinated || false, MedicalNotes: pet.MedicalNotes || '', EnergyLevel: pet.EnergyLevel || 'Середній', Friendliness: pet.Friendliness || 'Дружелюбний до всіх', NeedsTraining: pet.NeedsTraining || false, Size: pet.Size || 'Середній', FavoriteFood: pet.FavoriteFood || "М'яско"
@@ -293,7 +293,7 @@ function AdminPets() {
       if (selectedFiles.length > 0) {
         const uploadPromises = selectedFiles.map(file => uploadImage(file));
         const uploadedFileNames = await Promise.all(uploadPromises);
-        
+
         finalImages = uploadedFileNames;
         finalImageName = uploadedFileNames[0];
       } else if (!editMode && !finalImageName) {
@@ -304,16 +304,26 @@ function AdminPets() {
 
       const isHome = petFormData.Status === 'Вже вдома';
 
-      const dataToSave = { 
-        ...petFormData, 
+      const processTags = (tagString) => {
+        if (!tagString) return '';
+        return tagString
+          .split(/[ ,]+/) // Розділяємо по пробілу або комі
+          .filter(t => t.trim() !== '') // Прибираємо порожні елементи
+          .map(t => t.startsWith('#') ? t : `#${t}`) // Додаємо #, якщо його немає
+          .join(' ');
+      };
+
+      const dataToSave = {
+        ...petFormData,
+        Tags: processTags(petFormData.Tags), // Тепер теги завжди будуть форматовані
         ImageName: finalImageName,
-        Images: finalImages 
+        Images: finalImages
       };
 
       if (!isHome) {
         dataToSave.OwnerId = null;
         dataToSave.OwnerName = null;
-        dataToSave.HomeDescription = null; 
+        dataToSave.HomeDescription = null;
       }
 
       if (editMode) {
@@ -350,23 +360,26 @@ function AdminPets() {
         if (error) throw error;
 
         if (newPetData && newPetData.length > 0) {
-            const newPetId = newPetData[0].Id || newPetData[0].id;
-            const validUsers = usersList.filter(u => u.Nickname || u.nickname || u.NickName || u.nickname);
-            
+          const newPetId = newPetData[0].Id || newPetData[0].id;
+
+          // 👇 ОТРИМУЄМО АКТУАЛЬНИХ КОРИСТУВАЧІВ ДЛЯ СПОВІЩЕНЬ
+          const { data: freshUsers } = await supabase.from('Users').select('Nickname');
+
+          if (freshUsers && freshUsers.length > 0) {
+            const validUsers = freshUsers.filter(u => u.Nickname && u.Nickname !== 'Гість');
+
             if (validUsers.length > 0) {
-                const notificationsToInsert = validUsers.map(user => {
-                    const nick = user.Nickname || user.nickname || user.NickName;
-                    return {
-                        UserNickname: nick,
-                        PetId: newPetId,
-                        PetName: dataToSave.Name,
-                        NewStatus: 'Новенький хвостик',
-                        IsRead: false
-                    };
-                });
-                
-                await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
+              const notificationsToInsert = validUsers.map(user => ({
+                UserNickname: user.Nickname,
+                PetId: newPetId,
+                PetName: dataToSave.Name,
+                NewStatus: 'Новенький хвостик',
+                IsRead: false
+              }));
+
+              await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
             }
+          }
         }
         showToast("🎉 Нового хвостика успішно додано!");
       }
@@ -407,126 +420,126 @@ function AdminPets() {
             <h3 className="sidebar-title" style={{ margin: 0 }}>Фільтри</h3>
             <button className="reset-btn" onClick={resetFilters}>Скинути</button>
           </div>
-          
+
           <div className="filter-block">
             <label>Вид тварини</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Всі види' },
                 ...petTypes.map(type => ({ value: type, label: type }))
-              ]} 
-              value={filterType} 
-              onChange={setFilterType} 
+              ]}
+              value={filterType}
+              onChange={setFilterType}
             />
           </div>
 
           <div className="filter-block">
             <label>Порода</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Будь-яка' },
                 ...petBreeds.map(breed => ({ value: breed, label: breed }))
-              ]} 
-              value={filterBreed} 
-              onChange={setFilterBreed} 
+              ]}
+              value={filterBreed}
+              onChange={setFilterBreed}
             />
           </div>
 
           <div className="filter-block">
             <label>Стать</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Будь-яка' },
                 { value: 'Хлопчик', label: 'Хлопчик' },
                 { value: 'Дівчинка', label: 'Дівчинка' }
-              ]} 
-              value={filterGender} 
-              onChange={setFilterGender} 
+              ]}
+              value={filterGender}
+              onChange={setFilterGender}
             />
           </div>
 
           <div className="filter-block">
             <label>Розмір</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Будь-який' },
                 { value: 'Маленький', label: 'Маленький' },
                 { value: 'Середній', label: 'Середній' },
                 { value: 'Великий', label: 'Великий' }
-              ]} 
-              value={filterSize} 
-              onChange={setFilterSize} 
+              ]}
+              value={filterSize}
+              onChange={setFilterSize}
             />
           </div>
 
           <div className="filter-block">
             <label>Рівень енергії</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Будь-який' },
                 { value: 'Низький', label: 'Низький' },
                 { value: 'Середній', label: 'Середній' },
                 { value: 'Високий', label: 'Високий' }
-              ]} 
-              value={filterEnergy} 
-              onChange={setFilterEnergy} 
+              ]}
+              value={filterEnergy}
+              onChange={setFilterEnergy}
             />
           </div>
 
           <div className="filter-block">
             <label>Вік</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Будь-який' },
                 { value: 'До 6 місяців', label: 'До 6 місяців (Малюки)' },
                 { value: 'Від 6 міс. до 1 року', label: 'Від 6 міс. до 1 року' },
                 { value: 'Від 1 до 3 років', label: 'Від 1 до 3 років' },
                 { value: 'Більше 3 років', label: 'Більше 3 років' }
-              ]} 
-              value={filterAge} 
-              onChange={setFilterAge} 
+              ]}
+              value={filterAge}
+              onChange={setFilterAge}
             />
           </div>
 
           <div className="filter-block">
             <label>Вакцинація</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Не важливо' },
                 { value: 'Вакциновані', label: '💉 Вакциновані' },
                 { value: 'Не вакциновані', label: '⚠️ Не вакциновані' }
-              ]} 
-              value={filterVaccinated} 
-              onChange={setFilterVaccinated} 
+              ]}
+              value={filterVaccinated}
+              onChange={setFilterVaccinated}
             />
           </div>
 
           <div className="filter-block">
             <label>Навчання / Дресирування</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Не важливо' },
                 { value: 'Так', label: 'Потребує навчання' },
                 { value: 'Ні', label: 'Слухняна(ий)' }
-              ]} 
-              value={filterTraining} 
-              onChange={setFilterTraining} 
+              ]}
+              value={filterTraining}
+              onChange={setFilterTraining}
             />
           </div>
 
           <div className="filter-block">
             <label>Позначка (Статус тваринки)</label>
-            <CustomDropdown 
+            <CustomDropdown
               options={[
                 { value: 'Всі', label: 'Всі статуси' },
                 { value: 'Шукає дім', label: '🐾 Шукає дім' },
                 { value: 'Особливий догляд', label: '❤️‍🩹 Особливий догляд' },
                 { value: 'На лікуванні', label: '💊 На лікуванні' },
                 { value: 'Вже вдома', label: '🏡 Вже вдома' },
-                { value: 'Не вдалось врятувати', label: '🌈 Не вдалось врятувати' }
-              ]} 
-              value={filterStatus} 
-              onChange={setFilterStatus} 
+                { value: 'Не вдалось врятувати', label: '😞 Не вдалось врятувати' }
+              ]}
+              value={filterStatus}
+              onChange={setFilterStatus}
             />
           </div>
         </aside>
@@ -541,14 +554,14 @@ function AdminPets() {
                 <div className="sort-control">
                   <span className="sort-label">Сортувати:</span>
                   <div style={{ width: '220px' }}>
-                    <CustomDropdown 
+                    <CustomDropdown
                       options={[
                         { value: 'newest', label: 'Новенькі спочатку' },
                         { value: 'oldest', label: 'Ті, що давно чекають' },
                         { value: 'name', label: 'За алфавітом (А-Я)' }
-                      ]} 
-                      value={sortOrder} 
-                      onChange={setSortOrder} 
+                      ]}
+                      value={sortOrder}
+                      onChange={setSortOrder}
                     />
                   </div>
                 </div>
@@ -575,7 +588,7 @@ function AdminPets() {
                     tags={pet.Tags}
                     image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
                     isAdmin={true}
-                    status={pet.Status} 
+                    status={pet.Status}
                   />
                 </div>
               ))}
@@ -602,11 +615,10 @@ function AdminPets() {
                 <div className="input-group">
                   <label>Вид тваринки</label>
                   <div className="add-type-row">
-                    {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                    <CustomDropdown 
-                      options={petTypes.map(type => ({ value: type, label: type }))} 
-                      value={petFormData.Type} 
-                      onChange={val => setPetFormData({ ...petFormData, Type: val })} 
+                    <CustomDropdown
+                      options={petTypes.map(type => ({ value: type, label: type }))}
+                      value={petFormData.Type}
+                      onChange={val => setPetFormData({ ...petFormData, Type: val })}
                     />
                   </div>
                   <div className="add-type-row" style={{ marginTop: '10px' }}>
@@ -618,11 +630,10 @@ function AdminPets() {
                 <div className="input-group">
                   <label>Порода</label>
                   <div className="add-type-row">
-                    {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                    <CustomDropdown 
-                      options={petBreeds.map(breed => ({ value: breed, label: breed }))} 
-                      value={petFormData.Breed} 
-                      onChange={val => setPetFormData({ ...petFormData, Breed: val })} 
+                    <CustomDropdown
+                      options={petBreeds.map(breed => ({ value: breed, label: breed }))}
+                      value={petFormData.Breed}
+                      onChange={val => setPetFormData({ ...petFormData, Breed: val })}
                     />
                   </div>
                   <div className="add-type-row" style={{ marginTop: '10px' }}>
@@ -635,14 +646,13 @@ function AdminPets() {
               <div className="form-row">
                 <div className="input-group">
                   <label>Стать</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     options={[
                       { value: 'Хлопчик', label: 'Хлопчик' },
                       { value: 'Дівчинка', label: 'Дівчинка' }
-                    ]} 
-                    value={petFormData.Gender} 
-                    onChange={val => setPetFormData({ ...petFormData, Gender: val })} 
+                    ]}
+                    value={petFormData.Gender}
+                    onChange={val => setPetFormData({ ...petFormData, Gender: val })}
                   />
                 </div>
 
@@ -659,15 +669,14 @@ function AdminPets() {
                 </div>
                 <div className="input-group">
                   <label>Розмір</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     options={[
                       { value: 'Маленький', label: 'Маленький' },
                       { value: 'Середній', label: 'Середній' },
                       { value: 'Великий', label: 'Великий' }
-                    ]} 
-                    value={petFormData.Size} 
-                    onChange={val => setPetFormData({ ...petFormData, Size: val })} 
+                    ]}
+                    value={petFormData.Size}
+                    onChange={val => setPetFormData({ ...petFormData, Size: val })}
                   />
                 </div>
               </div>
@@ -675,29 +684,27 @@ function AdminPets() {
               <div className="form-row">
                 <div className="input-group">
                   <label>Рівень енергії</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     options={[
                       { value: 'Низький', label: 'Низький' },
                       { value: 'Середній', label: 'Середній' },
                       { value: 'Високий', label: 'Високий' }
-                    ]} 
-                    value={petFormData.EnergyLevel} 
-                    onChange={val => setPetFormData({ ...petFormData, EnergyLevel: val })} 
+                    ]}
+                    value={petFormData.EnergyLevel}
+                    onChange={val => setPetFormData({ ...petFormData, EnergyLevel: val })}
                   />
                 </div>
                 <div className="input-group">
                   <label>Дружелюбність</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     options={[
                       { value: 'Дружелюбний до всіх', label: 'Дружелюбний до всіх' },
                       { value: 'Любить дітей', label: 'Любить дітей' },
                       { value: 'Добре поводиться з іншими тваринами', label: 'Добре поводиться з іншими тваринами' },
                       { value: 'Обережний / Потребує часу', label: 'Обережний / Потребує часу' }
-                    ]} 
-                    value={petFormData.Friendliness} 
-                    onChange={val => setPetFormData({ ...petFormData, Friendliness: val })} 
+                    ]}
+                    value={petFormData.Friendliness}
+                    onChange={val => setPetFormData({ ...petFormData, Friendliness: val })}
                   />
                 </div>
               </div>
@@ -705,8 +712,7 @@ function AdminPets() {
               <div className="form-row">
                 <div className="input-group">
                   <label>Улюблена їжа</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     options={[
                       { value: 'М\'яско', label: 'М\'яско' },
                       { value: 'Рибка', label: 'Рибка' },
@@ -715,9 +721,9 @@ function AdminPets() {
                       { value: 'Паштет', label: 'Паштет' },
                       { value: 'Смаколики', label: 'Смаколики' },
                       { value: 'Усе смачненьке', label: 'Усе смачненьке' }
-                    ]} 
-                    value={petFormData.FavoriteFood || "М'яско"} 
-                    onChange={val => setPetFormData({ ...petFormData, FavoriteFood: val })} 
+                    ]}
+                    value={petFormData.FavoriteFood || "М'яско"}
+                    onChange={val => setPetFormData({ ...petFormData, FavoriteFood: val })}
                   />
                 </div>
 
@@ -735,11 +741,11 @@ function AdminPets() {
                 </div>
                 <div className="input-group">
                   <label>Медичні нотатки (ліки, особливості)</label>
-                  <textarea 
-                    placeholder="Наприклад: Потребує гіпоалергенний корм..." 
-                    value={petFormData.MedicalNotes || ''} 
-                    onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })} 
-                    className="form-control" 
+                  <textarea
+                    placeholder="Наприклад: Потребує гіпоалергенний корм..."
+                    value={petFormData.MedicalNotes || ''}
+                    onChange={e => setPetFormData({ ...petFormData, MedicalNotes: e.target.value })}
+                    className="form-control"
                     rows="3"
                     maxLength={300}
                   />
@@ -751,44 +757,42 @@ function AdminPets() {
 
               <div className="input-group">
                 <label>Позначка (Статус тваринки)</label>
-                {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                <CustomDropdown 
+                <CustomDropdown
                   options={[
                     { value: 'Шукає дім', label: '🐾 Шукає дім' },
-                    { value: 'Особливий догляд', label: '❤️‍🩹 Потребує особливого догляду' },
+                    { value: 'Особливий догляд', label: '❤️‍🩹 Особливий догляд' },
                     { value: 'На лікуванні', label: '💊 На лікуванні' },
                     { value: 'Вже вдома', label: '🏡 Вже вдома' },
-                    { value: 'Не вдалось врятувати', label: '🌈 Не вдалось врятувати' },
+                    { value: 'Не вдалось врятувати', label: '😞 Не вдалось врятувати' },
                     { value: 'Заброньована', label: '🔒 Заброньована' }
-                  ]} 
-                  value={petFormData.Status} 
+                  ]}
+                  value={petFormData.Status}
                   onChange={val => {
                     const newStatus = val;
                     let updatedFormData = { ...petFormData, Status: newStatus };
-                    
+
                     if (newStatus === 'Вже вдома') {
                       if (!updatedFormData.HomeDescription) {
                         updatedFormData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
                       }
                     } else {
-                      updatedFormData.HomeDescription = null; 
+                      updatedFormData.HomeDescription = null;
                     }
                     setPetFormData(updatedFormData);
-                  }} 
+                  }}
                 />
               </div>
 
               {petFormData.Status === 'Вже вдома' && (
                 <div className="input-group" style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
                   <label style={{ color: '#6847DD', marginBottom: '8px' }}>🏡 Хто прихистив тваринку?</label>
-                  {/* 👇 ЗАМІНЕНО НА CUSTOM DROPDOWN */}
-                  <CustomDropdown 
+                  <CustomDropdown
                     placeholder="-- Виберіть користувача --"
-                    options={usersList.map(user => ({ 
-                      value: user.Id.toString(), 
-                      label: `${user.FirstName} ${user.LastName} (@${user.Nickname})` 
-                    }))} 
-                    value={petFormData.OwnerId ? petFormData.OwnerId.toString() : ''} 
+                    options={usersList.map(user => ({
+                      value: user.Id.toString(),
+                      label: `${user.FirstName} ${user.LastName} (@${user.Nickname})`
+                    }))}
+                    value={petFormData.OwnerId ? petFormData.OwnerId.toString() : ''}
                     onChange={val => {
                       const selectedUserId = val;
                       const selectedUser = usersList.find(u => u.Id.toString() === selectedUserId);
@@ -797,30 +801,30 @@ function AdminPets() {
                         OwnerId: selectedUserId ? parseInt(selectedUserId) : null,
                         OwnerName: selectedUser ? `${selectedUser.FirstName} ${selectedUser.LastName}` : ''
                       });
-                    }} 
+                    }}
                   />
                 </div>
               )}
 
               <div className="input-group">
                 <label>Теги</label>
-                <input type="text" placeholder="добра розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
+                <input type="text" placeholder="#добра #розумна" value={petFormData.Tags} onChange={e => setPetFormData({ ...petFormData, Tags: e.target.value })} className="form-control" />
               </div>
 
               <div className="input-group">
                 <label>Фотографії або відео (можна обрати декілька)</label>
                 <label className="file-upload-label">
                   <span className="file-upload-text">
-                    {selectedFiles.length > 0 
-                      ? `✅ Обрано файлів: ${selectedFiles.length}` 
+                    {selectedFiles.length > 0
+                      ? `✅ Обрано файлів: ${selectedFiles.length}`
                       : (editMode ? "🖼️ Натисніть, щоб замінити медіа (оберіть всі потрібні файли)" : "📷 Натисніть, щоб обрати photo/відео")}
                   </span>
-                  <input 
-                    type="file" 
-                    multiple 
-                    accept="image/*,video/*" 
-                    onChange={(e) => setSelectedFiles(Array.from(e.target.files))} 
-                    style={{ display: 'none' }} 
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*,video/*"
+                    onChange={(e) => setSelectedFiles(Array.from(e.target.files))}
+                    style={{ display: 'none' }}
                   />
                 </label>
                 {selectedFiles.length > 0 && (
@@ -839,10 +843,10 @@ function AdminPets() {
                 <div style={{ marginBottom: '20px' }}>
                   <h3 className="section-subtitle" style={{ fontSize: '15px' }}>📖 Опис історії та характеру в притулку:</h3>
                   <div className="editable-container">
-                    <textarea 
-                      value={petFormData.Description || ''} 
-                      onChange={e => setPetFormData({ ...petFormData, Description: e.target.value })} 
-                      className="inline-input input-desc" 
+                    <textarea
+                      value={petFormData.Description || ''}
+                      onChange={e => setPetFormData({ ...petFormData, Description: e.target.value })}
+                      className="inline-input input-desc"
                       required
                       rows="4"
                       maxLength={700}
@@ -857,10 +861,10 @@ function AdminPets() {
                   <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
                     <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px', fontSize: '15px' }}>🏡 Історія успіху (Життя в новій родині):</h3>
                     <div className="editable-container">
-                      <textarea 
-                        value={petFormData.HomeDescription || ''} 
-                        onChange={e => setPetFormData({ ...petFormData, HomeDescription: e.target.value })} 
-                        className="inline-input input-desc" 
+                      <textarea
+                        value={petFormData.HomeDescription || ''}
+                        onChange={e => setPetFormData({ ...petFormData, HomeDescription: e.target.value })}
+                        className="inline-input input-desc"
                         required
                         rows="4"
                         maxLength={700}
