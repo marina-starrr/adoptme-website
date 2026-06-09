@@ -88,7 +88,7 @@
     padding: 20px;
     display: flex;
     flex-direction: column;
-    background-color: #6847DD;
+    background: linear-gradient(to bottom, #805CFF, #4024A4);
     color: var(--white);
     justify-content: flex-start; /* ЗМІНЕНО: щоб контент йшов природно зверху вниз */
     position: relative;
@@ -106,7 +106,7 @@
     left: 20px;
     right: 20px;
     justify-content: space-between;
-    color: var(--black);
+    color: var(--white);
     width: calc(100% - 40px);
 }
 
@@ -115,7 +115,7 @@
     align-items: center;
     font-size: 18px;
     font-weight: bold;
-    color: var(--black);
+    color: var(--white);
 }
 
 .pet-info img {
