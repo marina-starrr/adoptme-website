@@ -4,42 +4,34 @@ import { supabase } from '../supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
-import { useToast } from '../context/ToastContext'; 
+import { useToast } from '../context/ToastContext';
 import { createPortal } from 'react-dom';
 
 function Profile() {
-  const [activeTab, setActiveTab] = useState('favorites');
-  const [appFilter, setAppFilter] = useState('Всі');
+  const [activeTab, setActiveTab] = useState('personal');
   const fileInputRef = useRef(null);
-
-  const [applications, setApplications] = useState([]);
+  const [applications, setApplications] = useState([]); // Стан для реальних заявок
   const [loadingApps, setLoadingApps] = useState(false);
   const [favorites, setFavorites] = useState([]);
-  
+
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isModalClosing, setIsModalClosing] = useState(false); 
+  const [isModalClosing, setIsModalClosing] = useState(false);
   const [selectedApp, setSelectedApp] = useState(null);
-  const [isAppModalClosing, setIsAppModalClosing] = useState(false); 
+  const [isAppModalClosing, setIsAppModalClosing] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { showToast } = useToast(); 
+  const { showToast } = useToast();
 
   const [userData, setUserData] = useState({
-    nickname: '',
-    firstName: '',
-    lastName: '',
+    name: 'Марина Денісова', // Твоє повне ім'я згідно з профілем
     phone: '',
     email: '',
-    avatarUrl: '/ava.png'
+    avatarUrl: '/ava.jpg' 
   });
 
-  useEffect(() => {
-    if (localStorage.getItem('userRole') === 'admin') {
-      navigate('/admin/adoptions', { replace: true });
-    }
-  }, [navigate]);
+  const [favorites, setFavorites] = useState([]);
 
   useEffect(() => {
     const fetchProfileAndApplications = async () => {
@@ -66,7 +58,7 @@ function Profile() {
           }));
 
           setLoadingApps(true);
-          
+
           const { data: appsData, error: appsError } = await supabase
             .from('AdoptionRequests')
             .select('*')
@@ -111,61 +103,45 @@ function Profile() {
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
 
-    const savedAvatar = localStorage.getItem('profileAvatar');
-    if (savedAvatar) {
-      setUserData(prev => ({ ...prev, avatarUrl: savedAvatar }));
+    // Завантаження профілю
+    const savedUser = JSON.parse(localStorage.getItem('profileData'));
+    if (savedUser) {
+      setUserData(savedUser);
     }
   }, []);
 
+  // 1. Функція завантаження заявок з Supabase
   useEffect(() => {
     if (location.state?.welcomeMsg) {
       showToast(location.state.welcomeMsg);
     }
-    
+
     if (location.state?.activeTab) {
       setActiveTab(location.state.activeTab);
     }
 
     if (applications.length > 0 && location.state?.highlightAppId) {
       const targetApp = applications.find(app => app.Id === location.state.highlightAppId);
-      
+
       if (targetApp) {
         setSelectedApp(targetApp);
         setAppFilter('Всі');
       }
     }
 
-    if (location.state) {
-      window.history.replaceState({}, document.title);
+      fetchMyApplications();
     }
-  }, [location, applications, showToast]);
+  }, [activeTab, userData.name]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setUserData(prevData => ({ ...prevData, [name]: value }));
   };
 
-  const handleSaveProfile = async (e) => {
+  const handleSaveProfile = (e) => {
     e.preventDefault();
-    const currentNickname = localStorage.getItem('userNickname');
-
-    try {
-      const { error } = await supabase
-        .from('Users')
-        .update({
-          FirstName: userData.firstName.trim(),
-          LastName: userData.lastName.trim(),
-          Phone: userData.phone.trim(),
-          Email: userData.email.trim()
-        })
-        .eq('Nickname', currentNickname);
-
-      if (error) throw error;
-      showToast('✅ Зміни успішно збережено в базі даних! 🐾');
-
-    } catch (err) {
-      showToast('❌ Помилка збереження: ' + err.message);
-    }
+    localStorage.setItem('profileData', JSON.stringify(userData));
+    alert('Дані збережено локально!');
   };
 
   const handleLogout = () => {
@@ -187,7 +163,6 @@ function Profile() {
     });
   };
 
-  // 👇 Логіка видалення тваринки з обраного
   const handleRemoveFavorite = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
@@ -268,144 +243,80 @@ function Profile() {
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64String = reader.result;
-        setUserData(prevData => ({ ...prevData, avatarUrl: base64String }));
-        localStorage.setItem('profileAvatar', base64String);
+        setUserData(prevData => {
+            const newData = { ...prevData, avatarUrl: base64String };
+            localStorage.setItem('profileData', JSON.stringify(newData));
+            return newData;
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const filterTabs = ['Всі', 'Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
-  const filteredApps = applications.filter(app => {
-    if (appFilter === 'Всі') return true;
-    return (app.Status || 'Нова') === appFilter;
-  });
-
-  const parseAppInfo = (app) => {
-    const isVolunteer = app.PetName.includes('Волонтерство');
-    const appType = isVolunteer ? 'Волонтерство' : 'Прихисток';
-    let petName = 'будь-який хвостик';
-
-    if (isVolunteer) {
-      const match = app.PetName.match(/\((.*?)\)/);
-      if (match) petName = match[1];
-    } else {
-      petName = app.PetName;
-    }
-
-    return { isVolunteer, appType, petName };
-  };
-
   return (
-    <div className="profile-page" style={{ position: 'relative' }}>
-
+    <div className="profile-page"> 
       <div className="profile-container">
         <aside className="profile-sidebar">
-          <div className="profile-sidebar-banner">
-            <BackgroundPaws customClass="sidebar-paws" />
-          </div>
-
           <div className="profile-avatar-section">
             <div className="avatar-wrapper" onClick={handleAvatarClick}>
-              <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
-              <div className="avatar-overlay">
-                <span className="camera-icon">📷</span>
-              </div>
+                <img src={userData.avatarUrl} alt="Аватар" className="profile-avatar-large" />
+                <div className="avatar-overlay"><span>Змінити</span></div>
             </div>
             <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} style={{ display: 'none' }} />
-
-            <h2 className="profile-name">
-              {userData.firstName ? `${userData.firstName} ${userData.lastName}` : 'Користувач'}
-            </h2>
-            <p className="profile-status">@{userData.nickname || 'nickname'}</p>
+            <h2 className="profile-name">{userData.name}</h2>
+            <p className="profile-status">Власниця акаунту</p>
           </div>
-
+          
           <nav className="profile-nav">
-            <button className={`profile-nav-btn ${activeTab === 'favorites' ? 'active' : ''}`} onClick={() => setActiveTab('favorites')}>
-              🐾 Улюбленці
-              {favorites.length > 0 && <span className="badge">{favorites.length}</span>}
+            <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
+              Особисті дані
             </button>
             <button className={`profile-nav-btn ${activeTab === 'applications' ? 'active' : ''}`} onClick={() => setActiveTab('applications')}>
-              📝 Мої заявки
+              Мої заявки
               {applications.length > 0 && <span className="badge">{applications.length}</span>}
             </button>
-            <button className={`profile-nav-btn ${activeTab === 'personal' ? 'active' : ''}`} onClick={() => setActiveTab('personal')}>
-              👤 Особисті дані
-            </button>
-
-            <div className="nav-divider"></div>
-
-            <button className="profile-nav-btn logout-nav-btn" onClick={handleLogout}>
-              🚪 Вийти з акаунту
+            <button className={`profile-nav-btn ${activeTab === 'favorites' ? 'active' : ''}`} onClick={() => setActiveTab('favorites')}>
+              Улюбленці
+              {favorites.length > 0 && <span className="badge">{favorites.length}</span>}
             </button>
           </nav>
         </aside>
 
         <section className="profile-content-area">
-          {activeTab === 'favorites' && (
+          {activeTab === 'personal' && (
             <div className="profile-tab-content fade-in">
-              <h3>Мої улюбленці</h3>
-              {favorites.length === 0 ? (
-                <p className="empty-message">Список порожній. Перейдіть у каталог <Link to="/pets" className="empty-link-purple">тварин</Link>, щоб додати друзів ❤️</p>
-              ) : (
-                <>
-                  <div className="profile-favorites-grid">
-                    {favorites.map(pet => (
-                      <div className="fav-profile-card" key={pet.id}>
-                        <button
-                          className="remove-favorite-icon"
-                          onClick={(e) => handleRemoveFavorite(e, pet.id)}
-                          title="Прибрати з обраного"
-                        >
-                          &times;
-                        </button>
-                        <Link to={`/pets/${pet.id}`}>
-                          <img src={pet.image} alt={pet.name} />
-                        </Link>
-                        <h4>{pet.name}</h4>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div style={{ textAlign: 'center', marginTop: '30px' }}>
-                    <p className="success-favorites-text">
-                      Чудовий вибір! Скоріше натискай кнопку нижче <br /> і заповнюй анкету на прихисток 💜
-                    </p>
-                    <button className="adopt-pet-btn" onClick={() => window.dispatchEvent(new Event('openFavorites'))}>
-                      Прихистити
-                    </button>
-                  </div>
-                </>
-              )}
+              <h3>Особисті дані</h3>
+              <form className="profile-form" onSubmit={handleSaveProfile}>
+                <div className="form-group">
+                  <label>Ім'я та Прізвище</label>
+                  <input type="text" name="name" value={userData.name} onChange={handleInputChange} required />
+                </div>
+                <div className="form-group">
+                  <label>Номер телефону</label>
+                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} />
+                </div>
+                <div className="form-group">
+                  <label>Електронна пошта</label>
+                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} />
+                </div>
+                <button type="submit" className="save-profile-btn">Зберегти зміни</button>
+              </form>
             </div>
           )}
 
           {activeTab === 'applications' && (
             <div className="profile-tab-content fade-in">
               <h3>Історія заявок у притулок</h3>
-
-              <div className="app-filters-container">
-                {filterTabs.map(tab => (
-                  <button
-                    key={tab}
-                    className={`app-filter-btn ${appFilter === tab ? 'active' : ''}`}
-                    onClick={() => setAppFilter(tab)}
-                  >
-                    {tab}
-                  </button>
-                ))}
-              </div>
-
               {loadingApps ? <p>Завантаження заявок...</p> : (
                 <div className="applications-list">
                   {filteredApps.length === 0 ? <p className="empty-message">Заявок з таким статусом не знайдено.</p> :
                     filteredApps.map(app => {
                       const { isVolunteer, appType, petName } = parseAppInfo(app);
-                      
+
                       return (
-                        <div 
-                          className="application-card clickable-card" 
-                          key={app.Id} 
+                        <div
+                          className="application-card clickable-card"
+                          key={app.Id}
                           id={`app-card-${app.Id}`}
                           onClick={() => setSelectedApp(app)}
                         >
@@ -420,7 +331,7 @@ function Profile() {
 
                             <div className="app-details">
                               <h4 className="app-type-label">{appType}</h4>
-                              <p className="app-pet-name">Тваринка: 
+                              <p className="app-pet-name">Тваринка:
                                 {app.PetId && petName !== 'будь-який хвостик' ? (
                                   <Link to={`/pets/${app.PetId}`} className="app-pet-link" onClick={(e) => e.stopPropagation()}><span> {petName}</span></Link>
                                 ) : (
@@ -438,72 +349,43 @@ function Profile() {
                             {app.Status || 'Нова'}
                           </div>
                         </div>
-                      );
-                    })
+                        <div className="app-status status-yellow">На розгляді</div>
+                      </div>
+                    ))
                   }
                 </div>
               )}
             </div>
           )}
 
-          {activeTab === 'personal' && (
+          {activeTab === 'favorites' && (
             <div className="profile-tab-content fade-in">
-              <h3>Особисті дані</h3>
-              <form className="profile-form" onSubmit={handleSaveProfile}>
-
-                <div className="form-group">
-                  <label>Ваш Нікнейм (Ідентифікатор)</label>
-                  <input type="text" name="nickname" value={userData.nickname} readOnly className="input-readonly" title="Нікнейм є унікальним і не змінюється" />
+              <h3>Мої улюбленці</h3>
+              {favorites.length === 0 ? (
+                <p className="empty-message">Список порожній.</p>
+              ) : (
+                <div className="profile-favorites-grid">
+                  {favorites.map(pet => (
+                    <div className="fav-profile-card" key={pet.id}>
+                      <img src={pet.image} alt={pet.name} />
+                      <h4>{pet.name}</h4>
+                    </div>
+                  ))}
                 </div>
-
-                <div style={{ display: 'flex', gap: '20px' }}>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label>Ім'я</label>
-                    <input type="text" name="firstName" value={userData.firstName} onChange={handleInputChange} required />
-                  </div>
-                  <div className="form-group" style={{ flex: 1 }}>
-                    <label>Прізвище</label>
-                    <input type="text" name="lastName" value={userData.lastName} onChange={handleInputChange} required />
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Номер телефону</label>
-                  <input type="tel" name="phone" value={userData.phone} onChange={handleInputChange} required />
-                </div>
-
-                <div className="form-group">
-                  <label>Електронна пошта (Email)</label>
-                  <input type="email" name="email" value={userData.email} onChange={handleInputChange} required />
-                </div>
-
-                <button type="submit" className="save-profile-btn">Зберегти зміни</button>
-              </form>
-
-              <div className="danger-zone">
-                <p>Небезпечна зона</p>
-                <button
-                  type="button"
-                  className="delete-account-btn"
-                  onClick={() => setIsDeleteModalOpen(true)}
-                >
-                  🗑️ Видалити акаунт назавжди
-                </button>
-              </div>
-
+              )}
             </div>
           )}
         </section>
       </div>
 
       {isDeleteModalOpen && createPortal(
-        <div 
-          className={`profile-modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+        <div
+          className={`profile-modal-overlay ${isModalClosing ? 'closing' : ''}`}
           onClick={closeDeleteModal}
         >
-          <div 
-            className={`modal-content fade-view ${isModalClosing ? 'closing' : ''}`} 
-            onClick={e => e.stopPropagation()} 
+          <div
+            className={`modal-content fade-view ${isModalClosing ? 'closing' : ''}`}
+            onClick={e => e.stopPropagation()}
             style={{ maxWidth: '400px', textAlign: 'center', padding: '40px 30px' }}
           >
             <div style={{ fontSize: '50px', marginBottom: '15px' }}>🐾😢</div>
@@ -525,16 +407,16 @@ function Profile() {
       )}
 
       {selectedApp && createPortal(
-        <div 
-          className={`profile-modal-overlay ${isAppModalClosing ? 'closing' : ''}`} 
+        <div
+          className={`profile-modal-overlay ${isAppModalClosing ? 'closing' : ''}`}
           onClick={closeAppModal}
         >
-          <div 
-            className={`modal-content fade-view app-details-modal ${isAppModalClosing ? 'closing' : ''}`} 
+          <div
+            className={`modal-content fade-view app-details-modal ${isAppModalClosing ? 'closing' : ''}`}
             onClick={e => e.stopPropagation()}
           >
             <span className="profile-close-btn" onClick={closeAppModal}>&times;</span>
-            
+
             {(() => {
               const { isVolunteer, appType, petName } = parseAppInfo(selectedApp);
               return (
@@ -542,29 +424,29 @@ function Profile() {
                   <h3 className="modal-title">Деталі заявки №{selectedApp.Id}</h3>
                   <div className="app-details-grid">
                     <div className="detail-row">
-                      <strong>Тип заявки:</strong> 
+                      <strong>Тип заявки:</strong>
                       <span className="highlight-text">{appType}</span>
                     </div>
                     <div className="detail-row">
-                      <strong>Ім'я заявника:</strong> 
+                      <strong>Ім'я заявника:</strong>
                       <span>{selectedApp.AdopterName}</span>
                     </div>
                     <div className="detail-row">
-                      <strong>Телефон:</strong> 
+                      <strong>Телефон:</strong>
                       <span>{selectedApp.AdopterPhone}</span>
                     </div>
                     <div className="detail-row">
-                      <strong>Тваринка:</strong> 
+                      <strong>Тваринка:</strong>
                       <span>
                         {selectedApp.PetId ? (
-                           <Link to={`/pets/${selectedApp.PetId}`} onClick={closeAppModal} className="app-pet-link">
-                             {petName}
-                           </Link>
+                          <Link to={`/pets/${selectedApp.PetId}`} onClick={closeAppModal} className="app-pet-link">
+                            {petName}
+                          </Link>
                         ) : petName}
                       </span>
                     </div>
                     <div className="detail-row">
-                      <strong>Статус:</strong> 
+                      <strong>Статус:</strong>
                       <span className={`status-badge ${selectedApp.Status || 'Нова'}`} style={{ display: 'inline-block', padding: '4px 12px', fontSize: '13px' }}>
                         {selectedApp.Status || 'Нова'}
                       </span>
@@ -578,11 +460,11 @@ function Profile() {
                     ) : (
                       <>
                         <div className="detail-row">
-                          <strong>Досвід утримання:</strong> 
+                          <strong>Досвід утримання:</strong>
                           <span>{selectedApp.HasExperience ? 'Так' : 'Ні'}</span>
                         </div>
                         <div className="detail-row">
-                          <strong>Інші тварини вдома:</strong> 
+                          <strong>Інші тварини вдома:</strong>
                           <span>{selectedApp.HasOtherPets ? 'Так' : 'Ні'}</span>
                         </div>
                         <div className="detail-row full-width">

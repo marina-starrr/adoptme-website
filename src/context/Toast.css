@@ -32,3 +32,15 @@
     transform: translate(-50%, 0);
     opacity: 1;
 }
+
+@media (max-width: 480px) {
+    .global-toast {
+        top: 15px;
+        width: 90%;
+        max-width: 360px;
+        padding: 12px 20px;
+        font-size: 14px;
+        white-space: normal;
+        text-align: center;
+    }
+}

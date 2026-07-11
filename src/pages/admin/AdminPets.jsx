@@ -6,7 +6,6 @@ import { supabase } from '../../supabaseClient';
 import './AdminPets.css';
 import { useToast } from '../../context/ToastContext';
 
-// Універсальний компонент випадаючого списку
 function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -62,7 +61,6 @@ function AdminPets() {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Пагінація для адмінки (12 карток разом з плюсиком на першій сторінці)
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 12;
 
@@ -158,21 +156,17 @@ function AdminPets() {
       return dateB - dateA;
     });
 
-  // Автоматичне скидання пагінації на 1 сторінку при зміні фільтрів
   useEffect(() => {
     setCurrentPage(1);
   }, [filterType, filterBreed, filterGender, filterAge, filterStatus, filterSize, filterEnergy, filterVaccinated, filterTraining, sortOrder]);
 
-  // 👇 ДОДАНО: Перенесення користувача на самий верх сторінки при перелистуванні сторінок
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentPage]);
 
-  // Логіка зрізу: на першій сторінці беремо на 1 менше (бо є картка «Додати»)
   const totalItems = filteredAndSortedPets.length;
   const adminPageSize = currentPage === 1 ? ITEMS_PER_PAGE - 1 : ITEMS_PER_PAGE;
-  
-  // Рахуємо правильний зміщення індексів
+
   const offset = currentPage === 1 ? 0 : (currentPage - 1) * ITEMS_PER_PAGE - 1;
   const paginatedPets = filteredAndSortedPets.slice(offset, offset + adminPageSize);
   const totalPages = Math.ceil((totalItems + 1) / ITEMS_PER_PAGE);
@@ -349,15 +343,15 @@ function AdminPets() {
       const processTags = (tagString) => {
         if (!tagString) return '';
         return tagString
-          .split(/[ ,]+/) 
-          .filter(t => t.trim() !== '') 
-          .map(t => t.startsWith('#') ? t : `#${t}`) 
+          .split(/[ ,]+/)
+          .filter(t => t.trim() !== '')
+          .map(t => t.startsWith('#') ? t : `#${t}`)
           .join(' ');
       };
 
       const dataToSave = {
         ...petFormData,
-        Tags: processTags(petFormData.Tags), 
+        Tags: processTags(petFormData.Tags),
         ImageName: finalImageName,
         Images: finalImages
       };
@@ -610,7 +604,6 @@ function AdminPets() {
             </div>
 
             <div className="pet-grid">
-              {/* Картка додавання відображається тільки на 1 сторінці */}
               {currentPage === 1 && (
                 <div className="add-pet-card" onClick={handleAddOpen}>
                   <div className="plus-icon">+</div>
@@ -638,7 +631,6 @@ function AdminPets() {
               ))}
             </div>
 
-            {/* БЛОК ПАГІНАЦІЇ АДМІНІСТРАТОРА */}
             {totalPages > 1 && (
               <div className="pagination-container">
                 <button

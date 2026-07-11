@@ -1,19 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
 import './AdminAdoptions.css';
-import { useToast } from '../../context/ToastContext'; 
+import { useToast } from '../../context/ToastContext';
 
 function AdminAdoptions() {
     const [applications, setApplications] = useState([]);
     const [loading, setLoading] = useState(true);
-    
+
     const [openDropdownId, setOpenDropdownId] = useState(null);
-    const [filterType, setFilterType] = useState('Всі'); 
+    const [filterType, setFilterType] = useState('Всі');
 
     const [confirmDialog, setConfirmDialog] = useState(null);
     const [isModalClosing, setIsModalClosing] = useState(false);
 
-    const { showToast } = useToast(); 
+    const { showToast } = useToast();
 
     const statuses = ['Нова', 'Розглядається', 'Схвалено', 'Передано', 'Відхилено'];
 
@@ -41,7 +41,7 @@ function AdminAdoptions() {
         setTimeout(() => {
             setConfirmDialog(null);
             setIsModalClosing(false);
-        }, 300); 
+        }, 300);
     };
 
     const handleStatusChange = async (id, newStatus) => {
@@ -64,7 +64,6 @@ function AdminAdoptions() {
             setOpenDropdownId(null);
         };
 
-        // 1. ЛОГІКА ПРИЗНАЧЕННЯ СТАТУСУ "ПЕРЕДАНО"
         if (newStatus === 'Передано' && app.Status !== 'Передано') {
             if (app.PetName?.includes('Волонтерство')) {
                 showToast('❌ Статус "Передано" не застосовується для волонтерів.');
@@ -76,7 +75,7 @@ function AdminAdoptions() {
                 message: `Тваринку фізично передано користувачу ${app.AdopterName}? Ця дія закріпить її за ним у базі та додасть у Щасливчики.`,
                 isDestructive: false,
                 onConfirm: async () => {
-                    closeConfirmDialog(); 
+                    closeConfirmDialog();
                     try {
                         const { data: userData, error: userError } = await supabase
                             .from('Users')
@@ -88,7 +87,7 @@ function AdminAdoptions() {
 
                         const ownerId = userData.Id;
                         const petIds = app.PetIds || [];
-                        
+
                         if (petIds.length > 0) {
                             for (const petId of petIds) {
                                 await supabase.from('Pets').update({
@@ -109,7 +108,7 @@ function AdminAdoptions() {
                                             return {
                                                 UserNickname: nick,
                                                 PetId: petId,
-                                                PetName: app.PetName, // Використовуємо всі імена
+                                                PetName: app.PetName,
                                                 NewStatus: 'Вже знайшла дім',
                                                 IsRead: false
                                             };
@@ -133,13 +132,12 @@ function AdminAdoptions() {
             return;
         }
 
-        // 2. СКАСУВАННЯ ПЕРЕДАЧІ
         if (app.Status === 'Передано' && newStatus !== 'Передано') {
             setConfirmDialog({
                 message: `Ви дійсно хочете змінити статус? Тваринка повернеться до статусу "Шукає дім", її перша історія відновиться, а домашня історія успіху видалиться.`,
                 isDestructive: true,
                 onConfirm: async () => {
-                    closeConfirmDialog(); 
+                    closeConfirmDialog();
                     try {
                         const petIds = app.PetIds || [];
                         if (petIds.length > 0) {
@@ -148,8 +146,8 @@ function AdminAdoptions() {
                                     Status: 'Шукає дім',
                                     OwnerId: null,
                                     OwnerName: null,
-                                    HomeDescription: null, 
-                                    ShowInLucky: true  
+                                    HomeDescription: null,
+                                    ShowInLucky: true
                                 }).eq('Id', petId);
 
                                 const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
@@ -160,7 +158,7 @@ function AdminAdoptions() {
                                         return {
                                             UserNickname: nick,
                                             PetId: petId,
-                                            PetName: app.PetName, // Використовуємо всі імена
+                                            PetName: app.PetName,
                                             NewStatus: 'Шукає дім',
                                             IsRead: false
                                         };
@@ -181,7 +179,6 @@ function AdminAdoptions() {
             return;
         }
 
-        // 3. БРОНЮВАННЯ (Схвалено)
         if (newStatus === 'Схвалено' && app.Status !== 'Схвалено') {
             if (!app.PetName?.includes('Волонтерство')) {
                 try {
@@ -195,14 +192,14 @@ function AdminAdoptions() {
                                 const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
                                 return nick && nick !== app.UserNickname;
                             }) : [];
-                            
+
                             if (validFavUsers.length > 0) {
                                 const notificationsToInsert = validFavUsers.map(fav => {
                                     const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
                                     return {
                                         UserNickname: nick,
                                         PetId: petId,
-                                        PetName: app.PetName, // Використовуємо всі імена
+                                        PetName: app.PetName,
                                         NewStatus: 'Заброньована',
                                         IsRead: false
                                     };
@@ -218,7 +215,6 @@ function AdminAdoptions() {
             }
         }
 
-        // 4. ЗНЯТТЯ БРОНІ
         if (app.Status === 'Схвалено' && newStatus !== 'Схвалено' && newStatus !== 'Передано') {
             if (!app.PetName?.includes('Волонтерство')) {
                 try {
@@ -235,7 +231,6 @@ function AdminAdoptions() {
             }
         }
 
-        // Всі інші статуси
         await updateRequestStatus(true);
     };
 
@@ -244,7 +239,7 @@ function AdminAdoptions() {
             message: 'Ви впевнені, що хочете назавжди видалити цю заявку?',
             isDestructive: true,
             onConfirm: async () => {
-                closeConfirmDialog(); 
+                closeConfirmDialog();
                 const { error } = await supabase.from('AdoptionRequests').delete().eq('Id', id);
                 if (error) {
                     showToast('❌ Помилка видалення: ' + error.message);
@@ -262,7 +257,7 @@ function AdminAdoptions() {
     };
 
     const filteredApplications = applications.filter(app => {
-        const isVolunteer = app.PetName?.includes('Волонтерство'); 
+        const isVolunteer = app.PetName?.includes('Волонтерство');
         if (filterType === 'Всі') return true;
         if (filterType === 'Волонтерство') return isVolunteer;
         if (filterType === 'Прихисток') return !isVolunteer;
@@ -300,8 +295,7 @@ function AdminAdoptions() {
                     ) : (
                         filteredApplications.map(app => {
                             const isVolunteer = app.PetName?.includes('Волонтерство');
-                            
-                            // 👇 БАГФІКС: Більше не відрізаємо все після першої коми!
+
                             let displayPetName = app.PetName || 'Не вказано';
                             if (isVolunteer) {
                                 const match = app.PetName?.match(/\((.*?)\)/);
@@ -326,9 +320,9 @@ function AdminAdoptions() {
                                             <div className="info-item">
                                                 <span className="info-label">👤 Заявник:</span>
                                                 <span className="info-value">
-                                                    {app.AdopterName || 'Не вказано'} 
+                                                    {app.AdopterName || 'Не вказано'}
                                                     {app.UserNickname && <span style={{ color: '#888', fontSize: '13px' }}> @{app.UserNickname}</span>}
-                                                </span> 
+                                                </span>
                                             </div>
                                             <div className="info-item">
                                                 <span className="info-label">📞 Телефон:</span>
@@ -389,7 +383,6 @@ function AdminAdoptions() {
                 </div>
             </div>
 
-            {/* НАШЕ КРАСИВЕ ВІКНО ПІДТВЕРДЖЕННЯ */}
             {confirmDialog && (
                 <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeConfirmDialog} style={{ zIndex: 10000 }}>
                     <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
@@ -399,8 +392,8 @@ function AdminAdoptions() {
                         <p className="confirm-text">{confirmDialog.message}</p>
                         <div className="confirm-buttons">
                             <button className="cancel-btn" onClick={closeConfirmDialog}>Скасувати</button>
-                            <button 
-                                className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"} 
+                            <button
+                                className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"}
                                 onClick={confirmDialog.onConfirm}
                             >
                                 Підтвердити

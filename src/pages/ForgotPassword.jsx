@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './Login.css';
-import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
+import { useToast } from '../context/ToastContext';
 
 function ForgotPassword() {
     const [step, setStep] = useState(1);
@@ -16,7 +16,6 @@ function ForgotPassword() {
     const { showToast } = useToast();
     const navigate = useNavigate();
 
-    // Крок 1: Шукаємо користувача за нікнеймом
     const handleFindUser = async (e) => {
         e.preventDefault();
         try {
@@ -38,24 +37,20 @@ function ForgotPassword() {
 
             setDbQuestion(data.SecretQuestion);
             setDbAnswer(data.SecretAnswer);
-            setStep(2); // Переходимо на крок 2
+            setStep(2);
         } catch (err) {
             showToast('❌ Помилка з’єднання!');
         }
     };
 
-    // Крок 2: Перевірка відповіді
     const handleVerifyAnswer = (e) => {
         e.preventDefault();
-        // Порівнюємо у нижньому регістрі, щоб уникнути помилок з великими літерами
         if (userAnswer.trim().toLowerCase() === dbAnswer) {
-            setStep(3); // Переходимо на крок 3 (введення нового пароля)
-        } else {
+            setStep(3);
             showToast('❌ Неправильна відповідь!');
         }
     };
 
-    // Крок 3: Зміна пароля
     const handleResetPassword = async (e) => {
         e.preventDefault();
 
@@ -76,7 +71,7 @@ function ForgotPassword() {
                 .eq('Nickname', nickname.trim());
 
             if (error) {
-                console.error("Помилка Supabase:", error); 
+                console.error("Помилка Supabase:", error);
                 showToast('❌ Помилка при зміні пароля! Перевірте RLS.');
                 return;
             }

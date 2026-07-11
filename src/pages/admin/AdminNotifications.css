@@ -56,9 +56,6 @@
     color: #2e7d32;
 }
 
-/* =========================================
-   АДАПТИВНІСТЬ
-   ========================================= */
 @media (max-width: 768px) {
     .admin-notifications-actions {
         flex-direction: column;
@@ -79,6 +76,7 @@
 }
 
 @media (hover: none) {
+
     .btn-notify-action.process:hover,
     .btn-notify-action.delete:hover {
         filter: none;

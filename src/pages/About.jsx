@@ -1,12 +1,10 @@
 import './About.css';
-import { Link } from 'react-router-dom';
 
 function About() {
     return (
         <div className="about-us">
             <div className="about-us-relative-wrapper">
 
-                {/* БЛОК 1: ВІЗУАЛЬНА ЧАСТИНА (Збережено вашу стилістику) */}
                 <div className="absolute-visuals-container">
                     <div className="adopt-me-title-block">
                         <div className="adopt-me-title">adopt me</div>
@@ -44,7 +42,6 @@ function About() {
                     </div>
                 </div>
 
-                {/* БЛОК 2: НОВИЙ РОЗДІЛ "УМОВИ АДАПТАЦІЇ" */}
                 <div className="adaptation-section">
                     <div className="adaptation-header">
                         <h2>Шлях до нового життя</h2>
@@ -52,7 +49,6 @@ function About() {
                     </div>
 
                     <div className="adaptation-grid">
-                        {/* Етап 1 */}
                         <div className="adapt-card">
                             <div className="adapt-icon-wrapper">
                                 <span className="adapt-icon">🏥</span>
@@ -61,7 +57,6 @@ function About() {
                             <p>Нові тваринки проходять обов'язковий карантин. Ми забезпечуємо їм спокій, тепло та тишу, щоб знизити рівень стресу. Ветеринари проводять огляд та призначають лікування, якщо це необхідно.</p>
                         </div>
 
-                        {/* Етап 2 */}
                         <div className="adapt-card">
                             <div className="adapt-icon-wrapper">
                                 <span className="adapt-icon">🤝</span>
@@ -70,7 +65,6 @@ function About() {
                             <p>Після карантину починається найважливіше — відновлення довіри. Волонтери поступово привчають їх до рук, повідця та інших тварин. Любов і терпіння допомагають подолати будь-які страхи.</p>
                         </div>
 
-                        {/* Етап 3 */}
                         <div className="adapt-card">
                             <div className="adapt-icon-wrapper">
                                 <span className="adapt-icon">🏡</span>
@@ -79,7 +73,6 @@ function About() {
                             <p>У перші дні вдома тваринка може ховатися або відмовлятися від їжі. Це нормально! Не змушуйте її до контакту. Облаштуйте їй затишний куточок-укриття і дайте час звикнути до нових запахів та звуків.</p>
                         </div>
 
-                        {/* Етап 4 */}
                         <div className="adapt-card">
                             <div className="adapt-icon-wrapper">
                                 <span className="adapt-icon">❤️</span>
@@ -98,6 +91,35 @@ function About() {
                     </div>
                 </div>
 
+                <div className="overlay-text-container">
+                    Ми не просто притулок, а дім для тих, хто втратив усе. Ми надаємо прихисток бездомним тваринам, що потребують лікування, любові та догляду.
+                </div>
+
+                <img src="/1.png" alt="Зображення 1" className="image-1-positioned" />
+                <img src="/2.png" alt="Зображення 2" className="image-2-positioned" />
+
+                <div className="image-12-positioned">
+                    Наша місія — не тільки врятувати, а й знайти для кожного пухнастого друга люблячу сім'ю.
+                </div>
+
+                <img src="/4.png" alt="Зображення 4" className="image-4-positioned" />
+
+                <div className="image-13-positioned">
+                    Кожна тварина, яка потрапляє до нас, отримує повний ветеринарний огляд, необхідні щеплення та стерилізацію.
+                </div>
+
+                <img src="/3.png" alt="Зображення 3" className="image-3-positioned" />
+
+                <div className="image-14-positioned">
+                    Наші волонтери щодня дарують їм свою турботу, займаються соціалізацією та підготовкою до життя в родині.
+                </div>
+
+                <img src="/5.png" alt="Зображення 5" className="image-5-positioned" />
+                <img src="/6.png" alt="Зображення 6" className="image-6-positioned" />
+
+                <div className="image-15-positioned">
+                    Завдяки вашій підтримці, ми даруємо їм другий шанс на щасливе життя. Допоможіть нам змінити їхню долю.
+                </div>
             </div>
         </div>
     );

@@ -1,12 +1,10 @@
-// src/layouts/UserLayout.jsx
 import { Outlet } from 'react-router-dom';
-import UserHeader from '../components/UserHeader'; 
+import UserHeader from '../components/UserHeader';
 import Footer from '../components/Footer';
-import { useToast } from '../context/ToastContext'; // Підключаємо для доступу до showToast
+import { useToast } from '../context/ToastContext';
 
 function UserLayout() {
-  // Дістаємо функцію, якщо раптом захочеш її використати безпосередньо тут
-  const { showToast } = useToast(); 
+  const { showToast } = useToast();
 
   return (
     <div className="app-container">

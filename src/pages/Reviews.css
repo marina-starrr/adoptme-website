@@ -1,6 +1,3 @@
-/* =========================================
-   СЕКЦІЯ ВІДГУКІВ (ОСНОВНИЙ КОНТЕЙНЕР)
-   ========================================= */
 .reviews-section {
     background: linear-gradient(to bottom, #805CFF, #4024A4);
     padding: 80px 5%;
@@ -8,14 +5,11 @@
     flex-direction: column;
     align-items: center;
     position: relative;
-    flex: 1; 
+    flex: 1;
 }
 
-/* =========================================
-   ЗАГОЛОВОК ІЗ ПЕНЗЛИКОМ ТА ЛАПКОЮ
-   ========================================= */
 .reviews-title-container {
-    width: 380px; /* Трохи збільшено */
+    width: 380px;
     height: 125px;
     background-image: url('/brush3.png');
     background-size: cover;
@@ -23,57 +17,76 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: 60px;
+    margin-bottom: 40px;
     position: relative;
 }
 
 .reviews-title-container h2 {
-    font-size: 42px; /* Збільшено */
+    font-size: 42px;
     font-weight: 900;
     color: var(--black);
-    margin-right: 15px;
+    margin-right: 10px;
 }
 
 .reviews-title-container .title-lapki {
     width: 70px;
     height: 70px;
-}    
+}
 
-/* =========================================
-   ФОРМА ТА ІКОНКИ
-   ========================================= */
+
 .reviews-content-wrapper {
-    max-width: 950px; /* Було 850, розширив для кращого вигляду більшого шрифту */
+    max-width: 950px;
     width: 100%;
     display: flex;
     flex-direction: column;
-    gap: 60px;
+    gap: 40px;
 }
 
-.review-write-container {
+.review-card-container {
     background-color: var(--white);
-    border-radius: 28px;
-    box-shadow: 0 15px 40px rgba(33, 6, 74, 0.2);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     position: relative;
-    padding: 40px; /* Збільшено відступи */
+    padding: 40px;
     width: 100%;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
-.cat-icon, .dog-icon {
+.cat-icon,
+.dog-icon {
     position: absolute;
-    top: -116px;
+    top: -100px;
     z-index: 1;
-    width: 120px; /* Збільшено іконки */
+    width: 120px;
 }
 
-.cat-icon { left: 30px; transform: translateY(8px); }
-.dog-icon { right: 30px; transform: translateY(20px); }  
+.cat-icon {
+    left: 30px;
+    transform: translateY(8px);
+}
 
-.modern-review-form {
+.dog-icon {
+    right: 30px;
+    transform: translateY(20px);
+}
+
+.dog-icon {
+    right: 20px;
+    transform: translateY(20px);
+}  
+
+.review-form {
     position: relative;
     display: flex;
     flex-direction: column;
     gap: 20px;
+}  
+
+.form-label {
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
 }
 
 .current-user-badge {
@@ -84,26 +97,16 @@
     padding: 10px 20px;
     border-radius: 50px;
     width: max-content;
+    max-width: 100%;
+    box-sizing: border-box;
     color: #4a5568;
     font-size: 16px;
+    resize: none;
+    background-color: var(--body-bg);
 }
 
-.current-user-badge.guest-badge {
-    color: #eab308;
-    background: #fefce8;
-    font-weight: 600;
-}
-
-.current-user-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #6847DD;
-}
-
-.current-user-badge strong {
-    color: #6847DD;
+.form-textarea {
+    min-height: 150px;
 }
 
 .submit-container {
@@ -118,7 +121,7 @@
     border: 2px solid #e0d4f5;
     border-radius: 20px;
     font-family: inherit;
-    font-size: 18px; /* Більший текст в інпуті */
+    font-size: 18px;
     resize: none;
     background-color: #fdfbfe;
     min-height: 140px;
@@ -138,38 +141,32 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    transition: all 0.3s ease;
+    margin-left: 20px;
+    align-self: flex-end;
 }
 
 .submit-btn img {
-    width: 65px; /* Збільшено кнопку */
+    width: 65px;
     height: 65px;
     transition: transform 0.3s ease;
+    transform: rotate(-48deg);
 }
 
-.submit-btn:hover:not(.disabled) img {
-    transform: scale(1.1) rotate(-15deg);
+.submit-btn:hover img {
+    transform: scale(1.1) rotate(-48deg);
 }
 
-.submit-btn.disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-/* =========================================
-   СУЧАСНІ КАРТКИ ВІДГУКІВ
-   ========================================= */
 .review-card-list {
     display: flex;
     flex-direction: column;
-    gap: 35px; /* Збільшено відстань між відгуками */
+    gap: 35px;
 }
 
-.modern-review-card {
+.review-card {
     background-color: var(--white);
     border-radius: 28px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    padding: 35px 40px; /* Збільшено відступи в картці */
+    padding: 35px 40px;
     transition: transform 0.2s ease;
 }
 
@@ -177,7 +174,6 @@
     transform: translateY(-2px);
 }
 
-/* Шапка картки */
 .review-header {
     display: flex;
     justify-content: space-between;
@@ -193,7 +189,6 @@
     gap: 20px;
 }
 
-/* Кластер Аватар + Бульбашки тварин */
 .avatars-cluster {
     display: flex;
     align-items: flex-end;
@@ -201,7 +196,7 @@
 }
 
 .review-avatar {
-    width: 70px; /* Збільшено розмір аватара користувача */
+    width: 70px;
     height: 70px;
     border-radius: 50%;
     object-fit: cover;
@@ -211,17 +206,16 @@
     z-index: 1;
 }
 
-/* Бульбашки-аватарки тваринок */
 .pet-bubbles {
     display: flex;
-    margin-left: -20px; /* Заходить на основний аватар */
+    margin-left: -20px;
     margin-bottom: -5px;
     z-index: 2;
 }
 
 .pet-bubble-link {
     display: inline-block;
-    margin-left: -15px; /* Накладання бульбашок одна на одну */
+    margin-left: -15px;
     transition: transform 0.2s, z-index 0.2s;
     position: relative;
 }
@@ -237,9 +231,9 @@
     border-radius: 50%;
     border: 3px solid white;
     object-fit: cover;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
     background-color: #fff;
-    display: block; /* Запобігає появі зайвих відступів від тегу <a> */
+    display: block;
 }
 
 .review-author-info {
@@ -248,13 +242,13 @@
 }
 
 .review-name {
-    font-size: 22px; /* Збільшено */
+    font-size: 22px;
     font-weight: 800;
     color: #21064A;
 }
 
 .review-nickname {
-    font-size: 15px; /* Збільшено */
+    font-size: 15px;
     color: #8b7ca6;
     font-weight: 600;
     margin-top: 2px;
@@ -272,13 +266,12 @@
     font-weight: 500;
 }
 
-/* Тіло відгуку */
 .review-body {
-    padding-left: 90px; /* Вирівнювання тексту під ім'ям з урахуванням більшого аватара */
+    padding-left: 90px;
 }
 
 .review-text {
-    font-size: 18px; /* Збільшено текст відгуку */
+    font-size: 18px;
     color: #333;
     line-height: 1.7;
     margin: 0;
@@ -286,7 +279,6 @@
     word-wrap: break-word;
 }
 
-/* Відповідь адміністратора */
 .admin-reply-box {
     margin-top: 25px;
     margin-left: 90px;
@@ -312,9 +304,6 @@
     white-space: pre-wrap;
 }
 
-/* =========================================
-   ВІДПОВІДІ КОРИСТУВАЧІВ (КОМЕНТАРІ)
-   ========================================= */
 .user-replies-section {
     margin-top: 20px;
     margin-left: 90px;
@@ -427,46 +416,91 @@
 .send-reply-btn:hover:not(:disabled) {
     background: #4024A4;
 }
+
 .send-reply-btn:disabled {
     opacity: 0.5;
     cursor: not-allowed;
 }
 
-/* =========================================
-   АДАПТИВНІСТЬ ДЛЯ ВІДГУКІВ
-   ========================================= */
 @media (max-width: 768px) {
     .reviews-title-container {
         width: 90%;
         height: auto;
         padding: 20px 0;
-        margin-bottom: 40px;
     }
-    .reviews-title-container h2 { font-size: 32px; }
-    
-    .cat-icon, .dog-icon { display: none; }
-    
+
+    .reviews-title-container h2 {
+        font-size: 32px;
+    }
+
+    .cat-icon,
+    .dog-icon {
+        display: none;
+    }
+
     .review-header {
         flex-direction: column;
         gap: 20px;
         align-items: flex-start;
     }
+
     .review-meta {
         align-items: flex-start;
     }
-    .review-body, .admin-reply-box, .user-replies-section, .review-actions, .user-reply-form {
+
+    .review-body,
+    .admin-reply-box,
+    .user-replies-section,
+    .review-actions,
+    .user-reply-form {
         padding-left: 0;
         margin-left: 0;
     }
-    
-    .review-avatar { width: 60px; height: 60px; }
-    .pet-bubble-img { width: 30px; height: 30px; }
+
+    .review-avatar {
+        width: 60px;
+        height: 60px;
+    }
+
+    .pet-bubble-img {
+        width: 30px;
+        height: 30px;
+    }
 }
 
 @media (max-width: 480px) {
-    .reviews-title-container h2 { font-size: 26px; }
-    .form-textarea { font-size: 16px; min-height: 100px; }
-    .submit-btn img { width: 55px; height: 55px; }
-    .review-name { font-size: 18px; }
-    .review-text { font-size: 16px; }
+    .reviews-title-container h2 {
+        font-size: 26px;
+    }
+
+    .form-textarea {
+        font-size: 16px;
+        min-height: 100px;
+    }
+
+    .submit-btn img {
+        width: 55px;
+        height: 55px;
+    }
+
+    .review-name {
+        font-size: 18px;
+    }
+
+    .review-text {
+        font-size: 16px;
+    }
+
+    .review-write-container {
+        padding: 25px 20px;
+    }
+
+    .current-user-badge {
+        width: 100%;
+        white-space: normal;
+        font-size: 14px;
+        padding: 10px 16px;
+        border-radius: 16px;
+        line-height: 1.4;
+    }
 }

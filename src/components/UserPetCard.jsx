@@ -3,17 +3,15 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext'; // 👈 Додано контекст сповіщень
+import { useToast } from '../context/ToastContext';
 
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isNotified, setIsNotified] = useState(false);
     const { userEmail } = useAuth();
 
-    // 👇 Підключаємо глобальні сповіщення
     const { showToast } = useToast();
 
-    // Перевірка, чи тваринка в обраному
     useEffect(() => {
         const checkFavoriteStatus = () => {
             const favorites = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -29,7 +27,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         };
     }, [id]);
 
-    // Перевірка, чи користувач вже підписаний на сповіщення про лікування
     useEffect(() => {
         const checkNotificationStatus = async () => {
             if (status === 'На лікуванні') {

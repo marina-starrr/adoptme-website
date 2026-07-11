@@ -1,6 +1,3 @@
-/* =========================================
-   ОСНОВНИЙ ХЕДЕР ТА НАВІГАЦІЯ
-   ========================================= */
 .header {
     background-color: var(--header-bg);
     color: var(--white);
@@ -14,7 +11,6 @@
     top: 0;
     z-index: 1000;
     box-sizing: border-box;
-    /* Гарантує, що відступи не збільшують ширину */
 }
 
 .header-left {
@@ -37,7 +33,6 @@
     flex-grow: 1;
     justify-content: center;
     gap: clamp(20px, 2vw, 40px);
-    /* Відступи плавно зменшуються */
 }
 
 .nav-link {
@@ -53,6 +48,11 @@
     color: var(--white);
 }
 
+.nav-menu-header,
+.nav-link-icon {
+    display: none;
+}
+
 .header-right {
     display: flex;
     align-items: center;
@@ -65,7 +65,6 @@
     background-color: #7e5afd;
     color: var(--white);
     border: none;
-    /* Кнопка плавно зменшується на середніх екранах */
     padding: clamp(8px, 1vw, 15px) clamp(15px, 2vw, 30px);
     border-radius: 10px;
     font-weight: 700;
@@ -145,9 +144,6 @@
     animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* =========================================
-   МІНІ-МЕНЮ ПРОФІЛЮ (Dropdown)
-   ========================================= */
 .avatar-dropdown-container {
     position: relative;
     display: flex;
@@ -232,9 +228,6 @@
     color: #dc2626;
 }
 
-/* =========================================
-   МОБІЛЬНЕ МЕНЮ (ГАМБУРГЕР)
-   ========================================= */
 .hamburger-menu {
     display: none;
     flex-direction: column;
@@ -245,7 +238,7 @@
     border: none;
     cursor: pointer;
     padding: 0;
-    z-index: 1001;
+    z-index: 1002;
     flex-shrink: 0;
 }
 
@@ -269,9 +262,6 @@
     transform: translateY(-11px) rotate(-45deg);
 }
 
-/* =========================================
-   МОДАЛЬНІ ВІКНА
-   ========================================= */
 .modal {
     display: none;
     position: fixed;
@@ -429,9 +419,6 @@
     margin-bottom: 15px;
 }
 
-/* =========================================
-   ВМІСТ ОБРАНОГО (КАРТКИ ТА КНОПКИ)
-   ========================================= */
 .favorite-pets-container {
     display: flex;
     flex-wrap: wrap;
@@ -528,9 +515,6 @@
     box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
 
-/* =========================================
-   ФОРМА ПРИХИСТКУ (ОНОВЛЕНА БАГАТОКРОКОВА)
-   ========================================= */
 .adoption-form {
     display: flex;
     flex-direction: column;
@@ -689,11 +673,6 @@
     color: #6847DD;
 }
 
-/* =========================================
-   АДАПТИВНІСТЬ ДЛЯ ХЕДЕРА (Media Queries)
-   ========================================= */
-
-/* Крок 1: Злегка стискаємо відступи на екранах середнього розміру */
 @media (max-width: 1210px) {
     .header {
         justify-content: space-between;
@@ -714,7 +693,6 @@
     }
 }
 
-/* Крок 2: З'являється гамбургер-меню (вмикаємо раніше, щоб іконки ніколи не випадали) */
 @media (max-width: 1000px) {
     .header {
         justify-content: space-between;
@@ -722,26 +700,127 @@
     }
 
     .nav-menu {
-        display: none;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 300px;
+        max-width: 85vw;
+        background: #ffffff;
+        padding: 95px 0 30px;
+        gap: 0;
+        box-shadow: -15px 0 40px rgba(33, 6, 74, 0.25);
+        border-top-left-radius: 28px;
+        border-bottom-left-radius: 28px;
+        transform: translateX(100%);
+        transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 1001;
+        overflow-y: auto;
+        box-sizing: border-box;
+        list-style: none;
     }
 
     .nav-menu.active {
+        transform: translateX(0);
+    }
+
+    .nav-menu-header {
         display: flex;
-        flex-direction: column;
-        position: absolute;
-        top: 75px;
+        align-items: center;
+        padding: 0 30px 18px;
+        margin-bottom: 8px;
+        border-bottom: 2px solid #f0eaff;
+    }
+
+    .nav-menu-title {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--purple-dark);
+        letter-spacing: 0.3px;
+    }
+
+    .nav-menu li {
+        width: 100%;
+    }
+
+    .nav-menu .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 15px 30px;
+        font-size: 16px;
+        font-weight: 700;
+        color: #4a5568;
+        border-left: 4px solid transparent;
+        transition: all 0.2s ease;
+    }
+
+    .nav-menu .nav-link:hover {
+        background: #f4f0ff;
+        color: var(--purple-dark);
+        border-left-color: var(--purple-light);
+        padding-left: 34px;
+    }
+
+    .nav-link-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        width: 24px;
+        flex-shrink: 0;
+    }
+
+    .nav-overlay {
+        position: fixed;
+        top: 0;
         left: 0;
         width: 100%;
-        background-color: var(--header-bg);
-        padding: 20px 0;
-        text-align: center;
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-        border-bottom-left-radius: 15px;
-        border-bottom-right-radius: 15px;
+        height: 100%;
+        background: rgba(20, 6, 46, 0.55);
+        backdrop-filter: blur(3px);
+        z-index: 1000;
+        animation: fadeInOverlay 0.3s ease forwards;
+    }
+
+    @keyframes fadeInOverlay {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 
     .hamburger-menu {
         display: flex;
+        outline: none;
+    }
+
+    .hamburger-menu.active {
+        position: relative;
+    }
+
+    .hamburger-menu.active::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 44px;
+        height: 44px;
+        background: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 4px 15px rgba(33, 6, 74, 0.2);
+        z-index: -1;
+    }
+
+    .hamburger-menu.active .bar {
+        background-color: var(--purple-dark);
     }
 
     .header-right {
@@ -808,7 +887,6 @@
     }
 }
 
-/* Інші стилі нижче залишаються як є */
 .name-inputs-row {
     display: flex;
     gap: 15px;
@@ -947,9 +1025,6 @@
     transform: translateY(-2px);
 }
 
-/* =========================================
-   ДОДАТКОВІ СТИЛІ ДЛЯ СТАТУСІВ У СПОВІЩЕННЯХ
-   ========================================= */
 .status-badge-inline {
     padding: 3px 10px;
     border-radius: 6px;
@@ -1014,9 +1089,6 @@
     border: 1px solid #fef08a;
 }
 
-/* =========================================
-   СПИСОК ВИБОРУ ТВАРИНОК В АНКЕТІ ПРИХИСТКУ
-   ========================================= */
 .adoption-pet-selection-list {
     display: flex;
     flex-direction: column;

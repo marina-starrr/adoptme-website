@@ -37,7 +37,7 @@ function UserHeader() {
     const [agreeToTerms, setAgreeToTerms] = useState(false);
 
     const textareaRef = useRef(null);
-    const dropdownRef = useRef(null); 
+    const dropdownRef = useRef(null);
     const navigate = useNavigate();
     const location = useLocation();
 
@@ -56,34 +56,31 @@ function UserHeader() {
     const formatExistingPhone = (phoneStr) => {
         if (!phoneStr) return '';
         let digits = phoneStr.replace(/\D/g, '');
-        
+
         if (digits.startsWith('380')) digits = digits.substring(3);
         else if (digits.startsWith('0')) digits = digits.substring(1);
         else if (digits.startsWith('38')) digits = digits.substring(2);
-        
-        digits = digits.substring(0, 9); 
-        
+
+        digits = digits.substring(0, 9);
+
         let formatted = '+38(0';
         if (digits.length > 0) formatted += digits.substring(0, 2);
         if (digits.length > 2) formatted += ') ' + digits.substring(2, 5);
         if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
         if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
-        
+
         return formatted;
     };
 
-    // 👇 Логіка сповіщень тепер всередині useEffect з Realtime
     useEffect(() => {
         const fetchNotifications = async () => {
             const userNickname = localStorage.getItem('userNickname');
-            
-            // Якщо це гість або немає акаунту — блокуємо завантаження
+
             if (!userNickname || userNickname === 'Гість') {
                 setNotifications([]);
                 return;
             }
 
-            // Отримуємо актуальні ID тварин, щоб перевірити, чи не видалили їх
             const { data: activePets } = await supabase.from('Pets').select('Id');
             const activePetIds = new Set(activePets?.map(p => p.Id) || []);
 
@@ -111,7 +108,7 @@ function UserHeader() {
             if (!treatmentError && treatmentData) {
                 const validTreatmentData = [];
                 const invalidTreatmentIds = [];
-                
+
                 treatmentData.forEach(n => {
                     if (activePetIds.has(n.PetId)) validTreatmentData.push(n);
                     else invalidTreatmentIds.push(n.Id);
@@ -122,14 +119,14 @@ function UserHeader() {
                 }
 
                 combinedNotifications = [
-                    ...combinedNotifications, 
+                    ...combinedNotifications,
                     ...validTreatmentData.map(n => ({ ...n, type: 'treatment', uniqueId: `treat_${n.Id}` }))
                 ];
             }
 
             if (!adoptionError && adoptionData) {
                 combinedNotifications = [
-                    ...combinedNotifications, 
+                    ...combinedNotifications,
                     ...adoptionData.map(a => ({ ...a, type: 'adoption_status', uniqueId: `adopt_${a.Id}` }))
                 ];
             }
@@ -137,9 +134,8 @@ function UserHeader() {
             if (!favoriteError && favoriteData) {
                 const validFavoriteData = [];
                 const invalidFavoriteIds = [];
-                
+
                 favoriteData.forEach(fav => {
-                    // Модераційні повідомлення не прив'язані до конкретної тварини
                     if (fav.PetName === 'Модерація' || activePetIds.has(fav.PetId)) {
                         validFavoriteData.push(fav);
                     } else {
@@ -147,7 +143,6 @@ function UserHeader() {
                     }
                 });
 
-                // Видаляємо всі "биті" сповіщення про видалених тварин
                 if (invalidFavoriteIds.length > 0) {
                     await supabase.from('FavoriteNotifications').delete().in('Id', invalidFavoriteIds);
                 }
@@ -167,7 +162,6 @@ function UserHeader() {
             const userNickname = localStorage.getItem('userNickname');
             if (!userNickname || userNickname === 'Гість') return;
 
-            // 👇 ПІДПИСКА НА REALTIME: Миттєво реагує на нові сповіщення і видалення тварин
             const channel = supabase
                 .channel('user-live-notifications')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'FavoriteNotifications' }, fetchNotifications)
@@ -193,7 +187,7 @@ function UserHeader() {
                             .select('FirstName, LastName, Phone, Email')
                             .eq('Nickname', localNickname)
                             .maybeSingle();
-                        
+
                         if (userData) {
                             if (userData.FirstName) setAdopterFirstName(userData.FirstName);
                             if (userData.LastName) setAdopterLastName(userData.LastName);
@@ -201,7 +195,7 @@ function UserHeader() {
                             if (userData.Phone) {
                                 setAdopterPhone(formatExistingPhone(userData.Phone));
                             } else {
-                                setAdopterPhone(''); 
+                                setAdopterPhone('');
                             }
                         }
                     } catch (err) {
@@ -259,7 +253,7 @@ function UserHeader() {
 
     const toggleMenu = () => setIsOpen(!isOpen);
     const closeMenu = () => setIsOpen(false);
-    
+
     const handleLogoClick = (e) => {
         if (userRole === 'admin') {
             e.preventDefault();
@@ -312,20 +306,19 @@ function UserHeader() {
             }
         } catch (err) {
             console.error(err);
-            // fetchNotifications(); // 👈 Не потрібно викликати, бо є Realtime
         }
     };
 
     const handleNotificationCardClick = async (notif) => {
         handleDeleteNotification(notif);
         setIsNotificationsOpen(false);
-        
+
         if (notif.type === 'adoption_status') {
-            navigate('/profile', { 
-                state: { activeTab: 'applications', highlightAppId: notif.Id } 
+            navigate('/profile', {
+                state: { activeTab: 'applications', highlightAppId: notif.Id }
             });
         } else if (notif.type === 'favorite_status' && notif.PetName !== 'Модерація') {
-            navigate(`/pets/${notif.PetId}`); 
+            navigate(`/pets/${notif.PetId}`);
         }
     };
 
@@ -341,21 +334,21 @@ function UserHeader() {
 
     const handlePhoneChange = (e) => {
         let input = e.target.value;
-        
+
         if (input.length < 5 || !input.startsWith('+38(0')) {
             setAdopterPhone('+38(0');
             return;
         }
-        
+
         let rawAfter = input.substring(5).replace(/\D/g, '');
         rawAfter = rawAfter.substring(0, 9);
-        
+
         let formatted = '+38(0';
         if (rawAfter.length > 0) formatted += rawAfter.substring(0, 2);
         if (rawAfter.length > 2) formatted += ') ' + rawAfter.substring(2, 5);
         if (rawAfter.length > 5) formatted += ' ' + rawAfter.substring(5, 7);
         if (rawAfter.length > 7) formatted += ' ' + rawAfter.substring(7, 9);
-        
+
         setAdopterPhone(formatted);
     };
 
@@ -398,7 +391,7 @@ function UserHeader() {
             OtherPetsDetails: hasOtherPets === 'yes' ? otherPetsDetails : '',
             Reason: comment,
             Status: 'Нова',
-            UserNotified: false 
+            UserNotified: false
         };
 
         const { error } = await supabase.from('AdoptionRequests').insert([adoptionData]);
@@ -465,7 +458,7 @@ function UserHeader() {
     };
 
     const getStatusClass = (statusStr) => {
-        switch(statusStr) {
+        switch (statusStr) {
             case 'Нова': return 'new';
             case 'Розглядається': return 'review';
             case 'Схвалено': return 'approved';
@@ -476,12 +469,12 @@ function UserHeader() {
     };
 
     const getPetStatusClass = (statusStr) => {
-        switch(statusStr) {
+        switch (statusStr) {
             case 'На лікуванні': return 'treatment';
             case 'Вже вдома': case 'Вже знайшла дім': return 'home';
             case 'Не вдалось врятувати': return 'died';
             case 'Заброньована': case 'Заброньовано': return 'reserved';
-            case 'Шукає дім': return 'looking'; 
+            case 'Шукає дім': return 'looking';
             default: return 'review';
         }
     };
@@ -494,14 +487,19 @@ function UserHeader() {
                 </Link>
             </div>
 
+            {isOpen && <div className="nav-overlay" onClick={closeMenu}></div>}
+
             <nav>
                 <ul className={`nav-menu ${isOpen ? 'active' : ''}`}>
-                    <li><a href="/" className="nav-link" onClick={closeMenu}>Головна</a></li>
-                    <li><a href="/pets" className="nav-link" onClick={closeMenu}>Тварини</a></li>
-                    <li><a href="/about" className="nav-link" onClick={closeMenu}>Про нас</a></li>
-                    <li><a href="/reviews" className="nav-link" onClick={closeMenu}>Відгуки</a></li>
-                    <li><a href="/help" className="nav-link" onClick={closeMenu}>Допомога</a></li>
-                    <li><a href="/contact" className="nav-link" onClick={closeMenu}>Контакти</a></li>
+                    <li className="nav-menu-header">
+                        <span className="nav-menu-title">🐾 Меню</span>
+                    </li>
+                    <li><a href="/" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">🏠</span>Головна</a></li>
+                    <li><a href="/pets" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">🐶</span>Тварини</a></li>
+                    <li><a href="/about" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">💜</span>Про нас</a></li>
+                    <li><a href="/reviews" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">⭐</span>Відгуки</a></li>
+                    <li><a href="/help" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">🆘</span>Допомога</a></li>
+                    <li><a href="/contact" className="nav-link" onClick={closeMenu}><span className="nav-link-icon">✉️</span>Контакти</a></li>
                 </ul>
             </nav>
 
@@ -581,7 +579,6 @@ function UserHeader() {
                 </button>
             </div>
 
-            {/* Модальне вікно для СПОВІЩЕНЬ */}
             {isNotificationsOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -594,8 +591,8 @@ function UserHeader() {
                                 <p className="empty-favorites-text">У вас поки немає нових сповіщень.</p>
                             ) : (
                                 notifications.map(notif => (
-                                    <div 
-                                        key={notif.uniqueId} 
+                                    <div
+                                        key={notif.uniqueId}
                                         className="notification-card"
                                         onClick={() => handleNotificationCardClick(notif)}
                                         style={{ cursor: notif.type !== 'treatment' && notif.PetName !== 'Модерація' ? 'pointer' : 'default' }}
@@ -644,7 +641,7 @@ function UserHeader() {
                                         )}
                                         <button
                                             onClick={(e) => {
-                                                e.stopPropagation(); 
+                                                e.stopPropagation();
                                                 handleDeleteNotification(notif);
                                             }}
                                             className="mark-read-btn"
@@ -659,7 +656,6 @@ function UserHeader() {
                 </div>
             )}
 
-            {/* Модальне вікно для ОБРАНОГО */}
             {isFavoritesOpen && (
                 <div className={`modal ${isModalClosing ? 'closing' : ''}`} style={{ display: 'flex' }}>
                     <div className={`modal-content ${isModalClosing ? 'closing' : ''}`}>
@@ -729,7 +725,7 @@ function UserHeader() {
                                                         .from('Pets')
                                                         .select('Id, Name, Status')
                                                         .in('Id', ids);
-                                                    
+
                                                     if (!error && data) {
                                                         setLivePetsData(data);
                                                         const validIds = data
@@ -753,7 +749,7 @@ function UserHeader() {
                                     <h3>Анкета на прихисток</h3>
                                 </div>
                                 <form className="adoption-form" onSubmit={handleSubmit}>
-                                    
+
                                     <div className="form-step">
                                         <h4 className="form-step-title">Крок 1: Оберіть тваринок для прихистку</h4>
                                         <div className="adoption-pet-selection-list">
@@ -761,8 +757,8 @@ function UserHeader() {
                                                 const isUnavailable = ['на лікуванні', 'вже вдома', 'не вдалось врятувати', 'заброньована', 'заброньовано'].includes(pet.Status?.trim().toLowerCase());
                                                 return (
                                                     <div key={pet.Id} className={`selection-pet-item ${isUnavailable ? 'unavailable' : ''}`}>
-                                                        <input 
-                                                            type="checkbox" 
+                                                        <input
+                                                            type="checkbox"
                                                             id={`select-pet-${pet.Id}`}
                                                             checked={selectedPetIds.includes(pet.Id)}
                                                             disabled={isUnavailable}
@@ -801,18 +797,18 @@ function UserHeader() {
                                             onChange={(e) => setAdopterEmail(e.target.value)}
                                             required
                                         />
-                                        <input 
-                                            type="text" 
-                                            placeholder="+38(0__) ___ __ __" 
-                                            value={adopterPhone} 
-                                            onChange={handlePhoneChange} 
+                                        <input
+                                            type="text"
+                                            placeholder="+38(0__) ___ __ __"
+                                            value={adopterPhone}
+                                            onChange={handlePhoneChange}
                                             onFocus={() => {
                                                 if (adopterPhone === '') setAdopterPhone('+38(0');
                                             }}
                                             onBlur={() => {
                                                 if (adopterPhone === '+38(0') setAdopterPhone('');
                                             }}
-                                            required 
+                                            required
                                         />
                                     </div>
 

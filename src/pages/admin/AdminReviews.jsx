@@ -1,22 +1,19 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import './AdminReviews.css'; 
+import './AdminReviews.css';
 import { useToast } from '../../context/ToastContext';
 
 function AdminReviews() {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    // Стейти для відповіді
     const [activeReplyId, setActiveReplyId] = useState(null);
     const [replyText, setReplyText] = useState('');
     const [isSaving, setIsSaving] = useState(false);
 
-    // Стейти для видалення ЦІЛОГО відгуку
     const [reviewToDelete, setReviewToDelete] = useState(null);
-    const [isModalClosing, setIsModalClosing] = useState(false); 
+    const [isModalClosing, setIsModalClosing] = useState(false);
 
-    // Стейти для видалення ОКРЕМОГО коментаря (користувача або адміна)
     const [replyToDelete, setReplyToDelete] = useState(null);
     const [isReplyModalClosing, setIsReplyModalClosing] = useState(false);
 
@@ -32,7 +29,7 @@ function AdminReviews() {
             const { data, error } = await supabase
                 .from('Reviews')
                 .select('*')
-                .order('Id', { ascending: false }); 
+                .order('Id', { ascending: false });
 
             if (error) throw error;
             setReviews(data || []);
@@ -43,10 +40,9 @@ function AdminReviews() {
         }
     }
 
-    // --- ЛОГІКА ВІДПОВІДІ АДМІНА ---
     const handleOpenReply = (review) => {
         setActiveReplyId(review.Id);
-        setReplyText(review.AdminReply || ''); 
+        setReplyText(review.AdminReply || '');
     };
 
     const handleSaveReply = async (id) => {
@@ -70,7 +66,6 @@ function AdminReviews() {
         }
     };
 
-    // --- ЛОГІКА ВИДАЛЕННЯ ЦІЛОГО ВІДГУКУ ---
     const confirmDeleteClick = (id) => {
         setReviewToDelete(id);
     };
@@ -80,7 +75,7 @@ function AdminReviews() {
         setTimeout(() => {
             setReviewToDelete(null);
             setIsModalClosing(false);
-        }, 300); 
+        }, 300);
     };
 
     const executeDelete = async () => {
@@ -97,7 +92,6 @@ function AdminReviews() {
         }
     };
 
-    // --- ЛОГІКА ВИДАЛЕННЯ ОКРЕМИХ КОМЕНТАРІВ ---
     const confirmDeleteUserReplyClick = (reviewId, reply) => {
         setReplyToDelete({ reviewId, replyId: reply.id, type: 'user', author: reply.author, text: reply.text });
     };
@@ -131,7 +125,6 @@ function AdminReviews() {
 
                 if (updateError) throw updateError;
 
-                // Формуємо текст сповіщення (обрізаємо надто довгі коментарі)
                 const shortText = text.length > 50 ? text.substring(0, 50) + '...' : text;
                 const notifMessage = `Ваш коментар «${shortText}» був видалений через неприйнятний вміст.`;
 
@@ -208,7 +201,6 @@ function AdminReviews() {
 
                                         <p className="admin-review-text">{review.Text}</p>
 
-                                        {/* Відображення відповідей користувачів для адміна */}
                                         {review.UserReplies && review.UserReplies.length > 0 && (
                                             <div style={{ margin: '15px 0', padding: '15px', background: '#f4f5fa', borderRadius: '12px' }}>
                                                 <h4 style={{ margin: '0 0 10px 0', fontSize: '14px', color: '#666680' }}>💬 Коментарі користувачів:</h4>
@@ -218,8 +210,8 @@ function AdminReviews() {
                                                             <strong style={{ color: '#4A148C' }}>@{reply.author}:</strong>
                                                             <span style={{ color: '#444' }}>{reply.text}</span>
                                                         </div>
-                                                        <button 
-                                                            className="delete-reply-icon-btn" 
+                                                        <button
+                                                            className="delete-reply-icon-btn"
                                                             onClick={() => confirmDeleteUserReplyClick(review.Id, reply)}
                                                             title="Видалити коментар"
                                                         >
@@ -230,7 +222,6 @@ function AdminReviews() {
                                             </div>
                                         )}
 
-                                        {/* Блок відповіді адміна */}
                                         <div className="admin-reply-section">
                                             {activeReplyId === review.Id ? (
                                                 <div className="reply-editor">
@@ -284,16 +275,15 @@ function AdminReviews() {
                 </div>
             </div>
 
-            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ ЦІЛОГО ВІДГУКУ */}
             {reviewToDelete && (
-                <div 
-                    className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} 
+                <div
+                    className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}
                     onClick={closeConfirmDialog}
                     style={{ zIndex: 10000 }}
                 >
-                    <div 
-                        className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} 
-                        style={{ maxWidth: '400px', textAlign: 'center' }} 
+                    <div
+                        className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`}
+                        style={{ maxWidth: '400px', textAlign: 'center' }}
                         onClick={e => e.stopPropagation()}
                     >
                         <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800' }}>⚠️ Видалення відгуку</h3>
@@ -314,21 +304,20 @@ function AdminReviews() {
                 </div>
             )}
 
-            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ КОМЕНТАРЯ (ЮЗЕРА АБО АДМІНА) */}
             {replyToDelete && (
-                <div 
-                    className={`modal-overlay ${isReplyModalClosing ? 'closing' : ''}`} 
+                <div
+                    className={`modal-overlay ${isReplyModalClosing ? 'closing' : ''}`}
                     onClick={closeReplyConfirmDialog}
                     style={{ zIndex: 10001 }}
                 >
-                    <div 
-                        className={`admin-modal confirm-modal ${isReplyModalClosing ? 'closing' : ''}`} 
-                        style={{ maxWidth: '400px', textAlign: 'center' }} 
+                    <div
+                        className={`admin-modal confirm-modal ${isReplyModalClosing ? 'closing' : ''}`}
+                        style={{ maxWidth: '400px', textAlign: 'center' }}
                         onClick={e => e.stopPropagation()}
                     >
                         <h3 style={{ color: '#ef4444', fontSize: '24px', margin: '0 0 15px 0', fontWeight: '800' }}>⚠️ Видалення коментаря</h3>
                         <p style={{ color: '#555', fontSize: '16px', marginBottom: '30px', lineHeight: '1.6' }}>
-                            {replyToDelete.type === 'user' 
+                            {replyToDelete.type === 'user'
                                 ? `Ви дійсно хочете видалити коментар від @${replyToDelete.author}? Користувач отримає сповіщення із текстом видаленого коментаря.`
                                 : `Ви дійсно хочете видалити свою офіційну відповідь?`
                             }

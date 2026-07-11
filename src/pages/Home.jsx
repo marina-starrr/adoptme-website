@@ -1,22 +1,21 @@
 import { useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
-import BackgroundPaws from '../components/BackgroundPaws';
+import { Link } from 'react-router-dom';
 import './Home.css';
 import { supabase } from '../supabaseClient';
-import { useToast } from '../context/ToastContext'; 
+import { useToast } from '../context/ToastContext';
 
 function LuckyCard({ pet }) {
   const [imgIndex, setImgIndex] = useState(0);
 
   const nextImg = (e) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation();
     setImgIndex((prev) => (prev + 1) % pet.images.length);
   };
 
   const prevImg = (e) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation();
     setImgIndex((prev) => (prev - 1 + pet.images.length) % pet.images.length);
   };
 
@@ -24,7 +23,7 @@ function LuckyCard({ pet }) {
     <div className="lucky-card">
       <div className="lucky-card-img-slider">
         <Link to={`/pets/${pet.id}`} style={{ display: 'block', width: '100%', height: '100%' }}>
-            <img src={pet.images[imgIndex]} alt={pet.petName} className="lucky-main-img" />
+          <img src={pet.images[imgIndex]} alt={pet.petName} className="lucky-main-img" />
         </Link>
 
         {pet.images.length > 1 && (
@@ -43,17 +42,17 @@ function LuckyCard({ pet }) {
 
       <div className="lucky-card-info">
         <h3>
-            <Link to={`/pets/${pet.id}`} className="lucky-name-link">
-                {pet.petName}
-            </Link> 
-            <span className="owner-name"> та {pet.ownerName}</span>
+          <Link to={`/pets/${pet.id}`} className="lucky-name-link">
+            {pet.petName}
+          </Link>
+          <span className="owner-name"> та {pet.ownerName}</span>
         </h3>
         <div className="lucky-review-box">
           <p className="lucky-review">{pet.text}</p>
           {pet.text && pet.text.length > 100 && (
-              <Link to={`/pets/${pet.id}`} className="read-more-link">
-                  Читати далі »
-              </Link>
+            <Link to={`/pets/${pet.id}`} className="read-more-link">
+              Читати далі »
+            </Link>
           )}
         </div>
       </div>
@@ -63,15 +62,15 @@ function LuckyCard({ pet }) {
 
 function Home() {
   const location = useLocation();
-  const { showToast } = useToast(); 
-  
+  const { showToast } = useToast();
+
   const [happyPets, setHappyPets] = useState([]);
-  
-  const [allNewArrivals, setAllNewArrivals] = useState([]); 
-  const [filteredNewPets, setFilteredNewPets] = useState([]); 
-  const [dynamicTypes, setDynamicTypes] = useState([]); 
-  const [newTypeNames, setNewTypeNames] = useState([]); 
-  const [selectedCategory, setSelectedCategory] = useState('Всі'); 
+
+  const [allNewArrivals, setAllNewArrivals] = useState([]);
+  const [filteredNewPets, setFilteredNewPets] = useState([]);
+  const [dynamicTypes, setDynamicTypes] = useState([]);
+  const [newTypeNames, setNewTypeNames] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState('Всі');
 
   const sliderPets = [
     { src: '/mars1.png', id: 1 },
@@ -120,7 +119,7 @@ function Home() {
             id: pet.Id,
             petName: pet.Name,
             ownerName: pet.OwnerName ? pet.OwnerName.split(' ')[0] : "Нова сім'я",
-            text: pet.HomeDescription || "Знайшов свій дім!", 
+            text: pet.HomeDescription || "Знайшов свій дім!",
             images: images
           };
         });
@@ -137,7 +136,7 @@ function Home() {
           d.setDate(d.getDate() - daysAgo);
           return d.toISOString().split('T')[0];
         };
-        
+
         const todayStr = new Date().toISOString().split('T')[0];
         const weekAgoStr = getPastDateString(7);
 
@@ -149,7 +148,7 @@ function Home() {
         arrivals.sort((a, b) => b.Id - a.Id);
 
         setAllNewArrivals(arrivals);
-        setFilteredNewPets(arrivals); 
+        setFilteredNewPets(arrivals);
 
         const typesInNewArrivals = [...new Set(arrivals.map(p => p.Type).filter(Boolean))];
         setDynamicTypes(typesInNewArrivals);
@@ -158,7 +157,7 @@ function Home() {
           const hasOldPets = data.some(pet => pet.Type === type && pet.ArrivalDate < weekAgoStr);
           return !hasOldPets;
         });
-        
+
         setNewTypeNames(completelyNewTypes);
       }
     };
@@ -170,23 +169,27 @@ function Home() {
   const changeImage = (direction) => {
     setCurrentIndex((prevIndex) => {
       let newIndex = prevIndex + direction;
-      if (newIndex >= sliderPets.length) newIndex = 0;
-      if (newIndex < 0) newIndex = sliderPets.length - 1;
+      if (newIndex >= images.length) newIndex = 0;
+      if (newIndex < 0) newIndex = images.length - 1;
       return newIndex;
     });
   };
 
+  // 👇 НОВЕ: Магія автоматичного перемикання (Автопілот)
   useEffect(() => {
+    // Встановлюємо таймер, який викликає зміну картинки кожні 4 секунди
     const sliderTimer = setInterval(() => {
       changeImage(1);
     }, 4000);
+
+    // Очищаємо таймер, якщо користувач пішов з головної сторінки
     return () => clearInterval(sliderTimer);
   }, []);
 
   const getNewPetImg = (pet) => {
     const firstImg = (pet.Images && pet.Images.length > 0) ? pet.Images[0] : pet.ImageName;
-    return firstImg 
-      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${firstImg}` 
+    return firstImg
+      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${firstImg}`
       : '/placeholder.png';
   };
 
@@ -200,23 +203,11 @@ function Home() {
   };
 
   return (
-    <div className="home-page-container">
-      <div className="fixed-background-paws">
-        <BackgroundPaws />
-      </div>
-
-      <div className="ambient-glows">
-        <div className="glow-blob purple-top"></div>
-        <div className="glow-blob pink-right"></div>
-        <div className="glow-blob blue-bottom"></div>
-      </div>
-
-      <div className="hero">
+    <div className="hero">
         <div className="hero-left">
           <div className="call-to-action-container">
             <Link to="/pets" style={{ textDecoration: 'none' }}>
               <div className="call-to-action">
-                {/* 👇 Оновлено: примусове перенесення тексту на два рядки */}
                 <span className="cta-main-text">Знайди свого <br /> улюбленця</span>
                 <div className="blinking-paw"></div>
               </div>
@@ -271,67 +262,48 @@ function Home() {
               <div className="brush-title-container">Наші новинки</div>
               <p className="news-section-subtitle">Ці хвостики щойно прибули до притулку і дуже чекають на знайомство</p>
             </div>
-            
+
             <div className="news-categories-badges">
-              <button 
-                 className={`news-type-badge ${selectedCategory === 'Всі' ? 'active' : ''}`}
-                 onClick={() => handleCategoryClick('Всі')}
+              <button
+                className={`news-type-badge ${selectedCategory === 'Всі' ? 'active' : ''}`}
+                onClick={() => handleCategoryClick('Всі')}
               >
                 Всі хвостики
               </button>
               {dynamicTypes.map((type) => (
-                <button 
-                   key={type} 
-                   className={`news-type-badge ${selectedCategory === type ? 'active' : ''}`}
-                   onClick={() => handleCategoryClick(type)}
+                <button
+                  key={type}
+                  className={`news-type-badge ${selectedCategory === type ? 'active' : ''}`}
+                  onClick={() => handleCategoryClick(type)}
                 >
                   {type}
                   {newTypeNames.includes(type) && <span className="type-new-tag">✨ Новинка</span>}
                 </button>
               ))}
             </div>
+        </div>
 
-            <div className="news-pets-grid">
-              {filteredNewPets.map((pet) => (
-                <Link to={`/pets/${pet.Id}`} key={pet.Id} className="news-pet-card">
-                  <div className="news-card-img-wrapper">
-                    <img src={getNewPetImg(pet)} alt={pet.Name} />
-                    <span className="new-arrival-tag">Новенький 🐾</span>
-                  </div>
-                  <div className="news-card-details">
-                    <h3>{pet.Name}</h3>
-                    <div className="news-card-meta">
-                      <span>{pet.Type}</span> • <span>{pet.Breed}</span>
-                    </div>
-                    <p className="news-card-age">Вік: {pet.Age}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-
-      {happyPets.length > 0 && (
-        <>
-          <div className="page-separator"><span>🐾</span></div>
-
-          <section className="lucky-section">
-            <div className="section-header">
-              <div className="brush-title-container">Вони вже знайшли дім 🏡</div>
-              <p className="news-section-subtitle">Надихаючі історії наших випускників та їхніх нових сімей</p>
-            </div>
-
-            <div className="lucky-marquee-container">
-              <div className="lucky-marquee-track">
-                {[...happyPets, ...happyPets, ...happyPets].map((pet, index) => (
-                  <LuckyCard key={`${pet.id}-${index}`} pet={pet} />
+       <div className="hero-right">
+            <div className="image-slider">
+                {/* 👇 НОВЕ: Виводимо всі картинки, але активною робимо тільки одну */}
+                {images.map((imgSrc, index) => (
+                    <img 
+                        key={index}
+                        src={imgSrc} 
+                        alt="Happy pet" 
+                        // Додаємо клас 'active', якщо індекс збігається з поточним
+                        className={`slider-image ${index === currentIndex ? 'active' : ''}`} 
+                    />
                 ))}
-              </div>
+                
+                <button className="slider-nav prev" onClick={() => changeImage(-1)}>&lt;</button>
+                <button className="slider-nav next" onClick={() => changeImage(1)}>&gt;</button>
+                
+                <div className="cta-text-right">
+                    Ці цифри ростуть з кожним днем, стань частиною нашої родини!
+                </div>
             </div>
-          </section>
-        </>
-      )}
+        </div>
     </div>
   );
 }
