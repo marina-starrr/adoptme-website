@@ -1,23 +1,20 @@
-/* --- СТОРІНКА ПРОФІЛЮ --- */
-
 .profile-page {
-    background-color: var(--body-bg); 
+    background-color: transparent;
     padding: 60px 5%;
     display: flex;
     justify-content: center;
-    flex-grow: 1; 
+    flex-grow: 1;
+    position: relative;
+    flex: 1;
+    width: 100%;
 }
 
 .profile-container {
     display: flex;
     max-width: 1200px;
     width: 100%;
-    gap: 40px;
-    background-color: var(--white);
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-    overflow: hidden; 
-    min-height: 600px;
+    gap: 30px;
+    align-items: flex-start;
 }
 
 /* Ліва колонка (Sidebar) */
@@ -28,11 +25,69 @@
     border-right: 2px solid #e0d4f5;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    padding-bottom: 30px;
+    flex-shrink: 0;
+}
+
+.profile-sidebar-banner {
+    height: 140px;
+    background: linear-gradient(135deg, #a083f9, #6847DD);
+    position: relative;
+    width: 100%;
+}
+
+.sidebar-paws {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    pointer-events: none;
+}
+
+.sidebar-paws .paw {
+    background-image: url('/lapki.png') !important;
+    background-size: contain !important;
+    background-repeat: no-repeat !important;
+    width: 80px !important;
+    height: 80px !important;
+    opacity: 0.1 !important;
+    filter: brightness(2) !important;
+}
+
+.sidebar-paws .paw-1 {
+    top: -10%;
+    left: -10%;
+    transform: rotate(-20deg);
+}
+
+.sidebar-paws .paw-2 {
+    top: 20%;
+    right: -5%;
+    transform: rotate(45deg);
+}
+
+.sidebar-paws .paw-3 {
+    bottom: -10%;
+    left: 30%;
+    transform: rotate(15deg);
 }
 
 .profile-avatar-section {
     text-align: center;
-    margin-bottom: 40px;
+    margin-top: -70px;
+    position: relative;
+    z-index: 2;
+    padding: 0 20px;
+}
+
+.avatar-wrapper {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    margin-bottom: 15px;
+    border-radius: 50%;
 }
 
 .profile-avatar-large {
@@ -40,9 +95,39 @@
     height: 150px;
     border-radius: 50%;
     object-fit: cover;
-    border: 4px solid var(--purple-light);
-    margin-bottom: 15px;
-    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.2);
+    border: 6px solid #ffffff;
+    box-shadow: 0 8px 25px rgba(104, 71, 221, 0.25);
+    background-color: white;
+    transition: transform 0.3s ease;
+}
+
+.avatar-wrapper:hover .profile-avatar-large {
+    transform: scale(1.02);
+}
+
+.avatar-overlay {
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
+    border-radius: 50%;
+    background: rgba(33, 6, 74, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.avatar-wrapper:hover .avatar-overlay {
+    opacity: 1;
+}
+
+.camera-icon {
+    font-size: 32px;
+    color: white;
 }
 
 .profile-name {
@@ -58,7 +143,6 @@
     font-weight: 500;
 }
 
-/* Кнопки навігації */
 .profile-nav {
     display: flex;
     flex-direction: column;
@@ -89,7 +173,22 @@
     box-shadow: 0 4px 10px rgba(104, 71, 221, 0.3);
 }
 
-/* Права колонка (Контент) */
+.nav-divider {
+    height: 2px;
+    background-color: #f0f0f5;
+    margin: 10px 0;
+    border-radius: 2px;
+}
+
+.logout-nav-btn {
+    color: #ef4444;
+}
+
+.logout-nav-btn:hover {
+    background-color: #fef2f2;
+    color: #dc2626;
+}
+
 .profile-content-area {
     flex-grow: 1;
     padding: 40px;
@@ -109,45 +208,17 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Адаптивність */
-@media (max-width: 850px) {
-    .profile-container {
-        flex-direction: column;
-        gap: 0;
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
 
-    .profile-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 2px solid #e0d4f5;
-        padding: 30px 20px;
-    }
-
-    .profile-avatar-large {
-        width: 120px;
-        height: 120px;
-    }
-
-    .profile-nav {
-        flex-direction: row;
-        justify-content: center;
-        flex-wrap: wrap; 
-    }
-
-    .profile-nav-btn {
-        text-align: center;
-        padding: 12px 15px;
-    }
-
-    .profile-content-area {
-        padding: 30px 20px;
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }
-/* --- СТИЛІ ФОРМИ ОСОБИСТИХ ДАНИХ --- */
+
 .profile-form {
     display: flex;
     flex-direction: column;
@@ -196,7 +267,70 @@
 
 .save-profile-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
+    box-shadow: 0 8px 20px rgba(104, 71, 221, 0.3);
+}
+
+.danger-zone {
+    margin-top: 50px;
+    border-top: 2px dashed #fecaca;
+    padding-top: 30px;
+}
+
+.danger-zone p {
+    color: #ef4444;
+    font-size: 14px;
+    margin-bottom: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.delete-account-btn {
+    background: transparent;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+    padding: 14px 25px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.delete-account-btn:hover {
+    background: #ef4444;
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+}
+
+.app-filters-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.app-filter-btn {
+    background-color: #f4f5fa;
+    color: #64748b;
+    border: 1px solid transparent;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.app-filter-btn:hover {
+    background-color: #e2e8f0;
+    color: #1e293b;
+}
+
+.app-filter-btn.active {
+    background: #21064A;
+    color: white;
+    box-shadow: 0 4px 15px rgba(33, 6, 74, 0.25);
 }
 
 /* --- СТИЛІ ДЛЯ ЗАЯВОК --- */
@@ -230,6 +364,39 @@
     color: #666;
 }
 
+.app-pet-name {
+    margin: 0;
+    color: #4a5568;
+    font-size: 16px;
+}
+
+.app-pet-link {
+    text-decoration: none;
+}
+
+.app-pet-link:hover span {
+    text-decoration: underline;
+}
+
+.app-pet-name span {
+    color: #21064A;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.app-number {
+    font-size: 14px;
+    color: #718096;
+    margin: 0;
+    font-weight: 600;
+}
+
+.app-short-desc {
+    color: #a0aec0;
+    font-size: 13px;
+    margin-top: 2px;
+}
+
 .app-status {
     padding: 8px 15px;
     border-radius: 20px;
@@ -237,10 +404,31 @@
     font-weight: 700;
 }
 
-.status-green { background-color: #d4edda; color: #155724; }
-.status-yellow { background-color: #fff3cd; color: #856404; }
+.status-badge.Нова {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
 
-/* --- СТИЛІ ДЛЯ УЛЮБЛЕНЦІВ В ПРОФІЛІ --- */
+.status-badge.Розглядається {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.Схвалено {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.status-badge.Передано {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-badge.Відхилено {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
 .profile-favorites-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -253,6 +441,14 @@
     padding: 10px;
     text-align: center;
     background-color: white;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.fav-profile-card:hover {
+    border-color: #6847DD;
+    box-shadow: 0 8px 20px rgba(104, 71, 221, 0.1);
+    transform: translateY(-4px);
 }
 
 .fav-profile-card img {
@@ -261,6 +457,69 @@
     object-fit: cover;
     border-radius: 8px;
     margin-bottom: 10px;
+}
+
+.fav-profile-card h4 {
+    margin: 0;
+    color: #21064A;
+    font-weight: 800;
+    font-size: 18px;
+}
+
+.remove-favorite-icon {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background-color: #ffffff;
+    color: #ff4d4d;
+    border: 2px solid #ff4d4d;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    opacity: 0;
+}
+
+.fav-profile-card:hover .remove-favorite-icon {
+    opacity: 1;
+}
+
+.remove-favorite-icon:hover {
+    background-color: #ff4d4d;
+    color: white;
+    transform: scale(1.1);
+}
+
+.success-favorites-text {
+    color: #333;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.adopt-pet-btn {
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    border: none;
+    padding: 14px 35px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.adopt-pet-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
 
 .badge {
@@ -275,4 +534,256 @@
 .empty-message {
     color: #666;
     font-style: italic;
+    font-size: 15px;
+}
+
+.profile-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(3px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+}
+
+.app-details-modal {
+    max-width: 500px !important;
+    padding: 35px !important;
+    text-align: left !important;
+    border-radius: 24px !important;
+    position: relative;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.app-details-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.app-details-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-details-modal::-webkit-scrollbar-thumb {
+    background: #d4c5f9;
+    border-radius: 10px;
+}
+
+.profile-close-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 30px;
+    color: #a0aec0;
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.2s;
+}
+
+.profile-close-btn:hover {
+    color: #21064A;
+}
+
+.modal-title {
+    color: #21064A;
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f4f5fa;
+    padding-bottom: 15px;
+}
+
+.app-details-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 15px;
+    color: #4a5568;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f8f9fa;
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row.full-width {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.detail-row strong {
+    color: #2d3748;
+}
+
+.highlight-text {
+    color: #6847DD;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 14px;
+}
+
+.detail-box {
+    background-color: #f8f9fa;
+    padding: 12px 15px;
+    border-radius: 10px;
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4a5568;
+    white-space: pre-line;
+}
+
+@media (max-width: 900px) {
+    .profile-container {
+        flex-direction: column;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+        padding-bottom: 25px;
+    }
+
+    .profile-sidebar-banner {
+        height: 120px;
+    }
+
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-avatar-section {
+        margin-top: -60px;
+    }
+
+    .profile-content-area {
+        padding: 30px 25px;
+    }
+
+    .application-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .app-status {
+        align-self: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .profile-page {
+        padding: 30px 4%;
+    }
+
+    .profile-content-area {
+        padding: 20px 16px;
+    }
+
+    .profile-avatar-large {
+        width: 90px;
+        height: 90px;
+    }
+
+    .profile-sidebar-banner {
+        height: 90px;
+    }
+
+    .profile-avatar-section {
+        margin-top: -45px;
+    }
+
+    .profile-name {
+        font-size: 20px;
+    }
+
+    .profile-tab-content h3 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .app-card-left {
+        gap: 14px;
+    }
+
+    .app-pet-image {
+        width: 64px;
+        height: 64px;
+    }
+
+    .app-pet-name span {
+        font-size: 16px;
+    }
+
+    .app-details-modal {
+        padding: 22px !important;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .profile-favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+    }
+}
+
+.profile-modal-overlay.closing {
+    animation: fadeOutModal 0.3s forwards;
+}
+
+.modal-content.closing {
+    animation: animateclose 0.3s forwards;
+}
+
+@keyframes animateclose {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeOutModal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.empty-link-purple {
+    color: #6847DD;
+    font-weight: 700;
+    text-decoration: none;
+    position: relative;
+    transition: color 0.3s ease;
+}
+
+.empty-link-purple:hover {
+    color: #4A148C;
+    text-decoration: underline;
 }

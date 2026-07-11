@@ -1,0 +1,46 @@
+.global-toast {
+    position: fixed;
+    top: 30px;
+    left: 50%;
+    /* Ховаємо за верхньою межею екрану */
+    transform: translate(-50%, -150%);
+    background: #ffffff;
+    color: #21064A;
+    padding: 16px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    box-shadow: 0 10px 40px rgba(104, 71, 221, 0.25);
+    border: 2px solid #6847DD;
+
+    z-index: 999999 !important;
+
+    opacity: 0;
+    /* Пружна анімація (bouncy) */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    pointer-events: none;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    white-space: nowrap;
+}
+
+.global-toast.show {
+    /* Опускаємо на видиму частину */
+    transform: translate(-50%, 0);
+    opacity: 1;
+}
+
+@media (max-width: 480px) {
+    .global-toast {
+        top: 15px;
+        width: 90%;
+        max-width: 360px;
+        padding: 12px 20px;
+        font-size: 14px;
+        white-space: normal;
+        text-align: center;
+    }
+}

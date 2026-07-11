@@ -7,7 +7,7 @@ const PetList = () => {
   useEffect(() => {
     const fetchPets = async () => {
       const { data, error } = await supabase
-        .from('Pets') 
+        .from('Pets')
         .select('*');
 
       if (error) console.error('Помилка:', error);
@@ -25,10 +25,10 @@ const PetList = () => {
     <div className="catalog-grid">
       {pets.map((pet) => (
         <div key={pet.Id} className="pet-card">
-          <img 
-            src={getImageUrl(pet.ImageName)} 
-            alt={pet.Name} 
-            style={{ width: '200px', borderRadius: '10px' }} 
+          <img
+            src={getImageUrl(pet.ImageName)}
+            alt={pet.Name}
+            style={{ width: '200px', borderRadius: '10px' }}
           />
           <h3>{pet.Name}</h3>
           <p>{pet.Type} • {pet.Age}</p>

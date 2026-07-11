@@ -1,0 +1,687 @@
+.admin-loader {
+    text-align: center;
+    padding: 100px;
+    font-size: 18px;
+    color: #6847DD;
+    font-weight: bold;
+}
+
+.applications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: #f4f5fa;
+    border-radius: 16px;
+    border: 2px dashed #d1c4e9;
+    color: #888;
+}
+
+.empty-icon {
+    font-size: 48px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.app-card-premium {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 3px solid #6746db;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    border-left: 6px solid #ccc;
+}
+
+.app-card-premium:hover {
+    box-shadow: 0 8px 25px rgba(74, 20, 140, 0.08);
+    transform: translateY(-2px);
+}
+
+.app-card-premium.status-new {
+    border-left-color: #3b82f6;
+}
+
+.app-card-premium.status-review {
+    border-left-color: #f59e0b;
+}
+
+.app-card-premium.status-approved {
+    border-left-color: #10b981;
+}
+
+.app-card-premium.status-rejected {
+    border-left-color: #ef4444;
+}
+
+.app-card-premium.status-handed {
+    border-left-color: #8b5cf6;
+}
+
+.status-handed .status-badge {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+
+.app-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: #ede8ff;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.app-id-badge {
+    font-weight: 800;
+    color: #6746db;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+.status-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-new .status-badge {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.status-review .status-badge {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-approved .status-badge {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-rejected .status-badge {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.app-card-body {
+    padding: 20px;
+}
+
+.app-info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.info-label {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.info-value {
+    font-size: 15px;
+    color: #333;
+    font-weight: 600;
+}
+
+.info-value.highlight {
+    color: #6847DD;
+    font-weight: 800;
+    font-size: 16px;
+    line-height: 1.4;
+}
+
+.info-value.link {
+    color: #3b82f6;
+    text-decoration: none;
+}
+
+.info-value.link:hover {
+    text-decoration: underline;
+}
+
+.badges-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.trait-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.trait-badge.positive {
+    background: #f0fdf4;
+    color: #166534;
+    border: 1px solid #bbf7d0;
+}
+
+.trait-badge.negative {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}
+
+.app-comment-box {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 3px solid #d1c4e9;
+}
+
+.comment-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #666;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.app-comment-box p {
+    margin: 0;
+    font-size: 14px;
+    color: #444;
+    line-height: 1.5;
+    font-style: italic;
+}
+
+.app-card-footer {
+    padding: 15px 20px;
+    background: #fbfbfe;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.status-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.status-control label {
+    font-size: 13px;
+    font-weight: 700;
+    color: #666;
+}
+
+.custom-select-wrapper select {
+    appearance: none;
+    background: white;
+    border: 2px solid #e0e0e0;
+    padding: 8px 35px 8px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23666%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px top 50%;
+    background-size: 10px auto;
+}
+
+.custom-select-wrapper select:focus {
+    border-color: #6847DD;
+}
+
+.delete-app-btn {
+    background: white;
+    color: #ef4444;
+    border: 1px solid #fee2e2;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.delete-app-btn:hover {
+    background: #ef4444;
+    color: white;
+    border-color: #ef4444;
+}
+
+.custom-dropdown-container {
+    position: relative;
+    width: 200px;
+}
+
+.custom-dropdown-header {
+    background-color: #f4f5fa;
+    border: 2px solid #e0e0e0;
+    padding: 10px 15px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #4A148C;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+.custom-dropdown-header:hover {
+    border-color: #B49DFF;
+    background-color: #f0edff;
+}
+
+.custom-dropdown-header.open {
+    border-color: #6847DD;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(104, 71, 221, 0.15);
+}
+
+.dropdown-arrow {
+    font-size: 10px;
+    transition: transform 0.3s ease;
+    color: #6847DD;
+}
+
+.custom-dropdown-header.open .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+.custom-dropdown-list {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    list-style: none;
+    padding: 8px;
+    margin: 0 0 8px 0;
+    z-index: 1000;
+    animation: fadeInDropdown 0.2s ease;
+    border: 1px solid #eee;
+}
+
+@keyframes fadeInDropdown {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.custom-dropdown-item {
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.custom-dropdown-item:hover {
+    background-color: #f0edff;
+    color: #6847DD;
+}
+
+.custom-dropdown-item.selected {
+    background-color: #6847DD;
+    color: white;
+}
+
+.admin-filters {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f0edff;
+    padding-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    background: #ffffff;
+    border: 2px solid #e0d4f5;
+    padding: 10px 22px;
+    border-radius: 30px;
+    font-weight: 700;
+    color: #666680;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.filter-btn:hover {
+    border-color: #6847DD;
+    color: #6847DD;
+    background: #faf8ff;
+}
+
+.filter-btn.active {
+    background: #6847DD;
+    color: #ffffff;
+    border-color: #6847DD;
+    box-shadow: 0 4px 15px rgba(104, 71, 221, 0.25);
+}
+
+.app-card-premium.type-volunteer {
+    border: 2px solid #10b981;
+}
+
+.app-card-premium.type-volunteer .app-card-header {
+    background: #ecfdf5;
+    border-bottom: 1px solid #d1fae5;
+}
+
+.app-card-premium.type-volunteer .app-id-badge {
+    color: #059669;
+}
+
+.confirm-modal {
+    max-width: 400px;
+    text-align: center;
+    padding: 35px 30px;
+}
+
+.confirm-title {
+    color: #21064A;
+    font-size: 22px;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.confirm-text {
+    color: #555;
+    font-size: 15px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.delete-confirm-btn {
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease;
+}
+
+.delete-confirm-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(17, 2, 41, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    animation: fadeInModal 0.3s ease-out forwards;
+}
+
+.modal-overlay.closing {
+    animation: fadeOutModal 0.3s forwards;
+}
+
+.confirm-modal {
+    max-width: 400px;
+    background-color: #ffffff;
+    text-align: center;
+    padding: 35px 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    animation: animatetop 0.3s forwards;
+}
+
+.confirm-modal.closing {
+    animation: animateclose 0.3s forwards;
+}
+
+.confirm-title {
+    color: #21064A;
+    font-size: 24px;
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 800;
+}
+
+.confirm-text {
+    color: #555;
+    font-size: 16px;
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+}
+
+.delete-confirm-btn {
+    padding: 12px 24px;
+    border-radius: 30px;
+    border: none;
+    background: #ef4444;
+    color: white;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 15px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease;
+}
+
+.delete-confirm-btn:hover {
+    background: #dc2626;
+    transform: translateY(-2px);
+}
+
+@keyframes animatetop {
+    from {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes animateclose {
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+}
+
+@keyframes fadeInModal {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutModal {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@media (max-width: 1024px) {
+    .admin-filters {
+        gap: 10px;
+        padding-bottom: 16px;
+    }
+
+    .filter-btn {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+
+    .app-card-header {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .app-info-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-loader {
+        padding: 60px 20px;
+        font-size: 16px;
+    }
+
+    .app-card-body {
+        padding: 16px;
+    }
+
+    .app-info-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .badges-row {
+        flex-wrap: wrap;
+    }
+
+    .app-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+        padding: 14px 16px;
+    }
+
+    .status-control {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .custom-dropdown-container {
+        width: 100%;
+    }
+
+    .delete-app-btn {
+        align-self: flex-end;
+    }
+
+    .confirm-modal {
+        width: calc(100% - 32px);
+        max-width: none;
+        padding: 28px 20px;
+    }
+
+    .confirm-buttons {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .confirm-buttons button {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .empty-state {
+        padding: 40px 16px;
+    }
+
+    .app-card-header {
+        padding: 12px 14px;
+    }
+
+    .app-id-badge {
+        font-size: 12px;
+    }
+
+    .status-badge {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .trait-badge {
+        font-size: 12px;
+    }
+
+    .filter-btn {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 0;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+}
+
+@media (hover: none) {
+    .app-card-premium:hover {
+        transform: none;
+    }
+
+    .delete-app-btn:hover {
+        background: white;
+        color: #ef4444;
+    }
+}

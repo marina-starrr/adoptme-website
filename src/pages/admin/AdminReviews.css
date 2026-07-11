@@ -1,0 +1,390 @@
+.admin-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.empty-reviews-state {
+    text-align: center;
+    padding: 60px;
+    background: #f4f5fa;
+    border-radius: 20px;
+    border: 2px dashed #d4cbf9;
+    color: #666680;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.admin-review-card {
+    background: #fcfbfe;
+    border: 1px solid rgba(104, 71, 221, 0.15);
+    border-radius: 16px;
+    padding: 25px;
+    transition: box-shadow 0.3s ease;
+}
+
+.admin-review-card:hover {
+    box-shadow: 0 8px 25px rgba(104, 71, 221, 0.08);
+}
+
+.admin-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.review-author-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.review-author-info strong {
+    font-size: 1.1rem;
+    color: #21064A;
+}
+
+.review-date-badge {
+    background: #e0f7fa;
+    color: #006064;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.delete-review-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.delete-review-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.admin-review-text {
+    font-size: 1.05rem;
+    line-height: 1.6;
+    color: #444;
+    margin-bottom: 20px;
+    white-space: pre-wrap;
+}
+
+.admin-reply-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(104, 71, 221, 0.1);
+}
+
+.add-reply-btn {
+    background: transparent;
+    color: #6847DD;
+    border: 2px dashed #d4cbf9;
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.add-reply-btn:hover {
+    background: #f0edff;
+    border-color: #6847DD;
+}
+
+.reply-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.reply-textarea {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #6847DD;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    resize: vertical;
+    outline: none;
+    box-shadow: 0 4px 15px rgba(104, 71, 221, 0.1);
+}
+
+.reply-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.cancel-reply-btn {
+    background: #f4f5fa;
+    color: #555;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.cancel-reply-btn:hover {
+    background: #e2e4f0;
+}
+
+.save-reply-btn {
+    background: #6847DD;
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 20px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(104, 71, 221, 0.3);
+}
+
+.save-reply-btn:hover:not(:disabled) {
+    background: #49109f;
+    transform: translateY(-2px);
+}
+
+.existing-reply {
+    background: #f0edff;
+    padding: 15px 20px;
+    border-radius: 12px;
+    border-left: 4px solid #6847DD;
+}
+
+.existing-reply strong {
+    color: #49109f;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.existing-reply p {
+    margin: 0 0 15px 0;
+    color: #333;
+    line-height: 1.5;
+    white-space: pre-wrap;
+}
+
+.edit-reply-btn {
+    background: transparent;
+    color: #6847DD;
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.edit-reply-btn:hover {
+    color: #49109f;
+}
+
+.user-reply-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e0d4f5;
+}
+
+.user-reply-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.delete-reply-icon-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.delete-reply-icon-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.existing-reply-actions {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.delete-admin-reply-btn {
+    background: transparent;
+    color: #ef4444;
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    transition: color 0.2s ease;
+}
+
+.delete-admin-reply-btn:hover {
+    color: #dc2626;
+}
+
+.user-reply-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px dashed #e0d4f5;
+}
+
+.user-reply-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.delete-reply-icon-btn {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border: none;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 10px;
+}
+
+.delete-reply-icon-btn:hover {
+    background: #ef4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+@media (max-width: 1024px) {
+    .empty-reviews-state {
+        padding: 40px 24px;
+        font-size: 16px;
+    }
+
+    .admin-review-card {
+        padding: 20px;
+    }
+}
+
+@media (max-width: 768px) {
+    .admin-reviews-list {
+        gap: 16px;
+    }
+
+    .admin-review-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .review-author-info {
+        gap: 10px;
+    }
+
+    .admin-review-text {
+        font-size: 1rem;
+    }
+
+    .reply-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .cancel-reply-btn,
+    .save-reply-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .existing-reply-actions {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .user-reply-item {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .delete-reply-icon-btn {
+        align-self: flex-end;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-review-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .review-author-info strong {
+        font-size: 1rem;
+    }
+
+    .review-date-badge {
+        font-size: 0.8rem;
+    }
+
+    .add-reply-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .reply-textarea {
+        font-size: 0.95rem;
+        padding: 12px;
+    }
+}
+
+@media (hover: none) {
+    .admin-review-card:hover {
+        box-shadow: none;
+    }
+
+    .delete-review-btn:hover,
+    .delete-reply-icon-btn:hover {
+        transform: none;
+    }
+}

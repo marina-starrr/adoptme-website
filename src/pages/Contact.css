@@ -1,17 +1,11 @@
-/* =========================================
-   ОСНОВНА СЕКЦІЯ КОНТАКТІВ
-   ========================================= */
 .contact-section {
     width: 100%;
     padding: 60px 5%;
     text-align: center;
     background-color: var(--body-bg);
-    flex: 1; /* Змушує секцію займати вільне місце до футера */
+    flex: 1;
 }
 
-/* =========================================
-   ЗАГОЛОВОК З ФОНОВИМ ПЕНЗЛИКОМ
-   ========================================= */
 .contact-header {
     position: relative;
     width: 732px;
@@ -37,9 +31,13 @@
     width: 100%;
 }
 
-/* =========================================
-   ВЕРХНІ КАРТИНКИ (КІТ І СОБАКА НА ЛІНІЇ)
-   ========================================= */
+.contact-cards-wrapper {
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 4px;
+}
+
 .contact-images-container {
     display: flex;
     justify-content: center;
@@ -72,9 +70,6 @@
     transform: translateY(-50%);
 }
 
-/* =========================================
-   КАРТКИ З КОНТАКТАМИ
-   ========================================= */
 .contact-cards-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -132,9 +127,51 @@
     line-height: 1.4;
 }
 
-/* =========================================
-   БЛОК ПІДТРИМКИ (QR КОД)
-   ========================================= */
+.location-media-container {
+    display: flex;
+    gap: clamp(20px, 3vw, 40px);
+    max-width: 1200px;
+    margin: clamp(40px, 5vw, 60px) auto;
+    align-items: stretch;
+    padding: 0 4px;
+}
+
+.media-block {
+    flex: 1;
+    min-width: 0;
+    background-color: #fff;
+    border-radius: 20px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    padding: clamp(16px, 2.5vw, 20px);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+.section-subtitle {
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 700;
+    color: #382677;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.map-iframe {
+    width: 100%;
+    height: clamp(220px, 40vw, 350px);
+    border: 0;
+    border-radius: 15px;
+    display: block;
+}
+
+.shelter-video {
+    width: 100%;
+    height: clamp(220px, 40vw, 350px);
+    border-radius: 15px;
+    object-fit: cover;
+    background-color: #000;
+}
+
 .support-block {
     margin-top: 80px;
     text-align: center;
@@ -162,33 +199,64 @@
 }
 
 .support-image {
-    width: 288px;
-    height: 288px;
+    width: clamp(140px, 30vw, 288px);
+    height: clamp(140px, 30vw, 288px);
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
-/* =========================================
-   АДАПТИВНІСТЬ ДЛЯ КОНТАКТІВ (Media Queries)
-   ========================================= */
+.more-help-container {
+    margin-top: clamp(40px, 5vw, 60px);
+    margin-bottom: 40px;
+    text-align: center;
+    padding: 0 8px;
+}
+
+.more-help-btn {
+    display: inline-block;
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: white;
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 700;
+    padding: clamp(14px, 2vw, 18px) clamp(24px, 5vw, 45px);
+    border-radius: 30px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(104, 71, 221, 0.3);
+    transition: all 0.3s ease;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.more-help-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(104, 71, 221, 0.5);
+    color: white;
+}
+
 @media (max-width: 1200px) {
     .contact-header {
         width: 90%;
         height: auto;
         padding: 30px 0;
     }
+
     .contact-cards-container {
         grid-template-columns: 1fr;
         gap: 20px;
-    } 
+    }
+
     .contact-card {
         width: 100%;
         height: auto;
     }
+
     .inner-card {
         width: 90%;
         height: auto;
         padding: 20px;
         margin: 0 auto;
     }
+
     .contact-images-container {
         flex-direction: column;
         gap: 20px;
@@ -199,27 +267,33 @@
 @media (max-width: 1024px) {
     .contact-header {
         margin-bottom: 40px;
-    }  
+    }
+
     .header-text {
         font-size: 32px;
     }
+
     .contact-images-container {
         height: auto;
         margin-bottom: 30px;
-    }    
+    }
+
     .contact-image.call-image,
     .contact-image.line-image {
         position: static;
         transform: none;
         margin: 0;
-    } 
+    }
+
     .contact-cards-container {
         gap: 30px;
         max-width: 600px;
     }
+
     .contact-card {
         min-height: 180px;
     }
+
     .inner-card {
         width: 100%;
     }
@@ -228,37 +302,47 @@
 @media (max-width: 768px) {
     .contact-section {
         padding: 40px 20px;
-    } 
+    }
+
     .header-text {
         font-size: 28px;
     }
+
     .contact-header {
         margin-bottom: 30px;
-    }      
+    }
+
     .contact-card {
         min-height: 160px;
     }
+
     .inner-card {
         padding: 15px;
-    }   
+    }
+
     .card-title {
         font-size: 20px;
-    }   
+    }
+
     .card-info {
         font-size: 16px;
-    }        
+    }
+
     .qr-image {
         width: 200px;
         height: 200px;
     }
+
     .support-image {
         width: 220px;
         height: 220px;
     }
+
     .support-content {
         flex-direction: column;
         gap: 30px;
     }
+
     .support-title {
         margin-left: 0;
     }
@@ -267,29 +351,46 @@
 @media (max-width: 480px) {
     .contact-section {
         padding: 30px 15px;
-    }      
+    }
+
     .header-text {
         font-size: 24px;
-    }      
+    }
+
     .card-title {
         font-size: 18px;
-    }      
+    }
+
     .card-info {
         font-size: 14px;
-    }       
+    }
+
     .card-icon {
         width: 28px;
         height: 28px;
     }
+
     .support-title {
         font-size: 20px;
-    }    
+    }
+
     .qr-image {
         width: 150px;
         height: 150px;
     }
+
     .support-image {
         width: 180px;
         height: 180px;
+    }
+}
+
+@media (hover: none) {
+    .req-card:hover {
+        transform: none;
+    }
+
+    .more-help-btn:hover {
+        transform: none;
     }
 }
