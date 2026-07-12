@@ -1,12 +1,10 @@
-/* --- СТОРІНКА ПРОФІЛЮ --- */
-
 .profile-page {
-    background-color: transparent; 
+    background-color: transparent;
     padding: 60px 5%;
     display: flex;
     justify-content: center;
-    flex-grow: 1; 
-    position: relative; 
+    flex-grow: 1;
+    position: relative;
     flex: 1;
     width: 100%;
 }
@@ -15,18 +13,19 @@
     display: flex;
     max-width: 1200px;
     width: 100%;
-    gap: 30px; 
-    align-items: flex-start; 
+    gap: 30px;
+    align-items: flex-start;
 }
 
+/* Ліва колонка (Sidebar) */
 .profile-sidebar {
-    width: 320px;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(104, 71, 221, 0.08);
+    width: 300px;
+    background: linear-gradient(to bottom, #f8f5ff, #eee1ff);
+    padding: 40px 20px;
+    border-right: 2px solid #e0d4f5;
     display: flex;
     flex-direction: column;
-    overflow: hidden; 
+    overflow: hidden;
     padding-bottom: 30px;
     flex-shrink: 0;
 }
@@ -40,28 +39,44 @@
 
 .sidebar-paws {
     position: absolute !important;
-    top: 0; left: 0;
-    width: 100% !important; height: 100% !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
     pointer-events: none;
 }
 
 .sidebar-paws .paw {
-    background-image: url('/lapki.png') !important; 
+    background-image: url('/lapki.png') !important;
     background-size: contain !important;
     background-repeat: no-repeat !important;
-    width: 80px !important;  
+    width: 80px !important;
     height: 80px !important;
-    opacity: 0.1 !important; 
-    filter: brightness(2) !important; 
+    opacity: 0.1 !important;
+    filter: brightness(2) !important;
 }
 
-.sidebar-paws .paw-1 { top: -10%; left: -10%; transform: rotate(-20deg); }
-.sidebar-paws .paw-2 { top: 20%; right: -5%; transform: rotate(45deg); }
-.sidebar-paws .paw-3 { bottom: -10%; left: 30%; transform: rotate(15deg); }
+.sidebar-paws .paw-1 {
+    top: -10%;
+    left: -10%;
+    transform: rotate(-20deg);
+}
+
+.sidebar-paws .paw-2 {
+    top: 20%;
+    right: -5%;
+    transform: rotate(45deg);
+}
+
+.sidebar-paws .paw-3 {
+    bottom: -10%;
+    left: 30%;
+    transform: rotate(15deg);
+}
 
 .profile-avatar-section {
     text-align: center;
-    margin-top: -70px; 
+    margin-top: -70px;
     position: relative;
     z-index: 2;
     padding: 0 20px;
@@ -76,11 +91,11 @@
 }
 
 .profile-avatar-large {
-    width: 140px;
-    height: 140px;
+    width: 150px;
+    height: 150px;
     border-radius: 50%;
     object-fit: cover;
-    border: 6px solid #ffffff; 
+    border: 6px solid #ffffff;
     box-shadow: 0 8px 25px rgba(104, 71, 221, 0.25);
     background-color: white;
     transition: transform 0.3s ease;
@@ -92,7 +107,10 @@
 
 .avatar-overlay {
     position: absolute;
-    top: 6px; left: 6px; right: 6px; bottom: 6px; 
+    top: 6px;
+    left: 6px;
+    right: 6px;
+    bottom: 6px;
     border-radius: 50%;
     background: rgba(33, 6, 74, 0.6);
     backdrop-filter: blur(3px);
@@ -114,51 +132,52 @@
 
 .profile-name {
     font-size: 24px;
-    font-weight: 800;
-    color: #21064A;
-    margin: 0 0 5px 0;
+    font-weight: 700;
+    color: var(--black);
+    margin-bottom: 5px;
 }
 
 .profile-status {
-    font-size: 15px;
-    color: #8b7ca6;
-    font-weight: 600;
-    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: var(--purple-medium);
+    font-weight: 500;
+
 }
 
-/* 🌟 НАВІГАЦІЯ */
+
 .profile-nav {
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    padding: 0 25px;
+    gap: 15px;
+
 }
 
 .profile-nav-btn {
     background-color: transparent;
-    border: none;
-    padding: 14px 20px;
+    border: 2px solid transparent;
+    padding: 15px 20px;
     border-radius: 12px;
+    font-family: 'Montserrat', sans-serif;
     font-size: 16px;
     font-weight: 600;
-    color: #4a5568;
+    color: var(--black);
     text-align: left;
     cursor: pointer;
-    transition: all 0.2s ease;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    transition: all 0.3s ease;
+
+
+
 }
 
 .profile-nav-btn:hover {
-    background-color: #f4f5fa;
-    color: #21064A;
+    background-color: rgba(104, 71, 221, 0.1);
+
 }
 
 .profile-nav-btn.active {
-    background: #EFE6FF;
-    color: #6847DD;
-    font-weight: 700;
+    background: linear-gradient(to right, #6847DD, #382677);
+    color: var(--white);
+    box-shadow: 0 4px 10px rgba(104, 71, 221, 0.3);
 }
 
 .nav-divider {
@@ -177,21 +196,22 @@
     color: #dc2626;
 }
 
-/* 🌟 КОНТЕНТ */
+
 .profile-content-area {
     flex-grow: 1;
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 10px 40px rgba(104, 71, 221, 0.08);
-    padding: 40px 50px;
-    min-height: 600px;
+    padding: 40px;
+    background-color: var(--white);
+
+
+
 }
 
 .profile-tab-content h3 {
     font-size: 28px;
-    color: #21064A;
-    margin: 0 0 30px 0;
-    font-weight: 800;
+    color: var(--purple-dark);
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #eee1ff;
 }
 
 .fade-in {
@@ -199,16 +219,23 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-/* --- ОСОБИСТІ ДАНІ --- */
+
 .profile-form {
     display: flex;
     flex-direction: column;
     gap: 20px;
-    max-width: 600px;
+    max-width: 500px;
 }
 
 .form-group {
@@ -218,41 +245,41 @@
 }
 
 .form-group label {
-    font-weight: 700;
-    color: #4a5568;
+    font-weight: 600;
+    color: var(--purple-dark);
     font-size: 14px;
 }
 
 .form-group input {
-    padding: 14px 18px;
-    border: 2px solid #e2e8f0;
-    border-radius: 12px;
-    font-family: inherit;
-    font-size: 15px;
+    padding: 12px 15px;
+    border: 2px solid #e0d4f5;
+    border-radius: 10px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
     outline: none;
-    transition: all 0.3s;
-    background-color: #fdfdfd;
+    transition: border-color 0.3s;
+
 }
 
 .form-group input:focus {
     border-color: #6847DD;
-    background-color: #ffffff;
-    box-shadow: 0 4px 15px rgba(104, 71, 221, 0.1);
-}
 
-.input-readonly {
-    background: #f8f9fa !important;
-    color: #a0aec0 !important;
-    border-color: #edf2f7 !important;
-    cursor: not-allowed;
+
+
+
+
+
+
+
+
 }
 
 .save-profile-btn {
-    background: linear-gradient(to right, #6847DD, #4A148C);
+    background: linear-gradient(to right, #6847DD, #382677);
     color: white;
     border: none;
-    padding: 16px;
-    border-radius: 12px;
+    padding: 15px;
+    border-radius: 10px;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -266,14 +293,14 @@
 }
 
 .danger-zone {
-    margin-top: 50px; 
-    border-top: 2px dashed #fecaca; 
-    padding-top: 30px; 
+    margin-top: 50px;
+    border-top: 2px dashed #fecaca;
+    padding-top: 30px;
 }
 
 .danger-zone p {
-    color: #ef4444; 
-    font-size: 14px; 
+    color: #ef4444;
+    font-size: 14px;
     margin-bottom: 15px;
     font-weight: 700;
     text-transform: uppercase;
@@ -281,24 +308,24 @@
 }
 
 .delete-account-btn {
-    background: transparent; 
-    color: #ef4444; 
-    border: 2px solid #ef4444; 
-    padding: 14px 25px; 
-    border-radius: 12px; 
-    cursor: pointer; 
+    background: transparent;
+    color: #ef4444;
+    border: 2px solid #ef4444;
+    padding: 14px 25px;
+    border-radius: 12px;
+    cursor: pointer;
     font-weight: 700;
     font-size: 15px;
     transition: all 0.3s ease;
 }
 
 .delete-account-btn:hover {
-    background: #ef4444; 
-    color: #fff; 
+    background: #ef4444;
+    color: #fff;
     box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
 }
 
-/* --- ЗАЯВКИ --- */
+
 .app-filters-container {
     display: flex;
     gap: 10px;
@@ -329,10 +356,11 @@
     box-shadow: 0 4px 15px rgba(33, 6, 74, 0.25);
 }
 
+/* --- СТИЛІ ДЛЯ ЗАЯВОК --- */
 .applications-list {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 15px;
 }
 
 .application-card {
@@ -340,54 +368,55 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    background-color: #ffffff;
-    transition: transform 0.2s, box-shadow 0.2s;
+    border: 2px solid #eee1ff;
+    border-radius: 12px;
+    background-color: #faf8ff;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
-.clickable-card {
-    cursor: pointer;
+.app-details h4 {
+    margin-bottom: 5px;
+    color: var(--black);
 }
 
-.application-card:hover {
-    box-shadow: 0 8px 25px rgba(104, 71, 221, 0.08);
-    transform: translateY(-2px);
-    border-color: #d1bdfc;
-}
-
-.app-card-left {
-    display: flex;
-    align-items: center;
-    gap: 25px;
-}
-
-.app-pet-image {
-    width: 90px;
-    height: 90px;
-    border-radius: 14px;
-    object-fit: cover;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
-}
-
-.app-pet-image:hover {
-    transform: scale(1.05);
-}
-
-.app-details {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.app-type-label {
-    margin: 0;
+.app-details h4 span {
     color: #6847DD;
+
+
+}
+
+.app-details p {
+
+
     font-size: 14px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+    color: #666;
+
+
 }
 
 .app-pet-name {
@@ -423,35 +452,54 @@
     margin-top: 2px;
 }
 
-/* --- СТАТУСИ ЗАЯВОК --- */
+
 .app-status {
-    padding: 8px 16px;
+    padding: 8px 15px;
     border-radius: 20px;
     font-size: 14px;
     font-weight: 700;
 }
 
-.status-badge.Нова { background-color: #eff6ff; color: #2563eb; } 
-.status-badge.Розглядається { background-color: #fef3c7; color: #d97706; } 
-.status-badge.Схвалено { background-color: #d1fae5; color: #059669; } 
-.status-badge.Передано { background-color: #ede9fe; color: #7c3aed; } 
-.status-badge.Відхилено { background-color: #fee2e2; color: #dc2626; } 
+.status-badge.Нова {
+    background-color: #eff6ff;
+    color: #2563eb;
+}
 
-/* --- УЛЮБЛЕНЦІ --- */
+.status-badge.Розглядається {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-badge.Схвалено {
+    background-color: #d1fae5;
+    color: #059669;
+}
+
+.status-badge.Передано {
+    background-color: #ede9fe;
+    color: #7c3aed;
+}
+
+.status-badge.Відхилено {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+
 .profile-favorites-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: 25px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 20px;
 }
 
 .fav-profile-card {
-    border: 1px solid #e2e8f0;
-    border-radius: 16px;
-    padding: 15px;
+    border: 2px solid #6847DD;
+    border-radius: 12px;
+    padding: 10px;
     text-align: center;
     background-color: white;
     transition: all 0.3s ease;
-    position: relative; /* Додано для правильного позиціонування хрестика */
+    position: relative;
 }
 
 .fav-profile-card:hover {
@@ -462,10 +510,10 @@
 
 .fav-profile-card img {
     width: 100%;
-    height: 140px;
+    height: 120px;
     object-fit: cover;
-    border-radius: 12px;
-    margin-bottom: 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
 }
 
 .fav-profile-card h4 {
@@ -475,7 +523,7 @@
     font-size: 18px;
 }
 
-/* 👇 СТИЛІ ІКОНКИ ВИДАЛЕННЯ З ОБРАНОГО */
+
 .remove-favorite-icon {
     position: absolute;
     top: -8px;
@@ -492,9 +540,9 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     transition: all 0.2s ease;
-    opacity: 0; 
+    opacity: 0;
 }
 
 .fav-profile-card:hover .remove-favorite-icon {
@@ -507,7 +555,7 @@
     transform: scale(1.1);
 }
 
-/* 👇 СТИЛІ НОВОЇ КНОПКИ ТА ТЕКСТУ ПІД ОБРАНИМ */
+
 .success-favorites-text {
     color: #333;
     font-size: 16px;
@@ -533,26 +581,29 @@
     box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
 
-/* --- ІНШЕ --- */
+
 .badge {
-    background-color: #ef4444;
+    background-color: #ff4d4d;
     color: white;
     font-size: 12px;
     padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 700;
+    border-radius: 10px;
+    margin-left: 10px;
 }
 
 .empty-message {
-    color: #718096;
+    color: #666;
     font-style: italic;
     font-size: 15px;
 }
 
-/* --- МОДАЛЬНЕ ВІКНО ДЕТАЛЕЙ ЗАЯВКИ --- */
+
 .profile-modal-overlay {
     position: fixed;
-    top: 0; left: 0; width: 100%; height: 100%;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(3px);
     display: flex;
@@ -571,13 +622,23 @@
     overflow-y: auto;
 }
 
-.app-details-modal::-webkit-scrollbar { width: 6px; }
-.app-details-modal::-webkit-scrollbar-track { background: transparent; }
-.app-details-modal::-webkit-scrollbar-thumb { background: #d4c5f9; border-radius: 10px; }
+.app-details-modal::-webkit-scrollbar {
+    width: 6px;
+}
+
+.app-details-modal::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.app-details-modal::-webkit-scrollbar-thumb {
+    background: #d4c5f9;
+    border-radius: 10px;
+}
 
 .profile-close-btn {
     position: absolute;
-    top: 20px; right: 25px;
+    top: 20px;
+    right: 25px;
     font-size: 30px;
     color: #a0aec0;
     cursor: pointer;
@@ -644,47 +705,142 @@
     font-size: 14px;
     line-height: 1.5;
     color: #4a5568;
-    white-space: pre-line; 
+    white-space: pre-line;
 }
 
-/* --- АДАПТИВНІСТЬ --- */
+
 @media (max-width: 900px) {
-    .profile-container { flex-direction: column; }
-    .profile-sidebar { width: 100%; padding-bottom: 25px; }
-    .profile-sidebar-banner { height: 120px; }
-    .profile-avatar-large { width: 120px; height: 120px; }
-    .profile-avatar-section { margin-top: -60px; }
-    .profile-content-area { padding: 30px 25px; }
-    .application-card { flex-direction: column; align-items: flex-start; gap: 15px; }
-    .app-status { align-self: flex-start; }
+    .profile-container {
+        flex-direction: column;
+    }
+
+    .profile-sidebar {
+        width: 100%;
+        padding-bottom: 25px;
+    }
+
+    .profile-sidebar-banner {
+        height: 120px;
+    }
+
+    .profile-avatar-large {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-avatar-section {
+        margin-top: -60px;
+    }
+
+    .profile-content-area {
+        padding: 30px 25px;
+    }
+
+    .application-card {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+
+    .app-status {
+        align-self: flex-start;
+    }
 }
 
-/* =========================================
-   ДОДАТКОВІ АНІМАЦІЇ ДЛЯ МОДАЛЬНИХ ВІКОН
-   ========================================= */
+@media (max-width: 480px) {
+    .profile-page {
+        padding: 30px 4%;
+    }
 
-/* Анімація зникнення фону */
+    .profile-content-area {
+        padding: 20px 16px;
+    }
+
+    .profile-avatar-large {
+        width: 90px;
+        height: 90px;
+    }
+
+    .profile-sidebar-banner {
+        height: 90px;
+    }
+
+    .profile-avatar-section {
+        margin-top: -45px;
+    }
+
+    .profile-name {
+        font-size: 20px;
+    }
+
+    .profile-tab-content h3 {
+        font-size: 22px;
+        margin-bottom: 20px;
+    }
+
+    .app-card-left {
+        gap: 14px;
+    }
+
+    .app-pet-image {
+        width: 64px;
+        height: 64px;
+    }
+
+    .app-pet-name span {
+        font-size: 16px;
+    }
+
+    .app-details-modal {
+        padding: 22px !important;
+    }
+
+    .detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .profile-favorites-grid {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+    }
+}
+
+
 .profile-modal-overlay.closing {
     animation: fadeOutModal 0.3s forwards;
 }
 
-/* Анімація зникнення вікна */
+
 .modal-content.closing {
     animation: animateclose 0.3s forwards;
 }
 
 @keyframes animateclose {
-    from { transform: scale(1); opacity: 1; }
-    to { transform: scale(0.9); opacity: 0; }
+    from {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    to {
+        transform: scale(0.9);
+        opacity: 0;
+    }
 }
 
 @keyframes fadeOutModal {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 .empty-link-purple {
-    color: #6847DD; 
+    color: #6847DD;
     font-weight: 700;
     text-decoration: none;
     position: relative;
@@ -692,6 +848,6 @@
 }
 
 .empty-link-purple:hover {
-    color: #4A148C; 
-    text-decoration: underline; 
+    color: #4A148C;
+    text-decoration: underline;
 }

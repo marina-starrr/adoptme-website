@@ -1,6 +1,3 @@
-/* =========================================
-   ОСНОВНИЙ ФУТЕР
-   ========================================= */
 .footer {
     width: 100%;
     height: 80px;
@@ -9,7 +6,7 @@
     align-items: center;
     justify-content: center;
     position: relative;
-    margin-top: 0px; 
+    margin-top: 0px;
 }
 
 .footer-content {
@@ -27,8 +24,9 @@
 }
 
 .logo-img-footer {
-    width: 197px;
-    height: 73px; /* Додано px для правильної роботи */
+    width: clamp(120px, 20vw, 197px);
+    height: auto;
+    aspect-ratio: 197 / 73;
 }
 
 .logo-text {
@@ -44,14 +42,14 @@
     font-weight: 700;
     color: var(--black);
     position: absolute;
-    bottom: 15px; 
+    bottom: 15px;
     left: 50%;
     transform: translateX(-50%);
 }
 
-/* =========================================
-   АДАПТИВНІСТЬ ДЛЯ ФУТЕРА (Media Queries)
-   ========================================= */
+
+
+
 @media (max-width: 768px) {
     .footer {
         height: auto;
@@ -59,21 +57,27 @@
         flex-direction: column;
         text-align: center;
     }
-    
+
     .footer-content {
         flex-direction: column;
         text-align: center;
         justify-content: center;
         gap: 20px;
     }
-    
+
     .footer-logo {
         flex-direction: column;
     }
-    
+
     .footer-copyright {
         position: static;
         transform: none;
         margin-top: 15px;
     }
 }
+
+@media (max-width: 360px) {
+    .footer-copyright {
+        font-size: 13px;
+    }
+} 
