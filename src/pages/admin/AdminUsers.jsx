@@ -4,6 +4,7 @@ import { supabase } from '../../supabaseClient';
 import './AdminUsers.css';
 import { useToast } from '../../context/ToastContext';
 
+// Універсальний компонент випадаючого списку
 function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -64,6 +65,7 @@ function AdminUsers() {
     const [userToDelete, setUserToDelete] = useState(null);
     const [isModalClosing, setIsModalClosing] = useState(false);
 
+    // Стан для кнопки "ока"
     const [showPassword, setShowPassword] = useState(false);
 
     const initialFormState = {
@@ -107,7 +109,7 @@ function AdminUsers() {
         setTimeout(() => {
             setIsModalOpen(false);
             setIsModalClosing(false);
-            setShowPassword(false);
+            setShowPassword(false); // Скидаємо стан "ока"
         }, 300);
     };
 
@@ -129,6 +131,7 @@ function AdminUsers() {
         setEditMode(true);
         setCurrentUserId(user.Id);
 
+        // Форматуємо телефон для відображення в інпуті
         let rawPhone = (user.Phone || '').replace(/\D/g, '');
         if (rawPhone.length > 0 && !rawPhone.startsWith('380')) rawPhone = '380' + rawPhone;
 
@@ -146,7 +149,7 @@ function AdminUsers() {
             Nickname: user.Nickname || '',
             FirstName: user.FirstName || '',
             LastName: user.LastName || '',
-            Phone: formattedPhone,
+            Phone: formattedPhone, // Записуємо форматований номер
             Email: user.Email || '',
             Password: user.Password || '',
             Role: user.Role || 'user',
@@ -181,7 +184,9 @@ function AdminUsers() {
         e.preventDefault();
         setIsSaving(true);
 
+        // --- БЛОК ВАЛІДАЦІЇ ---
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Перевіряємо тільки 10 цифр, бо 38 ми доклеїмо самі
         const rawPhoneDigits = userFormData.Phone.replace(/\D/g, '');
 
         if (!userFormData.Nickname.trim()) {
@@ -208,6 +213,7 @@ function AdminUsers() {
             showToast('❌ Будь ласка, введіть відповідь на секретне запитання!');
             setIsSaving(false); return;
         }
+        // --- КІНЕЦЬ ВАЛІДАЦІЇ ---
 
         try {
             if (editMode && userFormData.Role === 'user') {
@@ -221,6 +227,7 @@ function AdminUsers() {
 
             const dataToSave = {
                 ...userFormData,
+                // Додаємо 38 і чисті цифри
                 Phone: '38' + rawPhoneDigits,
                 SecretAnswer: userFormData.SecretAnswer.trim().toLowerCase()
             };

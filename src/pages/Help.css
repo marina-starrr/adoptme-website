@@ -1,3 +1,6 @@
+/* =========================================
+   ОСНОВНА СЕКЦІЯ ДОПОМОГИ
+   ========================================= */
 .help-section {
     width: 100%;
     padding: 20px 5% 80px;
@@ -13,6 +16,9 @@
     z-index: 2;
 }
 
+/* =========================================
+   ЗАГОЛОВОК І ВСТУП
+   ========================================= */
 .help-header {
     position: relative;
     width: min(732px, 100%);
@@ -66,6 +72,9 @@
     padding: 0 8px;
 }
 
+/* =========================================
+   БЛОК ВОЛОНТЕРСТВА
+   ========================================= */
 .volunteer-block {
     margin-bottom: 80px;
 }
@@ -153,6 +162,9 @@
     color: white;
 }
 
+/* =========================================
+   БЛОК ПОТРЕБ (GRID)
+   ========================================= */
 .needs-block {
     margin-bottom: 80px;
 }
@@ -208,7 +220,9 @@
     margin: 0;
 }
 
-
+/* =========================================
+   БЛОК FAQ (АКОРДЕОН)
+   ========================================= */
 .faq-block {
     max-width: 800px;
     margin: 0 auto;
@@ -290,6 +304,9 @@
     padding-top: 15px;
 }
 
+/* =========================================
+   МОДАЛЬНЕ ВІКНО "Анкета волонтера"
+   ========================================= */
 .help-modal-overlay {
     position: fixed;
     z-index: 10000;
@@ -304,6 +321,7 @@
     align-items: center;
     padding: 16px;
     box-sizing: border-box;
+    /* Анімація передана Framer Motion */
 }
 
 .help-modal-content {
@@ -316,17 +334,16 @@
     text-align: center;
     position: relative;
     max-height: 90vh;
-    overflow-y: auto;
+    overflow-y: auto; 
+    /* Анімація передана Framer Motion */
 }
 
 .help-modal-content::-webkit-scrollbar {
     width: 6px;
 }
-
 .help-modal-content::-webkit-scrollbar-track {
     background: transparent;
 }
-
 .help-modal-content::-webkit-scrollbar-thumb {
     background: #d4c5f9;
     border-radius: 10px;
@@ -376,6 +393,7 @@
     }
 }
 
+/* Форма волонтера */
 .volunteer-form {
     display: flex;
     flex-direction: column;
@@ -452,6 +470,7 @@
     box-shadow: 0 5px 15px rgba(104, 71, 221, 0.4);
 }
 
+/* Екран успіху */
 .success-message-container {
     padding: 20px 10px;
     display: flex;
@@ -496,6 +515,9 @@
     }
 }
 
+/* =========================================
+   УНІВЕРСАЛЬНІ КАСТОМНІ ВИПАДАЮЧІ СПИСКИ
+   ========================================= */
 .custom-dropdown {
     position: relative;
     width: 100%;
@@ -522,6 +544,7 @@
     text-align: left;
 }
 
+/* Коли список відкривається ВНИЗ (для 1 та 2 поля) */
 .dropdown-display.open-down {
     border-color: #6847DD;
     background-color: #fff;
@@ -529,6 +552,7 @@
     border-bottom-right-radius: 0;
 }
 
+/* Коли список відкривається ВГОРУ (для вибору тваринки) */
 .dropdown-display.open-up {
     border-color: #6847DD;
     background-color: #fff;
@@ -561,6 +585,7 @@
     z-index: 10;
 }
 
+/* Налаштування для списку, що падає ВНИЗ */
 .dropdown-list.down {
     top: 100%;
     border-top: none;
@@ -569,6 +594,7 @@
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
 }
 
+/* Налаштування для списку, що підіймається ВГОРУ */
 .dropdown-list.up {
     bottom: 100%;
     border-bottom: none;
@@ -594,24 +620,23 @@
     background-color: #faf8ff;
 }
 
+/* Кастомізація скролбару для всіх списків */
 .dropdown-list::-webkit-scrollbar {
     width: 6px;
 }
-
 .dropdown-list::-webkit-scrollbar-track {
     background: #faf8ff;
     border-radius: 10px;
 }
-
 .dropdown-list::-webkit-scrollbar-thumb {
     background: #d4c5f9;
     border-radius: 10px;
 }
-
 .dropdown-list::-webkit-scrollbar-thumb:hover {
     background: #6847DD;
 }
 
+/* Специфічні стилі для тваринок всередині універсального списку */
 .selected-pet-info,
 .pet-option-flex {
     display: flex;
@@ -634,6 +659,9 @@
     color: #6847DD;
 }
 
+/* =========================================
+   РОЗДІЛЮВАЧІ СЕКЦІЙ
+   ========================================= */
 .page-separator {
     display: flex;
     align-items: center;
@@ -662,6 +690,9 @@
     flex-shrink: 0;
 }
 
+/* =========================================
+   ДОДАТКОВИЙ БЛОК ПІСЛЯ FAQ
+   ========================================= */
 .faq-contact-prompt {
     margin-top: 30px;
     text-align: center;
@@ -689,6 +720,9 @@
     text-decoration: underline;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ (Media Queries)
+   ========================================= */
 @media (max-width: 1024px) {
     .help-section {
         padding: 20px 20px 70px;

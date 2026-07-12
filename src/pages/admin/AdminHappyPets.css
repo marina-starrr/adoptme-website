@@ -38,6 +38,7 @@
     outline: none;
 }
 
+/* ПРЕВ'Ю ФОТОГРАФІЙ */
 .image-preview-container {
     display: flex;
     flex-wrap: wrap;
@@ -87,6 +88,7 @@
     font-weight: bold;
 }
 
+/* КНОПКИ ДІЙ (Зберегти/Скасувати) */
 .form-actions {
     display: flex;
     gap: 15px;
@@ -127,6 +129,7 @@
     background: #e2e2f0;
 }
 
+/* ТАБЛИЦЯ */
 .table-img-preview {
     width: 60px;
     height: 60px;
@@ -154,6 +157,7 @@
     transform: scale(1.2);
 }
 
+/* Знайдіть цей блок і додайте .form-group select */
 .form-group input[type="text"],
 .form-group textarea,
 .form-group select {
@@ -164,8 +168,10 @@
     font-size: 15px;
     transition: border-color 0.3s;
     background-color: white;
+    /* Для select */
 }
 
+/* Знайдіть цей блок і додайте .form-group select:focus */
 .form-group input[type="text"]:focus,
 .form-group textarea:focus,
 .form-group select:focus {
@@ -173,6 +179,7 @@
     outline: none;
 }
 
+/* Кнопка вибору файлу */
 .custom-file-upload {
     display: inline-flex;
     align-items: center;
@@ -202,6 +209,7 @@
     font-size: 18px;
 }
 
+/* Статус завантаження */
 .upload-status {
     color: #6847DD;
     font-size: 14px;
@@ -209,6 +217,9 @@
     margin-left: 10px;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
 @media (max-width: 1024px) {
     .form-row {
         flex-direction: column;

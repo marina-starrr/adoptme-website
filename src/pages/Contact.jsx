@@ -1,65 +1,12 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import BackgroundPaws from '../components/BackgroundPaws';
 import './Contact.css';
 
 function Contact() {
-  return (
-    <>
-      <div className="contact-section">
-          <div className="contact-header">
-              <img src="/brush4.png" alt="Фон" className="header-brush" />
-              <h2 className="header-text">Зворотній зв'язок</h2>
-          </div>
-          
-          <div className="contact-images-container">
-              <img src="/catdog.png" alt="Call us" className="contact-image call-image" />
-              <img src="/line.png" alt="Line" className="contact-image line-image" />
-          </div>  
-          
-          <div className="contact-cards-container">
-              <div className="contact-card">
-                  <div className="inner-card">
-                      <div className="card-title-row">
-                          <img src="/tele.png" alt="Іконка телефону" className="card-icon" />
-                          <h3 className="card-title">Зателефонуйте нам</h3>
-                      </div>
-                      <p className="card-info">(+380) 98 532 32 52</p>
-                      <p className="card-info">(+380) 63 123 21 31</p>
-                  </div>
-              </div>
-              
-              <div className="contact-card">
-                  <div className="inner-card">
-                      <div className="card-title-row">
-                          <img src="/gps.png" alt="Іконка локації" className="card-icon" />
-                          <h3 className="card-title">Відвідайте нас</h3>
-                      </div>
-                      <p className="card-info">Житомир, вул. Покровська, 96</p>
-                      <p className="card-info">10031</p>
-                  </div>
-              </div>
-              
-              <div className="contact-card">
-                  <div className="inner-card">
-                      <div className="card-title-row">
-                          <img src="/sms.png" alt="Іконка листа" className="card-icon" />
-                          <h3 className="card-title">Напишіть нам</h3>
-                      </div>
-                      <p className="card-info">adoptme@gmail.com</p>
-                      <p className="card-info">meadopt@ukr.net</p>
-                  </div>
-              </div>
-              
-              <div className="contact-card">
-                  <div className="inner-card">
-                      <div className="card-title-row">
-                          <img src="/time.png" alt="Іконка годинника" className="card-icon" />
-                          <h3 className="card-title">Години роботи</h3>
-                      </div>
-                      <p className="card-info">Пн-Пт: 08:30 – 16:30</p>
-                      <p className="card-info">Сб-Нд: вихідний</p>
-                  </div>
-              </div>
-          </div>
-      </div>
+    return (
+        <>
+            <div className="contact-section">
 
                 <BackgroundPaws />
 
@@ -76,54 +23,60 @@ function Contact() {
                         </div>
 
                         <div className="contact-cards-container">
-                            <div className="contact-card">
-                                <div className="inner-card">
-                                    <div className="card-title-row">
-                                        <img src="/tele.png" alt="Іконка телефону" className="card-icon" />
-                                        <h3 className="card-title">Зателефонуйте нам</h3>
-                                    </div>
-                                    <p className="card-info">(+380) 98 232 65 75</p>
-                                    <p className="card-info">(+380) 99 789 89 74</p>
+                        {/* Картка 1 */}
+                        <div className="contact-card">
+                            <div className="inner-card">
+                                <div className="card-title-row">
+                                    <img src="/tele.png" alt="Іконка телефону" className="card-icon" />
+                                    <h3 className="card-title">Зателефонуйте нам</h3>
                                 </div>
+                                <p className="card-info">(+380) 98 232 65 75</p>
+                                <p className="card-info">(+380) 99 789 89 74</p>
                             </div>
+                        </div>
 
-                            <div className="contact-card">
-                                <div className="inner-card">
-                                    <div className="card-title-row">
-                                        <img src="/gps.png" alt="Іконка локації" className="card-icon" />
-                                        <h3 className="card-title">Відвідайте нас</h3>
-                                    </div>
-                                    <p className="card-info">Київ, вул. Політехнічна, 39</p>
-                                    <p className="card-info">10031</p>
+                        {/* Картка 2 */}
+                        <div className="contact-card">
+                            <div className="inner-card">
+                                <div className="card-title-row">
+                                    <img src="/gps.png" alt="Іконка локації" className="card-icon" />
+                                    <h3 className="card-title">Відвідайте нас</h3>
                                 </div>
+                                <p className="card-info">Київ, вул. Політехнічна, 39</p>
+                                <p className="card-info">10031</p>
                             </div>
+                        </div>
 
-                            <div className="contact-card">
-                                <div className="inner-card">
-                                    <div className="card-title-row">
-                                        <img src="/sms.png" alt="Іконка листа" className="card-icon" />
-                                        <h3 className="card-title">Напишіть нам</h3>
-                                    </div>
-                                    <p className="card-info">adoptme.support.ua@gmail.com</p>
-                                    <p className="card-info">adoptme.support.ua@ukr.net</p>
+                        {/* Картка 3 */}
+                        <div className="contact-card">
+                            <div className="inner-card">
+                                <div className="card-title-row">
+                                    <img src="/sms.png" alt="Іконка листа" className="card-icon" />
+                                    <h3 className="card-title">Напишіть нам</h3>
                                 </div>
+                                <p className="card-info">adoptme.support.ua@gmail.com</p>
+                                <p className="card-info">adoptme.support.ua@ukr.net</p>
                             </div>
+                        </div>
 
-                            <div className="contact-card">
-                                <div className="inner-card">
-                                    <div className="card-title-row">
-                                        <img src="/time.png" alt="Іконка годинника" className="card-icon" />
-                                        <h3 className="card-title">Години роботи</h3>
-                                    </div>
-                                    <p className="card-info">Пн-Сб: 08:30 – 16:30</p>
-                                    <p className="card-info">Нд: вихідний</p>
+                        {/* Картка 4 */}
+                        <div className="contact-card">
+                            <div className="inner-card">
+                                <div className="card-title-row">
+                                    <img src="/time.png" alt="Іконка годинника" className="card-icon" />
+                                    <h3 className="card-title">Години роботи</h3>
                                 </div>
+                                <p className="card-info">Пн-Сб: 08:30 – 16:30</p>
+                                <p className="card-info">Нд: вихідний</p>
                             </div>
+                        </div>
                         </div>
                     </div>
 
+                    {/* ОНОВЛЕНА СЕКЦІЯ: Карта (зліва) та Відео (справа) */}
                     <div className="location-media-container">
 
+                        {/* Ліва колонка: Карта */}
                         <div className="media-block">
                             <h3 className="section-subtitle">Як нас знайти</h3>
                             <iframe
@@ -136,9 +89,11 @@ function Contact() {
                             ></iframe>
                         </div>
 
+                        {/* Права колонка: Відео */}
                         <div className="media-block">
                             <h3 className="section-subtitle">Серце нашого притулку</h3>
 
+                            {/* Варіант 1: Локальне відео (з папки public) */}
                             <video
                                 src="/videop.mp4"
                                 className="shelter-video"

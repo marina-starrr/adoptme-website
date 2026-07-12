@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import './Login.css';
-import { useToast } from '../context/ToastContext';
+import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
 function Register() {
   const [nickname, setNickname] = useState('');
@@ -22,7 +22,7 @@ function Register() {
 
   const navigate = useNavigate();
   const { login } = useAuth();
-  const { showToast } = useToast();
+  const { showToast } = useToast(); // 👈 Підключаємо функцію з контексту
 
   const handlePhoneChange = (e) => {
     const rawDigits = e.target.value.replace(/\D/g, '');
@@ -42,6 +42,7 @@ function Register() {
   const handleRegister = async (e) => {
     e.preventDefault();
 
+    // 1. Додаємо перевірку формату email (Regex)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       showToast('❌ Будь ласка, введіть коректну адресу електронної пошти!');
@@ -66,8 +67,10 @@ function Register() {
     try {
       const cleanedNickname = nickname.trim();
       const cleanedEmail = email.trim();
+      // Очищаємо телефон від дужок, плюсів та пробілів
       const cleanedPhone = phone.replace(/\D/g, '');
 
+      // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ
       const { data: existingUsers, error: checkError } = await supabase
         .from('Users')
         .select('Nickname, Email, Phone')
@@ -85,6 +88,7 @@ function Register() {
         return;
       }
 
+      // 2. РЕЄСТРАЦІЯ
       const { error: insertError } = await supabase
         .from('Users')
         .insert([
@@ -106,6 +110,7 @@ function Register() {
         return;
       }
 
+      // 3. УСПІШНИЙ ВХІД
       localStorage.setItem('userNickname', cleanedNickname);
       localStorage.setItem('userRole', 'user');
       login();

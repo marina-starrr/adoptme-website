@@ -102,17 +102,21 @@
     opacity: 0.5;
 }
 
+/* =========================================
+   HERO СЕКЦІЯ (ГОЛОВНИЙ ЕКРАН)
+   ========================================= */
 .hero {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 900px;
-    padding: 20px 5%;
+    gap: 40px;
+    min-height: 700px;
+    padding: 60px 5%;
     background-color: transparent;
-    overflow: hidden;
     z-index: 1;
-    flex: 1; /* Для коректного притискання футера */
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .hero-left {
@@ -123,31 +127,31 @@
     align-items: flex-start;
     position: relative;
     z-index: 2;
+    max-width: 650px;
 }
 
-/* =========================================
-   ЗАКЛИК ДО ДІЇ (CALL TO ACTION)
-   ========================================= */
 .call-to-action-container {
     position: relative;
-    margin-left: -60px;
-    right: -90px;
+    width: 110%;
+    height: 300px;
+    transform: translateX(-40px);
     z-index: 2;
 }
 
 .call-to-action {
     color: var(--black);
-    padding: 80px 70px;
+    padding: 40px 20px;
     border-radius: 15px;
     width: 100%;
-    max-width: 700px;
     min-height: 350px;
+    bottom: 45px;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
-    font-size: 50px;
+    font-size: clamp(32px, 4vw, 50px);
     font-weight: 700;
+    line-height: 1.3;
     position: relative;
     z-index: 3;
     transition: all 0.3s ease;
@@ -157,6 +161,7 @@
 .cta-main-text {
     position: relative;
     z-index: 5;
+    /* Щоб текст 100% був поверх лапки, якщо вони торкнуться */
 }
 
 .call-to-action::before {
@@ -167,49 +172,52 @@
     width: 100%;
     height: 100%;
     background-image: url('/brush01.png');
-    background-size: cover;
+    background-size: 100% 100%;
     background-position: center;
+    background-repeat: no-repeat;
     opacity: 0.7;
     z-index: -1;
 }
 
+/* =========================================
+   МИГОТЛИВА ЛАПКА (АНІМАЦІЯ)
+   ========================================= */
 .blinking-paw {
-    width: 420px; 
-    height: 420px;
+    display: block !important;
+    width: 350px;
+    height: 350px;
     background-image: url('/brushlapka.png');
     background-size: contain;
     background-repeat: no-repeat;
     position: absolute;
     bottom: -200px;
     left: -70px;
+    /* Висуваємо вліво, щоб не перекривала текст */
     pointer-events: none;
     animation: neon-pulse 1.2s infinite alternate;
     z-index: 4;
+    /* Лапка під текстом, але над фоном */
 }
 
 @keyframes neon-pulse {
-    0% { 
-        filter: drop-shadow(0 0 2px rgba(142, 112, 253, 0.3)); 
-        opacity: 0.85; 
+    0% {
+        filter: drop-shadow(0 0 2px rgba(142, 112, 253, 0.3));
+        opacity: 0.85;
     }
-    100% { 
-        filter: drop-shadow(0 0 12px rgba(142, 112, 253, 0.9)) 
-                drop-shadow(0 0 25px rgba(142, 112, 253, 0.6)); 
-        opacity: 1; 
+
+    100% {
+        filter: drop-shadow(0 0 12px rgba(142, 112, 253, 0.9)) drop-shadow(0 0 25px rgba(142, 112, 253, 0.6));
+        opacity: 1;
     }
 }
 
-/* =========================================
-   СТАТИСТИКА
-   ========================================= */
 .stats-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    column-gap: 50px;
-    row-gap: 30px;
-    margin-top: 50px;
-    max-width: 700px;
-    margin-left: 150px;
+    gap: 30px;
+    margin-top: 40px;
+    width: 100%;
+    margin-left: 10%;
     z-index: 2;
 }
 
@@ -220,14 +228,14 @@
 }
 
 .stat-text {
-    font-size: 24px;
+    font-size: clamp(16px, 2vw, 24px);
     font-weight: 700;
     color: var(--black);
     order: 1;
 }
 
 .stat-number {
-    font-size: 64px;
+    font-size: clamp(40px, 5vw, 64px);
     font-weight: 700;
     color: var(--purple-dark);
     margin-bottom: 5px;
@@ -238,46 +246,42 @@
     grid-column: span 2;
 }
 
-/* =========================================
-   СЛАЙДЕР (HERO RIGHT)
-   ========================================= */
 .hero-right {
     flex: 1;
     display: flex;
-    justify-content: center;
+    justify-content: flex-end;
     align-items: center;
     position: relative;
     z-index: 2;
+    max-width: 500px;
+    width: 100%;
 }
 
-/* =========================================
-   СЛАЙДЕР (HERO RIGHT)
-   ========================================= */
 .image-slider {
     position: relative;
-    width: 454px;
-    height: 614px;
+    width: 100%;
+    max-width: 454px;
+    aspect-ratio: 454 / 614;
     border-radius: 20px;
     overflow: hidden;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
     z-index: 5;
-    background-color: #f5f5f5; /* Легкий фон, поки картинка завантажується */
+    background-color: #f5f5f5;
 }
 
 .slider-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    position: absolute; /* Ставимо всі картинки одна на одну */
+    position: absolute;
     top: 0;
     left: 0;
-    opacity: 0; /* Робимо всі картинки невидимими */
-    transition: opacity 0.8s ease-in-out; /* 👈 МАГІЯ ПЛАВНОСТІ (0.8 секунди) */
+    opacity: 0;
+    transition: opacity 0.6s ease-in-out;
 }
 
-/* Клас для поточної картинки */
 .slider-image.active {
-    opacity: 1; /* Робимо видимою тільки активну картинку */
+    opacity: 1;
 }
 
 .slider-nav {
@@ -300,11 +304,16 @@
     transition: background-color 0.3s ease;
 }
 
-.slider-nav.prev { left: 20px; }
-.slider-nav.next { right: 20px; }
+.slider-nav.prev {
+    left: 15px;
+}
+
+.slider-nav.next {
+    right: 15px;
+}
 
 .slider-nav:hover {
-    background-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.8);
     color: #000;
 }
 
@@ -318,11 +327,14 @@
     border-radius: 10px;
     text-align: center;
     font-weight: 500;
-    font-size: 18px;
+    font-size: clamp(14px, 2vw, 18px);
     color: var(--text-color);
     z-index: 6;
 }
 
+/* =========================================
+   ІНШІ СЕКЦІЇ (НОВИНКИ / ЩАСЛИВЧИКИ)
+   ========================================= */
 .section-header {
     text-align: center;
     margin-bottom: 40px;
@@ -712,62 +724,83 @@
     text-decoration: underline;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ ВСЬОГО САЙТУ
+   ========================================= */
 @media (max-width: 1200px) {
     .hero {
-        height: auto;
         flex-direction: column;
         padding: 40px 5%;
+        text-align: center;
+        min-height: auto;
     }
-    .hero-left, .hero-right {
-        width: 100%;
-        justify-content: center;
+
+    .hero-left {
+        max-width: 100%;
+        margin-bottom: 40px;
         align-items: center;
     }
+
+    .hero-right {
+        max-width: 100%;
+        justify-content: center;
+    }
+
+    .call-to-action {
+        width: 150%;
+        left: -100px;
+    }
+
     .call-to-action-container {
-        margin-left: 0;
-        right: 0;
-        width: 100%;
+        transform: translateX(0);
         display: flex;
         justify-content: center;
-    } 
+        width: 100%;
+    }
+
     .stats-container {
         margin-left: 0;
         justify-content: center;
     }
-}
 
-@media (max-width: 1024px) {
-    .call-to-action {
-        font-size: 40px;
-        padding: 60px 50px;
-        max-width: 90%;
-    }
-    .stat-number { font-size: 48px; }
-    .stat-text { font-size: 20px; }
-    .image-slider {
-        width: 400px;
-        height: 540px;
+    .blinking-paw {
+        width: 300px;
+        height: 300px;
+        bottom: -170px;
+        left: -60px;
     }
 }
 
 @media (max-width: 768px) {
-    .call-to-action {
-        font-size: 30px;
-        padding: 40px 30px;
-        min-height: 250px;
-    }
     .stats-container {
         grid-template-columns: 1fr;
         gap: 20px;
     }
-    .stats-full-width { grid-column: 1; }
-    .stat-number { font-size: 36px; }
-    .stat-text { font-size: 18px; }
-    .image-slider {
-        width: 100%;
-        height: 400px;
+
+    .stats-full-width {
+        grid-column: 1;
     }
-    .blinking-paw { display: none; } /* Приховуємо лапку на малих екранах */
+
+    .blinking-paw {
+        width: 220px;
+        height: 220px;
+        bottom: -100px;
+        left: -30px;
+    }
+
+    .brush-title-container {
+        background-size: 100% 100%;
+        min-height: auto;
+        padding: 30px 15px;
+    }
+
+    .news-pets-grid {
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    }
+
+    .lucky-card {
+        width: 320px;
+    }
 }
 
 @media (max-width: 480px) {
@@ -776,6 +809,7 @@
         min-height: 200px;
         top: 50px;
         left: -80px;
+        /* На телефонах можемо додатково зменшити шрифт, щоб точно влізло у 2 рядки */
         font-size: clamp(24px, 7vw, 32px);
     }
 
@@ -822,12 +856,12 @@ footer,
 }
 
 .lucky-name-link {
-    color: #21064A;
+    color: #21064A; /* Колір як у h3 */
     text-decoration: none;
     transition: color 0.2s ease;
 }
 
 .lucky-name-link:hover {
-    color: #6847DD;
+    color: #6847DD; /* Або будь-який інший колір для акценту */
     text-decoration: underline;
 }

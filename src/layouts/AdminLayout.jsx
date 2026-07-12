@@ -33,6 +33,7 @@ function AdminLayout() {
     }, [location, showToast]);
 
     useEffect(() => {
+        // Підрахунок нових заявок на прихисток/волонтерство
         const fetchNewRequestsCount = async () => {
             try {
                 const { count, error } = await supabase
@@ -46,6 +47,7 @@ function AdminLayout() {
             }
         };
 
+        // 👇 Підрахунок нових сповіщень про лікування
         const fetchNewTreatmentCount = async () => {
             try {
                 const { count, error } = await supabase
@@ -62,6 +64,7 @@ function AdminLayout() {
         fetchNewRequestsCount();
         fetchNewTreatmentCount();
 
+        // Підписка на зміни в обох таблицях
         const subscriptionRequests = supabase
             .channel('public:AdoptionRequests')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'AdoptionRequests' }, fetchNewRequestsCount)
@@ -125,6 +128,7 @@ function AdminLayout() {
                 )}
 
                 <nav className={`admin-nav ${isMenuOpen ? 'open' : ''}`}>
+                    {/* Заявки */}
                     <a
                         href="/admin/adoptions"
                         className={`admin-nav-link has-badge ${location.pathname === '/admin/adoptions' ? 'active' : ''}`}
@@ -136,6 +140,7 @@ function AdminLayout() {
                         )}
                     </a>
 
+                    {/* Сповіщення */}
                     <a
                         href="/admin/notifications"
                         className={`admin-nav-link has-badge ${location.pathname === '/admin/notifications' ? 'active' : ''}`}
@@ -147,6 +152,7 @@ function AdminLayout() {
                         )}
                     </a>
 
+                    {/* Відгуки */}
                     <a
                         href="/admin/reviews"
                         className={`admin-nav-link ${location.pathname === '/admin/reviews' ? 'active' : ''}`}
@@ -155,6 +161,7 @@ function AdminLayout() {
                         Відгуки
                     </a>
 
+                    {/* Тварини */}
                     <a
                         href="/admin/pets"
                         className={`admin-nav-link ${location.pathname === '/admin/pets' ? 'active' : ''}`}
@@ -163,6 +170,7 @@ function AdminLayout() {
                         Тварини
                     </a>
 
+                    {/* Користувачі */}
                     <a
                         href="/admin/users"
                         className={`admin-nav-link ${location.pathname === '/admin/users' ? 'active' : ''}`}
@@ -171,6 +179,7 @@ function AdminLayout() {
                         Користувачі
                     </a>
 
+                    {/* Щасливчики */}
                     <a
                         href="/admin/happy-pets"
                         className={`admin-nav-link ${location.pathname === '/admin/happy-pets' ? 'active' : ''}`}

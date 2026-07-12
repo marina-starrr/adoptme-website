@@ -1,3 +1,6 @@
+/* =========================================
+   КАРТКА ТВАРИНКИ (PetCard)
+   ========================================= */
 .pet-card {
     background-color: var(--white);
     border-radius: 20px;
@@ -9,14 +12,17 @@
     position: relative;
     transition: transform 0.3s ease;
     border: 3px solid #6847DD;
-    width: 100%;
-    height: 100%;
+    width: 100%;        
+    height: 100%; /* ДОДАНО: щоб картка тягнулася на всю висоту */
 }
 
 .pet-card:hover {
     transform: translateY(-10px);
 }
 
+/* =========================================
+   ВЕРХНЯ ЧАСТИНА КАРТКИ (ФОТО ТА ІМ'Я)
+   ========================================= */
 .pet-card-image-container {
     width: 100%;
     height: 250px;
@@ -34,9 +40,9 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 20%;
+    object-position: center 20%; 
     display: block;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease; 
 }
 
 .pet-name {
@@ -44,16 +50,16 @@
     font-weight: 800;
     color: var(--white, #ffffff);
     position: absolute;
-    bottom: 15px;
-    right: 15px;
+    bottom: 15px; 
+    right: 15px;  
     top: auto;
     left: auto;
     z-index: 2;
     margin: 0;
-    text-shadow:
-        1px 1px 4px rgba(0, 0, 0, 0.8),
-        0px 0px 5px rgba(0, 0, 0, 0.6);
-    pointer-events: none;
+    text-shadow: 
+      1px 1px 4px rgba(0, 0, 0, 0.8), 
+      0px 0px 5px rgba(0, 0, 0, 0.6);
+    pointer-events: none; 
 }
 
 .action-icon {
@@ -75,18 +81,21 @@
     transform: scale(0.9);
 }
 
+/* =========================================
+   НИЖНЯ ЧАСТИНА КАРТКИ (ІНФОРМАЦІЯ)
+   ========================================= */
 .pet-card-content {
     padding: 20px;
     display: flex;
     flex-direction: column;
     background: linear-gradient(to bottom, #805CFF, #4024A4);
     color: var(--white);
-    justify-content: flex-start;
+    justify-content: flex-start; /* ЗМІНЕНО: щоб контент йшов природно зверху вниз */
     position: relative;
     padding-top: 50px;
     min-height: 120px;
-    padding-bottom: 20px;
-    flex-grow: 1;
+    padding-bottom: 20px; 
+    flex-grow: 1; /* ДОДАНО: щоб контент заповнював вільний простір картки */
 }
 
 .pet-info-row {
@@ -118,17 +127,17 @@
 
 .pet-info-chatacter {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: wrap;      
+    gap: 6px;             
     margin-top: 10px;
-    margin-bottom: 15px;
+    margin-bottom: 15px; /* Збільшено відступ до кнопки */
     font-size: 16px;
     font-weight: bold;
     color: white;
 }
 
 .pet-tag-pill {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.2); 
     padding: 2px 8px;
     border-radius: 12px;
     font-size: 13px;
@@ -137,13 +146,15 @@
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-
+/* =========================================
+   КНОПКА "ДЕТАЛЬНІШЕ"
+   ========================================= */
 .pet-details-btn {
     display: block;
-    margin-top: auto;
+    margin-top: auto; /* ДОДАНО: завжди притискає кнопку до низу! */
     padding: 10px 0;
     background-color: var(--white, #ffffff);
-    color: #6847DD;
+    color: #6847DD; 
     text-align: center;
     border-radius: 25px;
     text-decoration: none;
@@ -155,16 +166,19 @@
 }
 
 .pet-details-btn:hover {
-    background-color: #f0ebff;
+    background-color: #f0ebff; 
     transform: translateY(-3px);
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
 }
 
+/* =========================================
+   БЕЙДЖІ СТАТУСУ ТВАРИНКИ
+   ========================================= */
 .pet-status-badge {
     position: absolute;
     top: 15px;
     left: 15px;
-    max-width: calc(100% - 60px);
+    max-width: calc(100% - 60px); 
     padding: 6px 12px;
     border-radius: 12px;
     z-index: 3;
@@ -185,52 +199,33 @@
 .badge-text {
     font-size: 11px;
     font-weight: 700;
-    white-space: normal !important;
+    white-space: normal !important; 
     word-break: break-word;
     line-height: 1.2;
     text-align: left;
 }
 
-.status-looking {
-    background: rgba(76, 175, 80, 0.85);
-    color: white;
-}
+.status-looking { background: rgba(76, 175, 80, 0.85); color: white; }
+.status-special { background: rgba(255, 152, 0, 0.85); color: white; }
+.status-treatment { background: rgba(233, 30, 99, 0.85); color: white; }
+.status-home { background: rgba(33, 150, 243, 0.85); color: white; }
+.status-died { background: rgba(45, 45, 45, 0.85); color: white; }
 
-.status-special {
-    background: rgba(255, 152, 0, 0.85);
-    color: white;
-}
-
-.status-treatment {
-    background: rgba(233, 30, 99, 0.85);
-    color: white;
-}
-
-.status-home {
-    background: rgba(33, 150, 243, 0.85);
-    color: white;
-}
-
-.status-died {
-    background: rgba(45, 45, 45, 0.85);
-    color: white;
-}
-
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ КАРТКИ
+   ========================================= */
 @media (max-width: 768px) {
     .pet-card {
         margin-bottom: 20px;
         max-width: 100%;
     }
-
     .pet-card-content {
         min-height: 100px;
         padding-top: 40px;
     }
-
     .pet-info {
         font-size: 14px;
     }
-
     .pet-info-chatacter {
         font-size: 14px;
     }
@@ -242,16 +237,13 @@
         bottom: 10px;
         right: 10px;
     }
-
     .pet-info {
         font-size: 14px;
     }
-
     .pet-info img {
         width: 18px;
         height: 18px;
     }
-
     .pet-status-badge {
         font-size: 10px !important;
         padding: 4px 8px !important;

@@ -1,3 +1,4 @@
+/* --- ОСНОВНА СТРУКТУРА СТОРІНКИ --- */
 .loading-message {
   padding: 100px;
   text-align: center;
@@ -46,6 +47,7 @@
   position: relative;
 }
 
+/* --- ЛІВА КОЛОНКА (ГАЛЕРЕЯ) --- */
 .pet-gallery-section {
   flex: 1 1 350px;
   min-width: 0;
@@ -73,6 +75,7 @@
   display: block;
 }
 
+/* --- ВИПРАВЛЕНИЙ БЕЙДЖ --- */
 .pet-status-badge {
   position: absolute !important;
   top: 20px !important;
@@ -85,7 +88,7 @@
   border-radius: 20px !important;
   font-weight: bold !important;
   font-size: 0.95rem !important;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
   z-index: 10 !important;
   display: inline-flex !important;
   align-items: center !important;
@@ -93,30 +96,12 @@
   white-space: nowrap !important;
 }
 
-.status-looking {
-  background: #EFE6FF;
-  color: #6847DD;
-}
-
-.status-special {
-  background: #FFEBEE;
-  color: #D32F2F;
-}
-
-.status-treatment {
-  background: #FFF3E0;
-  color: #E65100;
-}
-
-.status-home {
-  background: #E8F5E9;
-  color: #2E7D32;
-}
-
-.status-died {
-  background: #F5F5F5;
-  color: #616161;
-}
+/* --- КОЛЬОРИ СТАТУСІВ --- */
+.status-looking { background: #EFE6FF; color: #6847DD; }
+.status-special { background: #FFEBEE; color: #D32F2F; }
+.status-treatment { background: #FFF3E0; color: #E65100; }
+.status-home { background: #E8F5E9; color: #2E7D32; }
+.status-died { background: #F5F5F5; color: #616161; }
 
 .gallery-thumbnails {
   display: flex;
@@ -151,6 +136,7 @@
   object-fit: cover;
 }
 
+/* --- ПРАВА КОЛОНКА (ІНФО) --- */
 .pet-info-section {
   flex: 1.5 1 400px;
   min-width: 0;
@@ -179,6 +165,7 @@
   word-wrap: break-word;
 }
 
+/* Характеристики (Сітка) - 3 в ряд */
 .pet-stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -221,12 +208,14 @@
   color: #333;
 }
 
+/* Заголовки секцій */
 .section-subtitle {
   font-size: 1.4rem;
   color: #4A148C;
   margin-bottom: 15px;
 }
 
+/* Теги */
 .pet-tags-block {
   margin-bottom: 30px;
 }
@@ -252,6 +241,7 @@
   font-style: italic;
 }
 
+/* Опис / Історія */
 .pet-story-block {
   margin-bottom: 35px;
 }
@@ -277,19 +267,20 @@
   text-align: right;
   font-size: 0.85rem;
   color: #8b7ca6;
-  margin-top: 8px !important;
+  margin-top: 8px !important; /* Відступ вниз ВІД поля */
   margin-bottom: 5px;
   font-weight: 500;
   padding-right: 5px;
   box-sizing: border-box;
-  clear: both;
+  clear: both; /* Гарантує, що він буде під усіма елементами */
   position: relative;
   z-index: 5;
 }
 
 .pet-story-block {
   margin-bottom: 35px;
-  position: relative;
+  /* Додано, щоб вміст (включаючи лічильник) не вилазив за межі */
+  position: relative; 
   width: 100%;
 }
 
@@ -307,8 +298,9 @@
   color: #49109f;
 }
 
+/* --- КНОПКИ ТА АДМІНКА --- */
 .action-area {
-  margin-top: auto;
+  margin-top: auto; /* Допомагає кнопці притискатися до низу колонки */
   width: 100%;
 }
 
@@ -375,9 +367,7 @@
   gap: 15px;
 }
 
-.btn-cancel,
-.btn-save,
-.btn-edit {
+.btn-cancel, .btn-save, .btn-edit {
   flex: 1;
   padding: 15px;
   border: none;
@@ -393,9 +383,7 @@
   color: #4a5568;
 }
 
-.btn-cancel:hover {
-  background: #cbd5e0;
-}
+.btn-cancel:hover { background: #cbd5e0; }
 
 .btn-save {
   background: #10b981;
@@ -403,10 +391,7 @@
   box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
 }
 
-.btn-save:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
-}
+.btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
 
 .btn-edit {
   background: #21064A;
@@ -414,10 +399,9 @@
   box-shadow: 0 8px 20px rgba(33, 6, 74, 0.3);
 }
 
-.btn-edit:hover {
-  background: #110229;
-}
+.btn-edit:hover { background: #110229; }
 
+/* --- СТИЛІ ІНЛАЙН-РЕДАГУВАННЯ --- */
 .editable-container {
   position: relative;
   display: flex;
@@ -473,14 +457,18 @@
   font-size: 1.15rem;
   line-height: 1.8;
   color: #444;
-  resize: none !important;
+  resize: none !important; /* Робить поле статичним (куточок зникне) */
   min-height: 150px;
-
+  
+  /* 👇 Нові правила, щоб суцільні букви "ВВВВ" переносилися: */
   word-wrap: break-word;
   word-break: break-word;
   overflow-wrap: break-word;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
 @media (max-width: 1024px) {
   .pet-details-layout {
     padding: 40px 4%;
@@ -624,7 +612,7 @@
     padding: 6px 14px !important;
   }
 
-  .pet-gallery-section {
+   .pet-gallery-section {
     flex: 1 1 100%;
     max-width: 70%;
   }
@@ -696,6 +684,7 @@
   }
 }
 
+/* --- ПАНЕЛЬ УПРАВЛІННЯ ФОТОГРАФІЯМИ (РЕЖИМ РЕДАГУВАННЯ) --- */
 .edit-photo-controls {
   position: absolute;
   bottom: 20px;
@@ -740,6 +729,7 @@
   background: #FFEBEE;
 }
 
+/* --- НОВІ КНОПКИ ТА ПОВІДОМЛЕННЯ ДЛЯ СТАТУСІВ --- */
 .btn-notify {
   width: 100%;
   padding: 20px;
@@ -775,6 +765,7 @@
   line-height: 1.5;
 }
 
+/* 👇 ДОДАТКОВІ СТИЛІ ДЛЯ МІНІАТЮР-ВІДЕОРОЛИКІВ */
 .thumbnail-video-container {
   position: relative;
   width: 100%;
@@ -809,3 +800,4 @@ textarea.form-control,
 textarea.input-desc {
   resize: none !important;
 }
+

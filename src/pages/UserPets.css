@@ -1,3 +1,4 @@
+/* ОСНОВНА СЕКЦІЯ ТВАРИН */
 .pets-section {
     padding: 60px 5%;
     background-color: transparent;
@@ -12,6 +13,7 @@
     color: #4A148C;
 }
 
+/* ЗАГОЛОВОК НА ПЛЯМІ (BRUSH) */
 .pets-title-container {
     width: 100%;
     max-width: 1024px;
@@ -31,6 +33,9 @@
     text-align: center;
 }
 
+/* =========================================
+   СТРУКТУРА КАТАЛОГУ (Сайдбар + Сітка)
+   ========================================= */
 .catalog-layout {
     display: flex;
     gap: 40px;
@@ -39,6 +44,9 @@
     align-items: flex-start;
 }
 
+/* =========================================
+   САЙДБАР З ФІЛЬТРАМИ
+   ========================================= */
 .catalog-sidebar {
     width: 280px;
     flex-shrink: 0;
@@ -53,6 +61,7 @@
     overflow-y: auto;
 }
 
+/* Кастомний скролбар для сайдбару */
 .catalog-sidebar::-webkit-scrollbar {
     width: 6px;
 }
@@ -107,6 +116,9 @@
     font-size: 14px;
 }
 
+/* =========================================
+   КАСТОМНИЙ ВИТОНЧЕНИЙ ВИПАДАЮЧИЙ СПИСОК
+   ========================================= */
 .custom-dropdown-container {
     position: relative;
     width: 100%;
@@ -221,6 +233,9 @@
     }
 }
 
+/* =========================================
+   ОСНОВНА ЗОНА (ПРАВА ЧАСТИНА)
+   ========================================= */
 .catalog-main {
     flex: 1;
     display: flex;
@@ -296,6 +311,7 @@
     font-size: 12px;
 }
 
+/* СІТКА */
 .pet-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); 
@@ -310,6 +326,7 @@
     height: 100%; 
 }
 
+/* ПОРОЖНІЙ РЕЗУЛЬТАТ ФІЛЬТРУВАННЯ */
 .empty-catalog {
     text-align: center;
     padding: 80px 20px;
@@ -346,6 +363,9 @@
     transform: translateY(-3px);
 }
 
+/* =========================================
+   СТИЛІ ПАГІНАЦІЇ (ПЕРЕМИКАЧА СТОРІНОК)
+   ========================================= */
 .pagination-container {
     display: flex;
     justify-content: center;
@@ -391,6 +411,9 @@
     cursor: not-allowed;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ
+   ========================================= */
 @media (max-width: 1200px) {
     .catalog-layout {
         gap: 28px;

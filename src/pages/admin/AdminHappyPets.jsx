@@ -4,6 +4,7 @@ import './AdminHappyPets.css';
 import { useToast } from '../../context/ToastContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
+// 👇 Універсальний компонент випадаючого списку додано сюди
 function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -280,6 +281,7 @@ function AdminHappyPets() {
         setFormData({ petId: '', userId: '', ownerName: '', homeDescription: '', images: [], showInLucky: true });
     };
 
+    // Підготовка даних для CustomDropdown
     const petOptions = availablePets.map(pet => ({
         value: pet.Id.toString(),
         label: `${pet.Name} (${pet.Status})`
@@ -297,6 +299,7 @@ function AdminHappyPets() {
                 Менеджер Щасливчиків
             </h2>
 
+            {/* ФОРМА */}
             <div className="admin-card">
                 <h3 style={{ marginTop: 0, color: '#49109f' }}>
                     {isEditing ? 'Редагувати історію' : 'Додати щасливчика (з існуючих тварин)'}
@@ -306,6 +309,7 @@ function AdminHappyPets() {
                     <div className="form-row">
                         <div className="form-group">
                             <label>Оберіть тваринку:</label>
+                            {/* 👇 Замінено на CustomDropdown */}
                             <CustomDropdown
                                 options={petOptions}
                                 value={formData.petId}
@@ -317,6 +321,7 @@ function AdminHappyPets() {
 
                         <div className="form-group">
                             <label>Оберіть користувача (Нова сім'я):</label>
+                            {/* 👇 Замінено на CustomDropdown */}
                             <CustomDropdown
                                 options={userOptions}
                                 value={formData.userId}
@@ -347,6 +352,7 @@ function AdminHappyPets() {
                     <div className="form-group">
                         <label>Фотографії (можна декілька):</label>
 
+                        {/* 👇 Кастомна кнопка замість стандартного input */}
                         <label className="custom-file-upload">
                             <span className="upload-icon">📷</span>
                             <span>{uploadingFiles ? 'Завантаження...' : 'Обрати фотографії'}</span>
@@ -381,6 +387,7 @@ function AdminHappyPets() {
                 </form>
             </div>
 
+            {/* СПИСОК ЩАСЛИВЧИКІВ */}
             <div className="admin-card">
                 <h3 style={{ marginTop: 0, color: '#49109f' }}>Список тваринок, що знайшли дім</h3>
                 <div className="admin-table-container">
@@ -436,6 +443,7 @@ function AdminHappyPets() {
                 </div>
             </div>
 
+            {/* ВІКНО ПІДТВЕРДЖЕННЯ ВИДАЛЕННЯ З ЧИСТИМ CSS */}
             {petToDelete && (
                 <div
                     className={`modal-overlay ${isModalClosing ? 'closing' : ''}`}

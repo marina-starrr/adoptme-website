@@ -6,8 +6,10 @@ import './AdminNotifications.css';
 function AdminNotifications() {
     const [notifications, setNotifications] = useState([]);
     const [loading, setLoading] = useState(true);
-
+    
+    // Стейт для модального вікна підтвердження видалення
     const [confirmDialog, setConfirmDialog] = useState(null);
+    // Стейт для керування плавною анімацією закриття
     const [isModalClosing, setIsModalClosing] = useState(false);
 
     const { showToast } = useToast();
@@ -22,7 +24,7 @@ function AdminNotifications() {
             .from('TreatmentNotifications')
             .select('*')
             .order('CreatedAt', { ascending: false });
-
+            
         if (error) {
             showToast('❌ Помилка завантаження сповіщень: ' + error.message);
         } else {
@@ -31,12 +33,13 @@ function AdminNotifications() {
         setLoading(false);
     }
 
+    // Універсальна функція для плавного закриття модалки
     const closeConfirmDialog = () => {
         setIsModalClosing(true);
         setTimeout(() => {
             setConfirmDialog(null);
             setIsModalClosing(false);
-        }, 300);
+        }, 300); // Чекаємо 300мс, поки відіграє CSS-анімація
     };
 
     const handleStatusChange = async (id, currentStatus) => {
@@ -59,9 +62,9 @@ function AdminNotifications() {
             message: 'Ви дійсно хочете назавжди видалити це сповіщення? Цю дію неможливо скасувати.',
             isDestructive: true,
             onConfirm: async () => {
-                closeConfirmDialog();
+                closeConfirmDialog(); // Плавно закриваємо
                 const { error } = await supabase.from('TreatmentNotifications').delete().eq('Id', id);
-
+                
                 if (!error) {
                     setNotifications(prev => prev.filter(n => n.Id !== id));
                     showToast('🗑️ Сповіщення успішно видалено!');
@@ -106,7 +109,7 @@ function AdminNotifications() {
                                         <td>@{n.UserNickname}</td>
                                         <td>{n.UserEmail || 'Не вказано'}</td>
                                         <td>
-                                            <span className={`pet-tag ${n.Status === 'Нова' ? 'status-special' : 'status-home'}`} style={{ fontSize: '13px', padding: '4px 10px' }}>
+                                            <span className={`pet-tag ${n.Status === 'Нова' ? 'status-special' : 'status-home'}`} style={{fontSize: '13px', padding: '4px 10px'}}>
                                                 {n.Status}
                                             </span>
                                         </td>
@@ -137,6 +140,7 @@ function AdminNotifications() {
                 </div>
             </div>
 
+            {/* НАШЕ КРАСИВЕ ВІКНО ПІДТВЕРДЖЕННЯ З АНІМАЦІЄЮ */}
             {confirmDialog && (
                 <div className={`modal-overlay ${isModalClosing ? 'closing' : ''}`} onClick={closeConfirmDialog} style={{ zIndex: 10000 }}>
                     <div className={`admin-modal confirm-modal ${isModalClosing ? 'closing' : ''}`} onClick={e => e.stopPropagation()}>
@@ -146,8 +150,8 @@ function AdminNotifications() {
                         <p className="confirm-text">{confirmDialog.message}</p>
                         <div className="confirm-buttons">
                             <button className="cancel-btn" onClick={closeConfirmDialog}>Скасувати</button>
-                            <button
-                                className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"}
+                            <button 
+                                className={confirmDialog.isDestructive ? "delete-confirm-btn" : "save-btn"} 
                                 onClick={confirmDialog.onConfirm}
                             >
                                 Так, видалити

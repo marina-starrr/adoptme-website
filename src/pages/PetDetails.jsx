@@ -1,11 +1,12 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react'; // 👈 Додано useRef
 import { supabase } from '../supabaseClient';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import './PetDetails.css';
 
+// 🌟 Компонент випадаючого списку
 function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -24,21 +25,21 @@ function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
 
   return (
     <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1 }}>
-      <div
-        className={`custom-dropdown-header ${isOpen ? 'open' : ''} inline-input`}
+      <div 
+        className={`custom-dropdown-header ${isOpen ? 'open' : ''} inline-input`} 
         onClick={() => !disabled && setIsOpen(!isOpen)}
         style={{ cursor: disabled ? 'default' : 'pointer' }}
       >
         <span>{selectedOption ? selectedOption.label : placeholder}</span>
         <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
       </div>
-
+      
       {isOpen && !disabled && (
         <div className="custom-dropdown-list-wrapper">
           <ul className="custom-dropdown-list">
             {options.map((opt) => (
-              <li
-                key={opt.value}
+              <li 
+                key={opt.value} 
                 className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
                 onClick={() => {
                   onChange(opt.value);
@@ -62,30 +63,39 @@ const isVideoFile = (urlOrName) => {
 };
 
 function PetDetails() {
-  const { id } = useParams(); // Отримуємо ID з URL
+  const { id } = useParams();
+  const location = useLocation();
   const [pet, setPet] = useState(null);
+  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+  const [isStoryExpanded, setIsStoryExpanded] = useState(false);
+
+  const [editableImages, setEditableImages] = useState([]);
+
+  const { userRole, userEmail } = useAuth();
+  const { showToast } = useToast();
+  const isAdminPath = location.pathname.includes('/admin/');
+
+  const getDbImages = (petData) => {
+    if (!petData) return [];
+    return petData.Images && petData.Images.length > 0
+      ? petData.Images
+      : (petData.ImageName ? [petData.ImageName] : []);
+  };
 
   useEffect(() => {
     async function fetchPet() {
       setLoading(true);
-      // Робимо запит до таблиці "Pets", де Id дорівнює параметру з URL
-      const { data, error } = await supabase
-        .from('Pets')
-        .select('*')
-        .eq('Id', id)
-        .single(); // Очікуємо лише один рядок
-
-      if (error) {
-        console.error("Помилка при завантаженні тваринки:", error.message);
-      } else {
-        setPet(data);
-      }
+      const { data, error } = await supabase.from('Pets').select('*').eq('Id', id).single();
+      if (!error) setPet(data);
       setLoading(false);
     }
-
     fetchPet();
-  }, [id]);
 
     if (isAdminPath) {
       supabase.from('Users').select('Id, FirstName, LastName, Nickname').then(({ data }) => {
@@ -185,7 +195,7 @@ function PetDetails() {
       if (finalData.Status !== 'Вже вдома') {
         finalData.OwnerId = null;
         finalData.OwnerName = null;
-        finalData.HomeDescription = null;
+        finalData.HomeDescription = null; 
         finalData.ShowInLucky = true;
       } else {
         finalData.ShowInLucky = finalData.ShowInLucky !== false;
@@ -202,7 +212,7 @@ function PetDetails() {
 
         const { data: favUsers } = await supabase
           .from('Favorites')
-          .select('*')
+          .select('*') 
           .eq('PetId', pet.Id);
 
         if (favUsers) {
@@ -302,32 +312,30 @@ function PetDetails() {
 
   const displayMedia = isEditing
     ? editableImages.map(img => ({
-      url: img.preview,
-      isVideo: img.isNew
-        ? (img.file?.type?.startsWith('video/') || isVideoFile(img.file?.name))
-        : isVideoFile(img.name)
-    }))
+        url: img.preview,
+        isVideo: img.isNew 
+            ? (img.file?.type?.startsWith('video/') || isVideoFile(img.file?.name)) 
+            : isVideoFile(img.name)
+      }))
     : getDbImages(pet).map(imgName => ({
-      url: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`,
-      isVideo: isVideoFile(imgName)
-    }));
+        url: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`,
+        isVideo: isVideoFile(imgName)
+      }));
 
   const safeActiveIndex = activeImageIndex >= displayMedia.length ? Math.max(0, displayMedia.length - 1) : activeImageIndex;
   const currentMedia = displayMedia[safeActiveIndex];
 
-  const rawStoryText = pet.Status === 'Вже вдома'
-    ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!")
+  const rawStoryText = pet.Status === 'Вже вдома' 
+    ? (pet.HomeDescription || "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!") 
     : (pet.Description || "Цей чудовий пухнастик дуже чекає на люблячу родину!");
-
+  
   const charLimit = 250;
   const isLongStory = rawStoryText.length > charLimit;
   const displayStoryText = (isLongStory && !isStoryExpanded) ? rawStoryText.substring(0, charLimit) + '...' : rawStoryText;
 
   return (
-    <div className="fade-view" style={{ padding: '100px 5%' }}>
-      <Link to="/pets" style={{ color: '#ff8fb1', textDecoration: 'none', fontWeight: 'bold' }}>
-        ← Назад до списку
-      </Link>
+    <div className={`pet-details-layout ${isAdminPath ? 'admin-mode' : ''}`}>
+      {!isAdminPath && <BackgroundPaws customClass="details-paws" />}
 
       <div className="pet-details-container">
         <Link to={isAdminPath ? "/admin/pets" : "/pets"} className="back-link">
@@ -339,14 +347,14 @@ function PetDetails() {
             <div className="main-image-wrapper">
               {displayMedia.length > 0 ? (
                 currentMedia.isVideo ? (
-                  <video
-                    src={currentMedia.url}
-                    controls
-                    autoPlay
-                    muted
-                    loop
+                  <video 
+                    src={currentMedia.url} 
+                    controls 
+                    autoPlay 
+                    muted 
+                    loop 
                     playsInline
-                    className="main-pet-image"
+                    className="main-pet-image" 
                   />
                 ) : (
                   <img src={currentMedia.url} alt={pet.Name} className="main-pet-image" />
@@ -419,11 +427,11 @@ function PetDetails() {
                   {(currentStatus === 'Вже вдома' || currentStatus === 'Не вдалось врятувати' || currentStatus === 'Заброньована' || currentStatus === 'Заброньовано') ? (
                     <div className="status-message-block">
                       <p>
-                        {currentStatus === 'Вже вдома'
-                          ? '🏡 Ця тваринка вже знайшла свою люблячу родину!'
+                        {currentStatus === 'Вже вдома' 
+                          ? '🏡 Ця тваринка вже знайшла свою люблячу родину!' 
                           : currentStatus === 'Не вдалось врятувати'
-                            ? '😞 На жаль, ця тваринка більше не з нами.'
-                            : '🔒 Ця тваринка вже заброньована іншою родиною!'}
+                          ? '😞 На жаль, ця тваринка більше не з нами.'
+                          : '🔒 Ця тваринка вже заброньована іншою родиною!'}
                       </p>
                     </div>
                   ) : currentStatus === 'На лікуванні' ? (
@@ -436,6 +444,7 @@ function PetDetails() {
             </div>
           </div>
 
+          {/* ПРАВА КОЛОНКА (Інформація) */}
           <div className="pet-info-section">
             <div className="pet-profile-header">
               {isEditing ? (
@@ -465,7 +474,7 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <CustomDropdown
-                      options={[{ value: 'Хлопчик', label: 'Хлопчик' }, { value: 'Дівчинка', label: 'Дівчинка' }]}
+                      options={[{value: 'Хлопчик', label: 'Хлопчик'}, {value: 'Дівчинка', label: 'Дівчинка'}]}
                       value={editFormData.Gender || 'Хлопчик'}
                       onChange={val => handleChange('Gender', val)}
                     />
@@ -479,9 +488,9 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <CustomDropdown
-                      options={['Безпородна', 'Британська', 'Шотландська', 'Мейн-кун', 'Сфінкс', 'Такса', 'Вівчарка', 'Лабрадор', 'Тер\'єр', 'Не вказано'].map(b => ({ value: b, label: b }))}
-                      value={editFormData.Breed || 'Безпородна'}
-                      onChange={val => handleChange('Breed', val)}
+                       options={['Безпородна', 'Британська', 'Шотландська', 'Мейн-кун', 'Сфінкс', 'Такса', 'Вівчарка', 'Лабрадор', 'Тер\'єр', 'Не вказано'].map(b => ({value: b, label: b}))}
+                       value={editFormData.Breed || 'Безпородна'}
+                       onChange={val => handleChange('Breed', val)}
                     />
                   ) : (pet.Breed || "Не вказано")}
                 </div>
@@ -493,9 +502,9 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <CustomDropdown
-                      options={[{ value: 'Маленький', label: 'Маленький' }, { value: 'Середній', label: 'Середній' }, { value: 'Великий', label: 'Великий' }]}
-                      value={editFormData.Size || 'Середній'}
-                      onChange={val => handleChange('Size', val)}
+                       options={[{value: 'Маленький', label: 'Маленький'}, {value: 'Середній', label: 'Середній'}, {value: 'Великий', label: 'Великий'}]}
+                       value={editFormData.Size || 'Середній'}
+                       onChange={val => handleChange('Size', val)}
                     />
                   ) : (pet.Size || "Середній")}
                 </div>
@@ -507,9 +516,9 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <CustomDropdown
-                      options={[{ value: 'Низький', label: 'Низький' }, { value: 'Середній', label: 'Середній' }, { value: 'Високий', label: 'Високий' }]}
-                      value={editFormData.EnergyLevel || 'Середній'}
-                      onChange={val => handleChange('EnergyLevel', val)}
+                       options={[{value: 'Низький', label: 'Низький'}, {value: 'Середній', label: 'Середній'}, {value: 'Високий', label: 'Високий'}]}
+                       value={editFormData.EnergyLevel || 'Середній'}
+                       onChange={val => handleChange('EnergyLevel', val)}
                     />
                   ) : (pet.EnergyLevel || "Середній")}
                 </div>
@@ -521,9 +530,9 @@ function PetDetails() {
                 <div className="stat-value">
                   {isEditing ? (
                     <CustomDropdown
-                      options={['М\'яско', 'Рибка', 'Сухий корм', 'Вологий корм', 'Паштет', 'Смаколики', 'Усе смачненьке'].map(f => ({ value: f, label: f }))}
-                      value={editFormData.FavoriteFood || "М'яско"}
-                      onChange={val => handleChange('FavoriteFood', val)}
+                       options={['М\'яско', 'Рибка', 'Сухий корм', 'Вологий корм', 'Паштет', 'Смаколики', 'Усе смачненьке'].map(f => ({value: f, label: f}))}
+                       value={editFormData.FavoriteFood || "М'яско"}
+                       onChange={val => handleChange('FavoriteFood', val)}
                     />
                   ) : (pet.FavoriteFood || "Усе смачненьке")}
                 </div>
@@ -538,7 +547,7 @@ function PetDetails() {
                   <>{pet.IsVaccinated ? '💉 Вакциновано' : '⚠️ Не вакциновано'}</>
                 )}
               </div>
-
+              
               <div style={{ background: '#FFF3E0', color: '#E65100', padding: '8px 15px', borderRadius: '20px', fontWeight: 'bold', fontSize: '14px' }}>
                 {isEditing ? (
                   <><input type="checkbox" checked={editFormData.NeedsTraining || false} onChange={e => handleChange('NeedsTraining', e.target.checked)} /> Потребує дресирування</>
@@ -557,11 +566,11 @@ function PetDetails() {
               {isEditing ? (
                 <>
                   <CustomDropdown
-                    options={['Дружелюбний до всіх', 'Любить дітей', 'Добрий/а до інших тварин', 'Обережний / Потребує часу'].map(f => ({ value: f, label: f }))}
-                    value={editFormData.Friendliness || 'Дружелюбний до всіх'}
-                    onChange={val => handleChange('Friendliness', val)}
+                     options={['Дружелюбний до всіх', 'Любить дітей', 'Добрий/а до інших тварин', 'Обережний / Потребує часу'].map(f => ({value: f, label: f}))}
+                     value={editFormData.Friendliness || 'Дружелюбний до всіх'}
+                     onChange={val => handleChange('Friendliness', val)}
                   />
-                  <div className="editable-container" style={{ marginTop: '10px' }}>
+                  <div className="editable-container" style={{marginTop: '10px'}}>
                     <input value={editFormData.Tags || ''} onChange={e => handleChange('Tags', e.target.value)} className="inline-input input-tags" placeholder="Введіть теги через кому або пробіл..." />
                   </div>
                 </>
@@ -581,10 +590,10 @@ function PetDetails() {
                     <h3 className="section-subtitle" style={{ fontSize: '15px' }}>📖 Опис історії та характеру в притулку:</h3>
                     <div className="story-content">
                       <div className="editable-container">
-                        <textarea
-                          value={editFormData.Description || ''}
-                          onChange={e => handleChange('Description', e.target.value)}
-                          className="inline-input input-desc"
+                        <textarea 
+                          value={editFormData.Description || ''} 
+                          onChange={e => handleChange('Description', e.target.value)} 
+                          className="inline-input input-desc" 
                           required
                           rows="4"
                           maxLength={700}
@@ -600,10 +609,10 @@ function PetDetails() {
                     <div style={{ background: '#fdfbfe', padding: '15px', borderRadius: '12px', border: '1px solid #d4cbf9' }}>
                       <h3 className="section-subtitle" style={{ color: '#6847DD', marginBottom: '10px', fontSize: '15px' }}>🏡 Історія успіху:</h3>
                       <div className="editable-container">
-                        <textarea
-                          value={editFormData.HomeDescription || ''}
-                          onChange={e => handleChange('HomeDescription', e.target.value)}
-                          className="inline-input input-desc"
+                        <textarea 
+                          value={editFormData.HomeDescription || ''} 
+                          onChange={e => handleChange('HomeDescription', e.target.value)} 
+                          className="inline-input input-desc" 
                           required
                           rows="4"
                           maxLength={700}
@@ -641,11 +650,11 @@ function PetDetails() {
                   {isEditing ? (
                     <>
                       <div className="editable-container">
-                        <textarea
-                          value={editFormData.MedicalNotes || ''}
-                          onChange={e => handleChange('MedicalNotes', e.target.value)}
-                          className="inline-input input-desc"
-                          placeholder="Медичні приписи..."
+                        <textarea 
+                          value={editFormData.MedicalNotes || ''} 
+                          onChange={e => handleChange('MedicalNotes', e.target.value)} 
+                          className="inline-input input-desc" 
+                          placeholder="Медичні приписи..." 
                           maxLength={300}
                           rows="3"
                         />
@@ -665,25 +674,25 @@ function PetDetails() {
               <div className="admin-extra-settings" style={{ marginTop: '20px' }}>
                 <div className="setting-row">
                   <label><strong>Статус:</strong></label>
-                  <CustomDropdown
+                  <CustomDropdown 
                     options={[
-                      { value: 'Шукає дім', label: 'Шукає дім' },
-                      { value: 'Особливий догляд', label: 'Особливий догляд' },
-                      { value: 'На лікуванні', label: 'На лікуванні' },
-                      { value: 'Заброньована', label: 'Заброньована' },
-                      { value: 'Вже вдома', label: 'Вже вдома' },
-                      { value: 'Не вдалось врятувати', label: 'Не вдалось врятувати' }
+                      {value: 'Шукає дім', label: 'Шукає дім'},
+                      {value: 'Особливий догляд', label: 'Особливий догляд'},
+                      {value: 'На лікуванні', label: 'На лікуванні'},
+                      {value: 'Заброньована', label: 'Заброньована'},
+                      {value: 'Вже вдома', label: 'Вже вдома'},
+                      {value: 'Не вдалось врятувати', label: 'Не вдалось врятувати'}
                     ]}
                     value={editFormData.Status || 'Шукає дім'}
                     onChange={val => {
-                      const newStatus = val;
-                      let updatedData = { ...editFormData, Status: newStatus };
-                      if (newStatus === 'Вже вдома') {
-                        if (!updatedData.HomeDescription) updatedData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
-                      } else {
-                        updatedData.HomeDescription = null;
-                      }
-                      setEditFormData(updatedData);
+                        const newStatus = val;
+                        let updatedData = { ...editFormData, Status: newStatus };
+                        if (newStatus === 'Вже вдома') {
+                            if (!updatedData.HomeDescription) updatedData.HomeDescription = "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!";
+                        } else {
+                            updatedData.HomeDescription = null;
+                        }
+                        setEditFormData(updatedData);
                     }}
                   />
                 </div>
@@ -693,15 +702,15 @@ function PetDetails() {
                     <div style={{ display: 'flex', alignItems: 'center' }}>
                       <label><strong>🏡 Власник:</strong></label>
                       <div style={{ marginLeft: '15px', color: '#2E7D32', fontWeight: 'bold', fontSize: '1.1rem' }}>
-                        {editFormData.OwnerName ? `👤 ${editFormData.OwnerName}` : "⏳ Автоматично призначиться при схваленні заявки"}
+                          {editFormData.OwnerName ? `👤 ${editFormData.OwnerName}` : "⏳ Автоматично призначиться при схваленні заявки"}
                       </div>
                     </div>
-
+                    
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: '5px' }}>
-                      <input
-                        type="checkbox"
+                      <input 
+                        type="checkbox" 
                         id="showInLuckyCheckbox"
-                        checked={editFormData.ShowInLucky !== false}
+                        checked={editFormData.ShowInLucky !== false} 
                         onChange={(e) => handleChange('ShowInLucky', e.target.checked)}
                         style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: '#10b981' }}
                       />

@@ -1,22 +1,37 @@
+/* =========================================
+   ОСНОВНА СЕКЦІЯ КОНТАКТІВ
+   ========================================= */
 .contact-section {
     width: 100%;
-    padding: 60px 5%;
+    padding: 20px 5% 60px;
     text-align: center;
-    background-color: var(--body-bg);
+    background-color: transparent;
     flex: 1;
+    position: relative;
+    box-sizing: border-box;
 }
 
+.contact-content {
+    position: relative;
+    z-index: 2;
+}
+
+/* =========================================
+   ЗАГОЛОВОК З ФОНОВИМ ПЕНЗЛИКОМ
+   ========================================= */
 .contact-header {
     position: relative;
-    width: 732px;
-    height: 188px;
-    margin: 0 auto 50px;
+    width: min(100%, 732px);
+    height: auto;
+    aspect-ratio: 732 / 188;
+    margin: 0 auto 20px;
 }
 
 .header-brush {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
 }
 
 .header-text {
@@ -24,109 +39,124 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color: var(--white);
-    font-size: 36px;
+    color: var(--white, #fff);
+    font-size: clamp(22px, 4vw, 36px);
     font-weight: 800;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
     width: 100%;
+    padding: 0 16px;
+    box-sizing: border-box;
 }
 
+/* =========================================
+   ДЕКОР + КАРТКИ (зображення «сидять» на картках)
+   ========================================= */
 .contact-cards-wrapper {
     position: relative;
     max-width: 1200px;
     margin: 0 auto;
-    padding: 4px;
+    padding:  4px;
 }
 
 .contact-images-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 40px;
     position: relative;
-    height: 150px;
+    width: 100%;
+    height: clamp(50px, 8vw, 80px);
+    margin-bottom: clamp(-55px, -7vw, -75px);
+    z-index: 3;
+    pointer-events: none;
 }
 
 .contact-image {
-    max-width: 100%;
+    position: absolute;
+    max-width: none;
     height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
 }
 
 .contact-image.call-image {
-    width: 136px;
-    height: 136px;
-    position: absolute;
+    width: clamp(80px, 12vw, 136px);
     left: 15%;
-    top: 87%;
-    transform: translateY(-50%);
+    bottom: 48px;
+    transform: translate(-50%, 55%);
 }
 
 .contact-image.line-image {
-    width: 154px;
-    height: 154px;
-    position: absolute;
+    width: clamp(90px, 14vw, 154px);
     right: 15%;
-    top: 98%;
-    transform: translateY(-50%);
+    bottom: 60px;
+    transform: translate(50%, 72%);
 }
 
+/* =========================================
+   КАРТКИ З КОНТАКТАМИ
+   ========================================= */
 .contact-cards-container {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 40px;
-    max-width: 1200px;
-    margin: 0 auto;
+    gap: clamp(20px, 3vw, 40px);
+    padding-top: clamp(48px, 7vw, 72px);
 }
 
 .contact-card {
     background: linear-gradient(to right, #6847DD, #382677);
     border-radius: 20px;
     padding: 15px;
-    height: 210px;
+    min-height: 210px;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-sizing: border-box;
 }
 
 .inner-card {
-    width: 507px;
-    height: 165px;
-    background-color: var(--white);
+    width: 100%;
+    max-width: 507px;
+    min-height: 165px;
+    background-color: var(--white, #fff);
     border-radius: 15px;
-    padding: 20px 30px;
+    padding: 20px clamp(16px, 3vw, 30px);
     text-align: left;
     display: flex;
     flex-direction: column;
     justify-content: center;
+    box-sizing: border-box;
 }
 
 .card-title-row {
     display: flex;
     align-items: center;
     margin-bottom: 15px;
+    gap: 12px;
 }
 
 .card-icon {
     width: 32px;
     height: 32px;
-    margin-right: 15px;
+    flex-shrink: 0;
 }
 
 .card-title {
-    font-size: 24px;
+    font-size: clamp(18px, 2.5vw, 24px);
     font-weight: 700;
-    color: var(--black);
+    color: var(--black, #000);
     margin: 0;
 }
 
 .card-info {
-    font-size: 18px;
+    font-size: clamp(14px, 2vw, 18px);
     font-weight: 600;
-    color: var(--black);
+    color: var(--black, #000);
     margin: 5px 0;
     line-height: 1.4;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
+/* =========================================
+   КАРТА ТА ВІДЕО (ДВІ КОЛОНКИ)
+   ========================================= */
 .location-media-container {
     display: flex;
     gap: clamp(20px, 3vw, 40px);
@@ -172,17 +202,22 @@
     background-color: #000;
 }
 
+/* =========================================
+   БЛОК ПІДТРИМКИ (QR КОД + РЕКВІЗИТИ)
+   ========================================= */
 .support-block {
-    margin-top: 80px;
+    margin-top: clamp(40px, 6vw, 80px);
     text-align: center;
     width: 100%;
+    padding: 0 4px;
+    box-sizing: border-box;
 }
 
 .support-title {
-    font-size: 24px;
+    font-size: clamp(24px, 3.5vw, 32px);
     font-weight: 700;
-    color: var(--black);
-    margin-bottom: 30px;
+    color: #382677;
+    margin-bottom: clamp(24px, 4vw, 40px);
     text-align: center;
 }
 
@@ -190,12 +225,81 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 80px;
+    flex-wrap: wrap;
+    gap: clamp(24px, 4vw, 40px);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.qr-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+    flex-shrink: 0;
 }
 
 .qr-image {
-    width: 250px;
-    height: 250px;
+    width: clamp(160px, 28vw, 250px);
+    height: clamp(160px, 28vw, 250px);
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    object-fit: cover;
+}
+
+.qr-hint {
+    font-size: clamp(14px, 2vw, 16px);
+    font-weight: 600;
+    color: #382677;
+    max-width: 220px;
+}
+
+.requisites-box {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    flex: 1;
+    min-width: min(100%, 280px);
+    max-width: 450px;
+}
+
+.req-card {
+    background-color: #fff;
+    border: 2px solid #6847DD;
+    border-radius: 15px;
+    padding: 15px 20px;
+    text-align: left;
+    box-shadow: 0 4px 6px rgba(104, 71, 221, 0.1);
+    transition: transform 0.3s;
+    box-sizing: border-box;
+}
+
+.req-card:hover {
+    transform: translateY(-3px);
+}
+
+.req-card h4 {
+    margin: 0 0 8px 0;
+    color: #6847DD;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.req-card p {
+    margin: 0 0 5px 0;
+    font-size: clamp(14px, 2vw, 18px);
+    font-weight: 700;
+    color: #000;
+    letter-spacing: 0.5px;
+    word-break: break-all;
+    overflow-wrap: anywhere;
+}
+
+.req-card span {
+    font-size: 13px;
+    color: #666;
+    word-break: break-word;
 }
 
 .support-image {
@@ -205,6 +309,9 @@
     flex-shrink: 0;
 }
 
+/* =========================================
+   ПОСИЛАННЯ "ЯК ЩЕ ДОПОМОГТИ"
+   ========================================= */
 .more-help-container {
     margin-top: clamp(40px, 5vw, 60px);
     margin-bottom: 40px;
@@ -233,109 +340,57 @@
     color: white;
 }
 
+/* =========================================
+   АДАПТИВНІСТЬ ДЛЯ КОНТАКТІВ (Media Queries)
+   ========================================= */
 @media (max-width: 1200px) {
-    .contact-header {
-        width: 90%;
-        height: auto;
-        padding: 30px 0;
-    }
-
-    .contact-cards-container {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-
-    .contact-card {
-        width: 100%;
-        height: auto;
-    }
-
-    .inner-card {
-        width: 90%;
-        height: auto;
-        padding: 20px;
-        margin: 0 auto;
-    }
-
-    .contact-images-container {
-        flex-direction: column;
-        gap: 20px;
-        align-items: center;
+    .contact-cards-wrapper {
+        max-width: 900px;
     }
 }
 
 @media (max-width: 1024px) {
+    .contact-section {
+        padding: 20px 4% 50px;
+    }
+
     .contact-header {
-        margin-bottom: 40px;
+        margin-bottom: 24px;
     }
 
-    .header-text {
-        font-size: 32px;
-    }
-
-    .contact-images-container {
-        height: auto;
-        margin-bottom: 30px;
-    }
-
-    .contact-image.call-image,
-    .contact-image.line-image {
-        position: static;
-        transform: none;
-        margin: 0;
-    }
-
-    .contact-cards-container {
-        gap: 30px;
+    .contact-cards-wrapper {
         max-width: 600px;
     }
 
+    .contact-images-container {
+        height: clamp(44px, 7vw, 64px);
+        margin-bottom: clamp(-48px, -6vw, -60px);
+    }
+
+    .contact-image.call-image {
+        left: 15%;
+        bottom: 40px;
+        transform: translate(-50%, 50%);
+    }
+
+    .contact-image.line-image {
+        right: 15%;
+        bottom: 50px;
+        transform: translate(50%, 65%);
+    }
+
+    .contact-cards-container {
+        grid-template-columns: 1fr;
+        gap: 24px;
+        padding-top: clamp(40px, 6vw, 56px);
+    }
+
     .contact-card {
-        min-height: 180px;
+        min-height: auto;
     }
 
-    .inner-card {
-        width: 100%;
-    }
-}
-
-@media (max-width: 768px) {
-    .contact-section {
-        padding: 40px 20px;
-    }
-
-    .header-text {
-        font-size: 28px;
-    }
-
-    .contact-header {
-        margin-bottom: 30px;
-    }
-
-    .contact-card {
-        min-height: 160px;
-    }
-
-    .inner-card {
-        padding: 15px;
-    }
-
-    .card-title {
-        font-size: 20px;
-    }
-
-    .card-info {
-        font-size: 16px;
-    }
-
-    .qr-image {
-        width: 200px;
-        height: 200px;
-    }
-
-    .support-image {
-        width: 220px;
-        height: 220px;
+    .location-media-container {
+        flex-direction: column;
     }
 
     .support-content {
@@ -343,26 +398,52 @@
         gap: 30px;
     }
 
-    .support-title {
-        margin-left: 0;
+    .requisites-box {
+        width: 100%;
+        max-width: 500px;
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .contact-section {
-        padding: 30px 15px;
+        padding: 16px 16px 40px;
     }
 
-    .header-text {
-        font-size: 24px;
+    .contact-header {
+        margin-bottom: 16px;
     }
 
-    .card-title {
-        font-size: 18px;
+    .contact-images-container {
+        height: clamp(40px, 6vw, 56px);
+        margin-bottom: clamp(-42px, -5vw, -52px);
     }
 
-    .card-info {
-        font-size: 14px;
+    .contact-image.call-image {
+        left: 8%;
+        width: clamp(72px, 14vw, 110px);
+    }
+
+    .contact-image.line-image {
+        right: 8%;
+        width: clamp(80px, 16vw, 120px);
+    }
+
+    .contact-cards-container {
+        padding-top: clamp(36px, 5vw, 48px);
+    }
+
+    .contact-card {
+        padding: 12px;
+        border-radius: 16px;
+    }
+
+    .inner-card {
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    .card-title-row {
+        margin-bottom: 12px;
     }
 
     .card-icon {
@@ -370,18 +451,113 @@
         height: 28px;
     }
 
-    .support-title {
+    .location-media-container {
+        margin: 32px auto;
+        gap: 24px;
+    }
+
+    .media-block {
+        border-radius: 16px;
+    }
+
+    .support-block {
+        margin-top: 48px;
+    }
+
+    .more-help-btn {
+        width: 100%;
+        max-width: 360px;
+    }
+}
+
+@media (max-width: 480px) {
+    .contact-section {
+        padding: 12px 12px 32px;
+    }
+
+    .contact-images-container {
+        height: clamp(36px, 5vw, 48px);
+        margin-bottom: clamp(-36px, -4vw, -44px);
+    }
+
+    .contact-image.call-image {
+        left: 6%;
+        width: clamp(64px, 18vw, 96px);
+        transform: translate(-50%, 48%);
+    }
+
+    .contact-image.line-image {
+        right: 6%;
+        width: clamp(72px, 20vw, 104px);
+        transform: translate(50%, 58%);
+    }
+
+    .contact-cards-container {
+        padding-top: clamp(28px, 4vw, 40px);
+    }
+
+    .contact-cards-container {
+        gap: 16px;
+    }
+
+    .contact-card {
+        padding: 10px;
+    }
+
+    .inner-card {
+        padding: 14px;
+    }
+
+    .card-title-row {
+        flex-wrap: wrap;
+    }
+
+    .req-card {
+        padding: 12px 14px;
+    }
+
+    .req-card h4 {
+        font-size: 14px;
+    }
+
+    .map-iframe,
+    .shelter-video {
+        height: clamp(200px, 55vw, 260px);
+        border-radius: 12px;
+    }
+
+    .more-help-container {
+        margin-top: 32px;
+        margin-bottom: 24px;
+    }
+
+    .more-help-btn {
+        max-width: none;
+        border-radius: 24px;
+        width: 100%;
+    }
+}
+
+@media (max-width: 360px) {
+    .contact-section {
+        padding: 10px 10px 28px;
+    }
+
+    .header-text {
         font-size: 20px;
     }
 
-    .qr-image {
-        width: 150px;
-        height: 150px;
+    .card-info {
+        font-size: 13px;
     }
 
-    .support-image {
-        width: 180px;
-        height: 180px;
+    .req-card p {
+        font-size: 13px;
+        letter-spacing: 0;
+    }
+
+    .qr-hint {
+        font-size: 13px;
     }
 }
 
