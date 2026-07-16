@@ -14,8 +14,8 @@ function Reviews() {
   const [replyingToId, setReplyingToId] = useState(null);
   const [replyText, setReplyText] = useState('');
 
-  const { isLoggedIn } = useAuth(); 
-  const navigate = useNavigate(); 
+  const { isLoggedIn, userId, nickname } = useAuth();
+  const navigate = useNavigate();
   const { showToast } = useToast(); // 👈 Ініціалізуємо тости
 
   // 1. ДИНАМІЧНЕ ЗАВАНТАЖЕННЯ ВІДГУКІВ ТА АКТУАЛЬНИХ ТВАРИН
@@ -28,46 +28,34 @@ function Reviews() {
 
       if (reviewsError) throw reviewsError;
 
-      const nicknames = [...new Set(reviewsData.map(r => r.UserNickname).filter(Boolean))];
+      // Тваринки, яких прихистив автор відгуку, рахуємо через Pets.OwnerUserId
+      // (Pets читаються публічно; profiles закриті RLS — тому не через них).
+      const ownerIds = [...new Set(reviewsData.map(r => r.user_id).filter(Boolean))];
 
-      if (nicknames.length > 0) {
-        const { data: usersData, error: usersError } = await supabase
-          .from('Users')
-          .select('Id, Nickname')
-          .in('Nickname', nicknames);
+      if (ownerIds.length > 0) {
+        const { data: petsData, error: petsError } = await supabase
+          .from('Pets')
+          .select('Id, ImageName, OwnerUserId')
+          .in('OwnerUserId', ownerIds)
+          .eq('Status', 'Вже вдома');
 
-        if (!usersError && usersData) {
-          const userIds = usersData.map(u => u.Id || u.id); 
+        if (!petsError && petsData) {
+          const currentPetsMap = {};
+          petsData.forEach(p => {
+            if (!currentPetsMap[p.OwnerUserId]) currentPetsMap[p.OwnerUserId] = [];
+            currentPetsMap[p.OwnerUserId].push({ id: p.Id, image: p.ImageName });
+          });
 
-          const { data: petsData, error: petsError } = await supabase
-            .from('Pets')
-            .select('*')
-            .in('OwnerId', userIds)
-            .eq('Status', 'Вже вдома');
+          const updatedReviews = reviewsData.map(review => ({
+            ...review,
+            DynamicPets: currentPetsMap[review.user_id] || []
+          }));
 
-          if (!petsError && petsData) {
-            const currentPetsMap = {};
-            usersData.forEach(user => {
-              const actualUserId = user.Id || user.id;
-              const userPets = petsData.filter(p => p.OwnerId === actualUserId);
-              
-              currentPetsMap[user.Nickname] = userPets.map(p => ({
-                id: p.Id || p.id,
-                image: p.ImageName
-              }));
-            });
-
-            const updatedReviews = reviewsData.map(review => ({
-              ...review,
-              DynamicPets: currentPetsMap[review.UserNickname] || []
-            }));
-
-            setReviews(updatedReviews);
-            return; 
-          }
+          setReviews(updatedReviews);
+          return;
         }
       }
-      
+
       const fallbackReviews = reviewsData.map(review => ({ ...review, DynamicPets: [] }));
       setReviews(fallbackReviews);
 
@@ -80,13 +68,12 @@ function Reviews() {
     fetchReviews();
 
     if (isLoggedIn) {
-        const nickname = localStorage.getItem('userNickname');
         const avatar = localStorage.getItem('profileAvatar') || '/ava.png';
         setCurrentUser({ nickname, avatar });
     } else {
         setCurrentUser(null);
     }
-  }, [isLoggedIn]);
+  }, [isLoggedIn, nickname]);
 
   const handleInteraction = (e) => {
     if (!isLoggedIn) {
@@ -109,20 +96,20 @@ function Reviews() {
     if (!text.trim()) return;
     setIsLoading(true);
 
-    const nickname = localStorage.getItem('userNickname');
     const avatar = localStorage.getItem('profileAvatar') || '/ava.png';
     const today = new Date();
     const formattedDate = today.toLocaleDateString('uk-UA');
 
     try {
         const { error } = await supabase.from('Reviews').insert([{
-            Name: nickname, 
+            Name: nickname,
             UserNickname: nickname,
+            user_id: userId,
             UserAvatar: avatar,
-            AdoptedPets: [], 
+            AdoptedPets: [],
             Text: text,
             Date: formattedDate,
-            UserReplies: [] 
+            UserReplies: []
         }]);
 
         if (error) throw error;

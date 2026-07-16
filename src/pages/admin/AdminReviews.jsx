@@ -135,17 +135,26 @@ function AdminReviews() {
                 const shortText = text.length > 50 ? text.substring(0, 50) + '...' : text;
                 const notifMessage = `Ваш коментар «${shortText}» був видалений через неприйнятний вміст.`;
 
-                const { error: notifError } = await supabase
-                    .from('FavoriteNotifications')
-                    .insert([{
-                        UserNickname: author,
-                        PetId: 0,
-                        PetName: 'Модерація',
-                        NewStatus: notifMessage,
-                        IsRead: false
-                    }]);
+                // Резолвимо нікнейм автора → user_id (сповіщення читаються по user_id)
+                const { data: authorProfile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('nickname', author)
+                    .maybeSingle();
 
-                if (notifError) throw notifError;
+                if (authorProfile?.id) {
+                    const { error: notifError } = await supabase
+                        .from('FavoriteNotifications')
+                        .insert([{
+                            user_id: authorProfile.id,
+                            PetId: 0,
+                            PetName: 'Модерація',
+                            NewStatus: notifMessage,
+                            IsRead: false
+                        }]);
+
+                    if (notifError) throw notifError;
+                }
 
                 showToast("🗑️ Коментар успішно видалено!");
                 setReviews(prev => prev.map(r => r.Id === reviewId ? { ...r, UserReplies: updatedReplies } : r));

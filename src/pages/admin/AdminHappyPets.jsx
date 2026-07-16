@@ -110,8 +110,8 @@ function AdminHappyPets() {
 
     const fetchAvailableUsers = async () => {
         const { data, error } = await supabase
-            .from('Users')
-            .select('Id, FirstName, LastName, Nickname')
+            .from('profiles')
+            .select('id, first_name, last_name, nickname')
             .order('created_at', { ascending: false });
 
         if (!error && data) {
@@ -140,12 +140,12 @@ function AdminHappyPets() {
     };
 
     const handleUserChange = (selectedUserId) => {
-        const selectedUser = availableUsers.find(u => u.Id.toString() === selectedUserId);
+        const selectedUser = availableUsers.find(u => u.id === selectedUserId);
 
         setFormData((prev) => ({
             ...prev,
             userId: selectedUserId,
-            ownerName: selectedUser ? `${selectedUser.FirstName} ${selectedUser.LastName}` : ''
+            ownerName: selectedUser ? `${selectedUser.first_name} ${selectedUser.last_name}` : ''
         }));
     };
 
@@ -193,6 +193,7 @@ function AdminHappyPets() {
         setLoading(true);
 
         const petDataToUpdate = {
+            OwnerUserId: formData.userId || null,
             OwnerName: formData.ownerName,
             HomeDescription: formData.homeDescription,
             Images: formData.images,
@@ -221,11 +222,10 @@ function AdminHappyPets() {
 
     const editPet = (pet) => {
         setIsEditing(true);
-        const matchedUser = availableUsers.find(u => `${u.FirstName} ${u.LastName}` === pet.OwnerName);
 
         setFormData({
             petId: pet.Id.toString(),
-            userId: matchedUser ? matchedUser.Id.toString() : '',
+            userId: pet.OwnerUserId || '',
             ownerName: pet.OwnerName || '',
             homeDescription: pet.HomeDescription || '',
             images: pet.Images || (pet.ImageName ? [pet.ImageName] : []),
@@ -256,6 +256,7 @@ function AdminHappyPets() {
                 .from('Pets')
                 .update({
                     Status: 'Шукає дім',
+                    OwnerUserId: null,
                     OwnerName: null,
                     HomeDescription: null,
                     ShowInLucky: true
@@ -288,8 +289,8 @@ function AdminHappyPets() {
     }));
 
     const userOptions = availableUsers.map(user => ({
-        value: user.Id.toString(),
-        label: `${user.FirstName} ${user.LastName} (@${user.Nickname})`
+        value: user.id,
+        label: `${user.first_name} ${user.last_name} (@${user.nickname})`
     }));
 
     return (

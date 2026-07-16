@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
 import './Login.css';
@@ -13,7 +12,6 @@ function Login() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const { login } = useAuth();
     const { showToast } = useToast();
 
     useEffect(() => {
@@ -23,12 +21,12 @@ function Login() {
         }
     }, [location, showToast]);
 
-    const restoreAndMergeCart = async (userNickname) => {
+    const restoreAndMergeCart = async (userId) => {
         try {
             const { data: dbFavorites, error } = await supabase
                 .from('Favorites')
                 .select('PetId')
-                .eq('UserNickname', userNickname);
+                .eq('user_id', userId);
 
             if (error) throw error;
 
@@ -40,7 +38,7 @@ function Login() {
                     if (!dbPetIds.includes(guestPet.id)) {
                         await supabase
                             .from('Favorites')
-                            .insert([{ UserNickname: userNickname, PetId: guestPet.id }]);
+                            .insert([{ user_id: userId, PetId: guestPet.id }]);
                         dbPetIds.push(guestPet.id);
                     }
                 }
@@ -77,34 +75,48 @@ function Login() {
         setIsSubmitting(true);
 
         try {
-            const { data: user, error } = await supabase
-                .from('Users')
-                .select('*')
-                .eq('Nickname', nickname.trim())
-                .eq('Password', password)
-                .maybeSingle();
+            // 1. Резолвимо нікнейм → email (безпечний RPC на боці БД)
+            const { data: email, error: rpcError } = await supabase
+                .rpc('get_login_email', { p_nickname: nickname.trim() });
 
-            if (error) {
+            if (rpcError) {
                 showToast('❌ Помилка з’єднання з базою даних!');
                 setIsSubmitting(false);
                 return;
             }
 
-            if (!user) {
+            if (!email) {
                 showToast('❌ Неправильний Нікнейм або Пароль!');
                 setIsSubmitting(false);
                 return;
             }
 
-            await restoreAndMergeCart(user.Nickname);
+            // 2. Вхід через Supabase Auth (пароль перевіряється на сервері)
+            const { data: authData, error: authError } = await supabase.auth
+                .signInWithPassword({ email, password });
 
-            localStorage.setItem('userNickname', user.Nickname);
-            localStorage.setItem('userRole', user.Role);
+            if (authError) {
+                if (authError.message?.toLowerCase().includes('email not confirmed')) {
+                    showToast('❌ Спершу підтвердьте email за посиланням із листа.');
+                } else {
+                    showToast('❌ Неправильний Нікнейм або Пароль!');
+                }
+                setIsSubmitting(false);
+                return;
+            }
 
-            login();
-            window.dispatchEvent(new Event('authChanged'));
+            // 3. Синхронізуємо «гостьове» обране з акаунтом
+            await restoreAndMergeCart(authData.user.id);
+            window.dispatchEvent(new Event('cartUpdated'));
 
-            if (user.Role === 'admin') {
+            // 4. Редірект за роллю
+            const { data: prof } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', authData.user.id)
+                .single();
+
+            if (prof?.role === 'admin') {
                 navigate('/admin/adoptions', { state: { welcomeMsg: 'Вітаємо в системі, Адміністраторе! 🐾' } });
             } else {
                 navigate('/', { state: { welcomeMsg: 'Раді бачити вас знову! 🐾' } });

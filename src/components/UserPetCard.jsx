@@ -8,7 +8,7 @@ import { useToast } from '../context/ToastContext'; // 👈 Додано кон�
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
     const [isFavorite, setIsFavorite] = useState(false);
     const [isNotified, setIsNotified] = useState(false);
-    const { userEmail } = useAuth();
+    const { userId, nickname, userEmail } = useAuth();
 
     // 👇 Підключаємо глобальні сповіщення
     const { showToast } = useToast();
@@ -32,49 +32,45 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
     // Перевірка, чи користувач вже підписаний на сповіщення про лікування
     useEffect(() => {
         const checkNotificationStatus = async () => {
-            if (status === 'На лікуванні') {
-                const userNickname = localStorage.getItem('userNickname');
-                if (userNickname) {
-                    const { data, error } = await supabase
-                        .from('TreatmentNotifications')
-                        .select('Id')
-                        .eq('PetId', id)
-                        .eq('UserNickname', userNickname);
+            if (status === 'На лікуванні' && userId) {
+                const { data } = await supabase
+                    .from('TreatmentNotifications')
+                    .select('Id')
+                    .eq('PetId', id)
+                    .eq('user_id', userId);
 
-                    if (data && data.length > 0) {
-                        setIsNotified(true);
-                    }
+                if (data && data.length > 0) {
+                    setIsNotified(true);
                 }
             }
         };
 
         checkNotificationStatus();
-    }, [id, status]);
+    }, [id, status, userId]);
 
     const toggleFavorite = async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
-        const userNickname = localStorage.getItem('userNickname');
         let favorites = JSON.parse(localStorage.getItem('favorites')) || [];
 
         if (isFavorite) {
-            if (userNickname) {
+            if (userId) {
                 const { error } = await supabase
                     .from('Favorites')
                     .delete()
-                    .eq('UserNickname', userNickname)
+                    .eq('user_id', userId)
                     .eq('PetId', id);
 
                 if (error) console.error("❌ Помилка видалення з Favorites:", error.message);
             }
             favorites = favorites.filter(pet => pet.id !== id);
         } else {
-            if (userNickname) {
+            if (userId) {
                 const { error } = await supabase.from('Favorites').insert([
                     {
                         PetId: id,
-                        UserNickname: userNickname
+                        user_id: userId
                     }
                 ]);
 
@@ -94,8 +90,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         e.preventDefault();
         e.stopPropagation();
 
-        const userNickname = localStorage.getItem('userNickname');
-        if (!userNickname) {
+        if (!userId) {
             showToast("🐾 Будь ласка, увійдіть в систему, щоб керувати сповіщеннями!");
             return;
         }
@@ -105,7 +100,7 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
                 .from('TreatmentNotifications')
                 .delete()
                 .eq('PetId', id)
-                .eq('UserNickname', userNickname);
+                .eq('user_id', userId);
 
             if (!error) {
                 setIsNotified(false);
@@ -116,7 +111,8 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
         } else {
             const { error } = await supabase.from('TreatmentNotifications').insert([
                 {
-                    UserNickname: userNickname,
+                    user_id: userId,
+                    UserNickname: nickname,
                     UserEmail: userEmail || null,
                     PetId: id,
                     PetName: name,

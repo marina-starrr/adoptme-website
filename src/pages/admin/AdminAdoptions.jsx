@@ -78,46 +78,33 @@ function AdminAdoptions() {
                 onConfirm: async () => {
                     closeConfirmDialog(); 
                     try {
-                        const { data: userData, error: userError } = await supabase
-                            .from('Users')
-                            .select('Id')
-                            .eq('Nickname', app.UserNickname)
-                            .single();
+                        const ownerUserId = app.user_id;
+                        if (!ownerUserId) throw new Error("У заявці не вказано користувача (user_id).");
 
-                        if (userError || !userData) throw new Error("Користувача не знайдено в базі даних.");
-
-                        const ownerId = userData.Id;
                         const petIds = app.PetIds || [];
-                        
+
                         if (petIds.length > 0) {
                             for (const petId of petIds) {
                                 await supabase.from('Pets').update({
                                     Status: 'Вже вдома',
-                                    OwnerId: ownerId,
+                                    OwnerUserId: ownerUserId,
                                     OwnerName: app.AdopterName,
                                     HomeDescription: "Ця тваринка вже знайшла свій дім і живе в щасті у новій люблячій родині!"
                                 }).eq('Id', petId);
 
-                                const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                                const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+                                const { data: favUsers } = await supabase.from('Favorites').select('user_id').eq('PetId', petId);
+                                const notificationsToInsert = (favUsers || [])
+                                    .filter(fav => fav.user_id && fav.user_id !== ownerUserId)
+                                    .map(fav => ({
+                                        user_id: fav.user_id,
+                                        PetId: petId,
+                                        PetName: app.PetName, // Використовуємо всі імена
+                                        NewStatus: 'Вже знайшла дім',
+                                        IsRead: false
+                                    }));
 
-                                if (validFavUsers.length > 0) {
-                                    const notificationsToInsert = validFavUsers
-                                        .map(fav => {
-                                            const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                            if (!nick || nick === app.UserNickname) return null;
-                                            return {
-                                                UserNickname: nick,
-                                                PetId: petId,
-                                                PetName: app.PetName, // Використовуємо всі імена
-                                                NewStatus: 'Вже знайшла дім',
-                                                IsRead: false
-                                            };
-                                        }).filter(n => n !== null);
-
-                                    if (notificationsToInsert.length > 0) {
-                                        await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-                                    }
+                                if (notificationsToInsert.length > 0) {
+                                    await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
                                 }
                             }
                         }
@@ -146,25 +133,23 @@ function AdminAdoptions() {
                             for (const petId of petIds) {
                                 await supabase.from('Pets').update({
                                     Status: 'Шукає дім',
-                                    OwnerId: null,
+                                    OwnerUserId: null,
                                     OwnerName: null,
-                                    HomeDescription: null, 
-                                    ShowInLucky: true  
+                                    HomeDescription: null,
+                                    ShowInLucky: true
                                 }).eq('Id', petId);
 
-                                const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                                const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
-                                if (validFavUsers.length > 0) {
-                                    const notificationsToInsert = validFavUsers.map(fav => {
-                                        const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                        return {
-                                            UserNickname: nick,
-                                            PetId: petId,
-                                            PetName: app.PetName, // Використовуємо всі імена
-                                            NewStatus: 'Шукає дім',
-                                            IsRead: false
-                                        };
-                                    });
+                                const { data: favUsers } = await supabase.from('Favorites').select('user_id').eq('PetId', petId);
+                                const notificationsToInsert = (favUsers || [])
+                                    .filter(fav => fav.user_id)
+                                    .map(fav => ({
+                                        user_id: fav.user_id,
+                                        PetId: petId,
+                                        PetName: app.PetName, // Використовуємо всі імена
+                                        NewStatus: 'Шукає дім',
+                                        IsRead: false
+                                    }));
+                                if (notificationsToInsert.length > 0) {
                                     await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
                                 }
                             }
@@ -190,23 +175,18 @@ function AdminAdoptions() {
                         for (const petId of petIds) {
                             await supabase.from('Pets').update({ Status: 'Заброньована' }).eq('Id', petId);
 
-                            const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', petId);
-                            const validFavUsers = favUsers ? favUsers.filter(fav => {
-                                const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                return nick && nick !== app.UserNickname;
-                            }) : [];
-                            
-                            if (validFavUsers.length > 0) {
-                                const notificationsToInsert = validFavUsers.map(fav => {
-                                    const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-                                    return {
-                                        UserNickname: nick,
-                                        PetId: petId,
-                                        PetName: app.PetName, // Використовуємо всі імена
-                                        NewStatus: 'Заброньована',
-                                        IsRead: false
-                                    };
-                                });
+                            const { data: favUsers } = await supabase.from('Favorites').select('user_id').eq('PetId', petId);
+                            const notificationsToInsert = (favUsers || [])
+                                .filter(fav => fav.user_id && fav.user_id !== app.user_id)
+                                .map(fav => ({
+                                    user_id: fav.user_id,
+                                    PetId: petId,
+                                    PetName: app.PetName, // Використовуємо всі імена
+                                    NewStatus: 'Заброньована',
+                                    IsRead: false
+                                }));
+
+                            if (notificationsToInsert.length > 0) {
                                 await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
                             }
                         }

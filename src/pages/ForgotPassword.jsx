@@ -1,164 +1,67 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './Login.css';
-import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
+import { useToast } from '../context/ToastContext';
 
 function ForgotPassword() {
-    const [step, setStep] = useState(1);
-    const [nickname, setNickname] = useState('');
-    const [dbQuestion, setDbQuestion] = useState('');
-    const [dbAnswer, setDbAnswer] = useState('');
-    const [userAnswer, setUserAnswer] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [sent, setSent] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const { showToast } = useToast();
-    const navigate = useNavigate();
 
-    // Крок 1: Шукаємо користувача за нікнеймом
-    const handleFindUser = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        try {
-            const { data, error } = await supabase
-                .from('Users')
-                .select('SecretQuestion, SecretAnswer')
-                .eq('Nickname', nickname.trim())
-                .maybeSingle();
+        setIsSubmitting(true);
 
-            if (error || !data) {
-                showToast('❌ Користувача з таким нікнеймом не знайдено!');
-                return;
-            }
+        const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+            redirectTo: `${window.location.origin}/update-password`,
+        });
 
-            if (!data.SecretQuestion) {
-                showToast('❌ У цього акаунта не налаштоване секретне запитання.');
-                return;
-            }
+        setIsSubmitting(false);
 
-            setDbQuestion(data.SecretQuestion);
-            setDbAnswer(data.SecretAnswer);
-            setStep(2); // Переходимо на крок 2
-        } catch (err) {
-            showToast('❌ Помилка з’єднання!');
-        }
-    };
-
-    // Крок 2: Перевірка відповіді
-    const handleVerifyAnswer = (e) => {
-        e.preventDefault();
-        // Порівнюємо у нижньому регістрі, щоб уникнути помилок з великими літерами
-        if (userAnswer.trim().toLowerCase() === dbAnswer) {
-            setStep(3); // Переходимо на крок 3 (введення нового пароля)
-        } else {
-            showToast('❌ Неправильна відповідь!');
-        }
-    };
-
-    // Крок 3: Зміна пароля
-    const handleResetPassword = async (e) => {
-        e.preventDefault();
-
-        if (newPassword !== confirmPassword) {
-            showToast('❌ Паролі не збігаються!');
+        if (error) {
+            showToast('❌ Не вдалося надіслати листа. Спробуйте пізніше.');
             return;
         }
 
-        if (newPassword.length < 6) {
-            showToast('❌ Пароль має містити мінімум 6 символів!');
-            return;
-        }
-
-        try {
-            const { error } = await supabase
-                .from('Users')
-                .update({ Password: newPassword })
-                .eq('Nickname', nickname.trim());
-
-            if (error) {
-                console.error("Помилка Supabase:", error); 
-                showToast('❌ Помилка при зміні пароля! Перевірте RLS.');
-                return;
-            }
-
-            navigate('/login', {
-                state: { welcomeMsg: '✅ Пароль успішно змінено! Тепер ви можете увійти.' }
-            });
-
-        } catch (err) {
-            showToast('❌ Сталася помилка!');
-        }
+        // Навмисно не розкриваємо, чи існує такий email (проти енумерації)
+        setSent(true);
     };
 
     return (
         <div className="login-page" style={{ position: 'relative' }}>
-
             <div className="login-card">
                 <h2>Відновлення пароля 🔐</h2>
 
-                {step === 1 && (
-                    <form onSubmit={handleFindUser}>
-                        <p>Введіть ваш Нікнейм, щоб ми знайшли ваш акаунт</p>
-                        <div className="input-group">
-                            <label>Нікнейм</label>
-                            <input
-                                type="text"
-                                value={nickname}
-                                onChange={(e) => setNickname(e.target.value)}
-                                placeholder="Ваш унікальний нікнейм"
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="login-submit-btn">Знайти акаунт</button>
-                    </form>
-                )}
-
-                {step === 2 && (
-                    <form onSubmit={handleVerifyAnswer}>
-                        <p style={{ fontWeight: 'bold', color: '#6d4ce4', marginBottom: '15px' }}>
-                            Запитання: {dbQuestion}
+                {sent ? (
+                    <div style={{ textAlign: 'center' }}>
+                        <p style={{ marginBottom: '10px' }}>
+                            Якщо акаунт із такою поштою існує, ми надіслали на неї
+                            посилання для зміни пароля.
                         </p>
+                        <p style={{ color: '#6d4ce4', fontSize: '14px' }}>
+                            Перевірте вхідні та теку «Спам».
+                        </p>
+                    </div>
+                ) : (
+                    <form onSubmit={handleSubmit}>
+                        <p>Введіть email, вказаний при реєстрації</p>
                         <div className="input-group">
-                            <label>Ваша відповідь</label>
+                            <label>Email</label>
                             <input
-                                type="text"
-                                value={userAnswer}
-                                onChange={(e) => setUserAnswer(e.target.value)}
-                                placeholder="Введіть відповідь..."
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="vash@mail.com"
                                 required
+                                disabled={isSubmitting}
                             />
                         </div>
-                        <button type="submit" className="login-submit-btn">Підтвердити</button>
-                        <button type="button" onClick={() => setStep(1)} style={{ background: 'none', border: 'none', color: 'gray', marginTop: '10px', cursor: 'pointer', width: '100%' }}>
-                            Повернутися назад
+                        <button type="submit" className="login-submit-btn" disabled={isSubmitting}>
+                            {isSubmitting ? '🐾 Надсилаємо...' : 'Надіслати посилання'}
                         </button>
-                    </form>
-                )}
-
-                {step === 3 && (
-                    <form onSubmit={handleResetPassword}>
-                        <p>Відповідь правильна! Створіть новий пароль.</p>
-                        <div className="input-group">
-                            <label>Новий пароль</label>
-                            <input
-                                type="password"
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                placeholder="Мінімум 6 символів"
-                                required
-                            />
-                        </div>
-                        <div className="input-group">
-                            <label>Повторіть пароль</label>
-                            <input
-                                type="password"
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                placeholder="Повторіть пароль"
-                                required
-                            />
-                        </div>
-                        <button type="submit" className="login-submit-btn">Зберегти пароль</button>
                     </form>
                 )}
 

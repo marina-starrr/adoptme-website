@@ -23,8 +23,8 @@ function Profile() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useAuth();
-  const { showToast } = useToast(); 
+  const { logout, userId, role, profile, userEmail } = useAuth();
+  const { showToast } = useToast();
 
   const [userData, setUserData] = useState({
     nickname: '',
@@ -36,78 +36,13 @@ function Profile() {
   });
 
   useEffect(() => {
-    if (localStorage.getItem('userRole') === 'admin') {
+    if (role === 'admin') {
       navigate('/admin/adoptions', { replace: true });
     }
-  }, [navigate]);
+  }, [role, navigate]);
 
+  // Обране (localStorage) + збережений аватар — не залежить від сесії
   useEffect(() => {
-    const fetchProfileAndApplications = async () => {
-      const currentNickname = localStorage.getItem('userNickname');
-      if (!currentNickname) return;
-
-      try {
-        const { data: user, error: userError } = await supabase
-          .from('Users')
-          .select('*')
-          .eq('Nickname', currentNickname)
-          .maybeSingle();
-
-        if (userError) throw userError;
-
-        if (user) {
-          setUserData(prev => ({
-            ...prev,
-            nickname: user.Nickname,
-            firstName: user.FirstName,
-            lastName: user.LastName,
-            phone: user.Phone,
-            email: user.Email
-          }));
-
-          setLoadingApps(true);
-          
-          const { data: appsData, error: appsError } = await supabase
-            .from('AdoptionRequests')
-            .select('*')
-            .eq('UserNickname', currentNickname)
-            .order('Id', { ascending: false });
-
-          if (!appsError && appsData) {
-            const { data: petsData } = await supabase.from('Pets').select('Id, Name, ImageName');
-
-            const enrichedApps = appsData.map(app => {
-              let searchName = app.PetName;
-              if (app.PetName.includes('Волонтерство')) {
-                const match = app.PetName.match(/\((.*?)\)/);
-                if (match) searchName = match[1];
-              } else {
-                searchName = app.PetName.split(',')[0].trim();
-              }
-
-              const matchedPet = petsData?.find(p => p.Name === searchName);
-              return {
-                ...app,
-                PetId: matchedPet?.Id,
-                PetImage: matchedPet
-                  ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}`
-                  : '/ava.png'
-              };
-            });
-
-            setApplications(enrichedApps);
-          }
-          setLoadingApps(false);
-        }
-      } catch (err) {
-        console.error("Помилка завантаження профілю:", err.message);
-      }
-    };
-
-    if (localStorage.getItem('userRole') !== 'admin') {
-      fetchProfileAndApplications();
-    }
-
     const savedFavs = JSON.parse(localStorage.getItem('favorites')) || [];
     setFavorites(savedFavs);
 
@@ -116,6 +51,59 @@ function Profile() {
       setUserData(prev => ({ ...prev, avatarUrl: savedAvatar }));
     }
   }, []);
+
+  // Особисті дані з контексту + заявки користувача
+  useEffect(() => {
+    if (!userId || role === 'admin') return;
+
+    if (profile) {
+      setUserData(prev => ({
+        ...prev,
+        nickname: profile.nickname || '',
+        firstName: profile.first_name || '',
+        lastName: profile.last_name || '',
+        phone: profile.phone || '',
+        email: userEmail || ''
+      }));
+    }
+
+    const fetchApplications = async () => {
+      setLoadingApps(true);
+      const { data: appsData, error: appsError } = await supabase
+        .from('AdoptionRequests')
+        .select('*')
+        .eq('user_id', userId)
+        .order('Id', { ascending: false });
+
+      if (!appsError && appsData) {
+        const { data: petsData } = await supabase.from('Pets').select('Id, Name, ImageName');
+
+        const enrichedApps = appsData.map(app => {
+          let searchName = app.PetName;
+          if (app.PetName.includes('Волонтерство')) {
+            const match = app.PetName.match(/\((.*?)\)/);
+            if (match) searchName = match[1];
+          } else {
+            searchName = app.PetName.split(',')[0].trim();
+          }
+
+          const matchedPet = petsData?.find(p => p.Name === searchName);
+          return {
+            ...app,
+            PetId: matchedPet?.Id,
+            PetImage: matchedPet
+              ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}`
+              : '/ava.png'
+          };
+        });
+
+        setApplications(enrichedApps);
+      }
+      setLoadingApps(false);
+    };
+
+    fetchApplications();
+  }, [userId, role, profile, userEmail]);
 
   useEffect(() => {
     if (location.state?.welcomeMsg) {
@@ -147,41 +135,36 @@ function Profile() {
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const currentNickname = localStorage.getItem('userNickname');
 
     try {
       const { error } = await supabase
-        .from('Users')
+        .from('profiles')
         .update({
-          FirstName: userData.firstName.trim(),
-          LastName: userData.lastName.trim(),
-          Phone: userData.phone.trim(),
-          Email: userData.email.trim()
+          first_name: userData.firstName.trim(),
+          last_name: userData.lastName.trim(),
+          phone: userData.phone.trim()
         })
-        .eq('Nickname', currentNickname);
+        .eq('id', userId);
 
       if (error) throw error;
-      showToast('✅ Зміни успішно збережено в базі даних! 🐾');
+
+      // Email керується Supabase Auth: зміна вимагає підтвердження за листом
+      const newEmail = userData.email.trim();
+      if (newEmail && newEmail !== userEmail) {
+        const { error: emailError } = await supabase.auth.updateUser({ email: newEmail });
+        if (emailError) throw emailError;
+        showToast('✅ Дані збережено. Підтвердьте нову пошту за посиланням із листа 🐾');
+      } else {
+        showToast('✅ Зміни успішно збережено! 🐾');
+      }
 
     } catch (err) {
       showToast('❌ Помилка збереження: ' + err.message);
     }
   };
 
-  const handleLogout = () => {
-    const userNickname = localStorage.getItem('userNickname');
-    const currentFavorites = localStorage.getItem('favorites');
-
-    if (userNickname && currentFavorites) {
-      localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
-    }
-
-    localStorage.removeItem('favorites');
-    localStorage.removeItem('userNickname');
-    localStorage.removeItem('userRole');
-    window.dispatchEvent(new Event('cartUpdated'));
-
-    logout();
+  const handleLogout = async () => {
+    await logout(); // signOut + очищення localStorage + подія cartUpdated
     navigate('/login', {
       state: { welcomeMsg: '🐾 Ви успішно вийшли з акаунту' }
     });
@@ -191,13 +174,12 @@ function Profile() {
   const handleRemoveFavorite = async (e, id) => {
     e.preventDefault();
     e.stopPropagation();
-    const userNickname = localStorage.getItem('userNickname');
 
-    if (userNickname) {
+    if (userId) {
       const { error } = await supabase
         .from('Favorites')
         .delete()
-        .eq('UserNickname', userNickname)
+        .eq('user_id', userId)
         .eq('PetId', id);
 
       if (error) {
@@ -228,24 +210,13 @@ function Profile() {
   };
 
   const confirmDeleteAccount = async () => {
-    const currentNickname = localStorage.getItem('userNickname');
-
     try {
-      const { error } = await supabase
-        .from('Users')
-        .delete()
-        .eq('Nickname', currentNickname);
-
+      // RPC видаляє власний рядок у auth.users; профіль і повʼязані дані — каскадом
+      const { error } = await supabase.rpc('delete_own_account');
       if (error) throw error;
 
-      localStorage.removeItem('userNickname');
-      localStorage.removeItem('userRole');
-      localStorage.removeItem('favorites');
-      localStorage.removeItem(`favorites_${currentNickname}`);
       localStorage.removeItem('profileAvatar');
-
-      window.dispatchEvent(new Event('cartUpdated'));
-      logout();
+      await logout();
 
       closeDeleteModal();
 

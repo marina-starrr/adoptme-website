@@ -66,7 +66,6 @@ function PetDetails() {
   const { id } = useParams();
   const location = useLocation();
   const [pet, setPet] = useState(null);
-  const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -77,7 +76,7 @@ function PetDetails() {
 
   const [editableImages, setEditableImages] = useState([]);
 
-  const { userRole, userEmail } = useAuth();
+  const { userId, nickname, userEmail } = useAuth();
   const { showToast } = useToast();
   const isAdminPath = location.pathname.includes('/admin/');
 
@@ -96,13 +95,7 @@ function PetDetails() {
       setLoading(false);
     }
     fetchPet();
-
-    if (isAdminPath) {
-      supabase.from('Users').select('Id, FirstName, LastName, Nickname').then(({ data }) => {
-        if (data) setUsersList(data);
-      });
-    }
-  }, [id, isAdminPath]);
+  }, [id]);
 
   useEffect(() => {
     return () => {
@@ -193,9 +186,9 @@ function PetDetails() {
       finalData.ImageName = finalImagesArray.length > 0 ? finalImagesArray[0] : null;
 
       if (finalData.Status !== 'Вже вдома') {
-        finalData.OwnerId = null;
+        finalData.OwnerUserId = null;
         finalData.OwnerName = null;
-        finalData.HomeDescription = null; 
+        finalData.HomeDescription = null;
         finalData.ShowInLucky = true;
       } else {
         finalData.ShowInLucky = finalData.ShowInLucky !== false;
@@ -212,23 +205,20 @@ function PetDetails() {
 
         const { data: favUsers } = await supabase
           .from('Favorites')
-          .select('*') 
+          .select('user_id')
           .eq('PetId', pet.Id);
 
         if (favUsers) {
-          const validFavUsers = favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname);
+          const validFavUsers = favUsers.filter(fav => fav.user_id);
 
           if (validFavUsers.length > 0) {
-            const notificationsToInsert = validFavUsers.map(fav => {
-              const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-              return {
-                UserNickname: nick,
-                PetId: pet.Id,
-                PetName: finalData.Name,
-                NewStatus: targetStatus,
-                IsRead: false
-              };
-            });
+            const notificationsToInsert = validFavUsers.map(fav => ({
+              user_id: fav.user_id,
+              PetId: pet.Id,
+              PetName: finalData.Name,
+              NewStatus: targetStatus,
+              IsRead: false
+            }));
             await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
           }
         }
@@ -256,10 +246,9 @@ function PetDetails() {
       : null;
 
     if (!isAlreadyFav) {
-      const userNickname = localStorage.getItem('userNickname');
-      if (userNickname) {
+      if (userId) {
         await supabase.from('Favorites').insert([
-          { PetId: pet.Id, UserNickname: userNickname }
+          { PetId: pet.Id, user_id: userId }
         ]);
       }
       favorites.push({ id: pet.Id, name: pet.Name, image: imageUrl });
@@ -270,15 +259,15 @@ function PetDetails() {
   };
 
   const handleNotifyWhenHealthyClick = async () => {
-    const userNickname = localStorage.getItem('userNickname');
-    if (!userNickname) {
+    if (!userId) {
       showToast("🐾 Будь ласка, увійдіть в систему, щоб підписатися на сповіщення!");
       return;
     }
 
     const { error } = await supabase.from('TreatmentNotifications').insert([
       {
-        UserNickname: userNickname,
+        user_id: userId,
+        UserNickname: nickname,
         UserEmail: userEmail || null,
         PetId: pet.Id,
         PetName: pet.Name,

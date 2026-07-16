@@ -53,6 +53,35 @@ function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
     );
 }
 
+// Виклик Edge Function admin-users із розбором помилки
+async function callAdminFn(body) {
+    const { data, error } = await supabase.functions.invoke('admin-users', { body });
+    if (error) {
+        let msg = error.message;
+        try {
+            const parsed = await error.context.json();
+            if (parsed?.error) msg = parsed.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+    }
+    if (data?.error) throw new Error(data.error);
+    return data;
+}
+
+const formatPhone = (raw) => {
+    let digits = (raw || '').replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    if (!digits.startsWith('380')) digits = '380' + digits;
+    digits = digits.substring(0, 12);
+    let formatted = '+';
+    if (digits.length > 0) formatted += digits.substring(0, 2);
+    if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
+    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
+    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
+    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
+    return formatted;
+};
+
 function AdminUsers() {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -65,19 +94,19 @@ function AdminUsers() {
     const [userToDelete, setUserToDelete] = useState(null);
     const [isModalClosing, setIsModalClosing] = useState(false);
 
-    // Стан для кнопки "ока"
     const [showPassword, setShowPassword] = useState(false);
+    const [newPassword, setNewPassword] = useState('');
+    const [showNewPassword, setShowNewPassword] = useState(false);
+    const [isResetting, setIsResetting] = useState(false);
 
     const initialFormState = {
-        Nickname: '',
-        FirstName: '',
-        LastName: '',
-        Phone: '',
-        Email: '',
-        Password: '',
-        Role: 'user',
-        SecretQuestion: 'Як звали вашого першого домашнього улюбленця?',
-        SecretAnswer: ''
+        nickname: '',
+        first_name: '',
+        last_name: '',
+        phone: '',
+        email: '',
+        password: '',
+        role: 'user'
     };
 
     const [userFormData, setUserFormData] = useState(initialFormState);
@@ -91,8 +120,8 @@ function AdminUsers() {
         setLoading(true);
         try {
             const { data, error } = await supabase
-                .from('Users')
-                .select('*')
+                .from('profiles')
+                .select('id, nickname, first_name, last_name, phone, role, created_at')
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -109,7 +138,9 @@ function AdminUsers() {
         setTimeout(() => {
             setIsModalOpen(false);
             setIsModalClosing(false);
-            setShowPassword(false); // Скидаємо стан "ока"
+            setShowPassword(false);
+            setShowNewPassword(false);
+            setNewPassword('');
         }, 300);
     };
 
@@ -124,140 +155,91 @@ function AdminUsers() {
     const handleAddOpen = () => {
         setEditMode(false);
         setUserFormData(initialFormState);
+        setNewPassword('');
         setIsModalOpen(true);
     };
 
     const handleEditOpen = (user) => {
         setEditMode(true);
-        setCurrentUserId(user.Id);
-
-        // Форматуємо телефон для відображення в інпуті
-        let rawPhone = (user.Phone || '').replace(/\D/g, '');
-        if (rawPhone.length > 0 && !rawPhone.startsWith('380')) rawPhone = '380' + rawPhone;
-
-        let formattedPhone = '';
-        if (rawPhone.length > 0) {
-            formattedPhone = '+';
-            if (rawPhone.length > 0) formattedPhone += rawPhone.substring(0, 2);
-            if (rawPhone.length > 2) formattedPhone += '(' + rawPhone.substring(2, 5);
-            if (rawPhone.length > 5) formattedPhone += ') ' + rawPhone.substring(5, 8);
-            if (rawPhone.length > 8) formattedPhone += ' ' + rawPhone.substring(8, 10);
-            if (rawPhone.length > 10) formattedPhone += ' ' + rawPhone.substring(10, 12);
-        }
-
+        setCurrentUserId(user.id);
+        setNewPassword('');
         setUserFormData({
-            Nickname: user.Nickname || '',
-            FirstName: user.FirstName || '',
-            LastName: user.LastName || '',
-            Phone: formattedPhone, // Записуємо форматований номер
-            Email: user.Email || '',
-            Password: user.Password || '',
-            Role: user.Role || 'user',
-            SecretQuestion: user.SecretQuestion || 'Як звали вашого першого домашнього улюбленця?',
-            SecretAnswer: user.SecretAnswer || ''
+            nickname: user.nickname || '',
+            first_name: user.first_name || '',
+            last_name: user.last_name || '',
+            phone: formatPhone(user.phone),
+            email: '',
+            password: '',
+            role: user.role || 'user'
         });
         setIsModalOpen(true);
     };
 
     const handlePhoneChange = (e) => {
-        const rawDigits = e.target.value.replace(/\D/g, '');
-        if (rawDigits.length === 0) {
-            setUserFormData({ ...userFormData, Phone: '' });
-            return;
-        }
-
-        let digits = rawDigits;
-        if (!digits.startsWith('380')) digits = '380' + digits;
-        digits = digits.substring(0, 12);
-
-        let formatted = '+';
-        if (digits.length > 0) formatted += digits.substring(0, 2);
-        if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
-        if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
-        if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-        if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
-
-        setUserFormData({ ...userFormData, Phone: formatted });
+        setUserFormData({ ...userFormData, phone: formatPhone(e.target.value) });
     };
 
     const handleSaveUser = async (e) => {
         e.preventDefault();
         setIsSaving(true);
 
-        // --- БЛОК ВАЛІДАЦІЇ ---
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        // Перевіряємо тільки 10 цифр, бо 38 ми доклеїмо самі
-        const rawPhoneDigits = userFormData.Phone.replace(/\D/g, '');
+        const rawPhoneDigits = userFormData.phone.replace(/\D/g, '');
 
-        if (!userFormData.Nickname.trim()) {
-            showToast('❌ Нікнейм обов’язковий!');
-            setIsSaving(false); return;
-        }
-        if (!userFormData.FirstName.trim() || !userFormData.LastName.trim()) {
+        if (!userFormData.first_name.trim() || !userFormData.last_name.trim()) {
             showToast('❌ Будь ласка, вкажіть ім’я та прізвище!');
             setIsSaving(false); return;
         }
-        if (!emailRegex.test(userFormData.Email)) {
-            showToast('❌ Введіть коректний Email!');
-            setIsSaving(false); return;
-        }
-        if (rawPhoneDigits.length !== 10) {
+        if (rawPhoneDigits.length !== 12) {
             showToast('❌ Введіть коректний номер телефону (10 цифр після +38)!');
             setIsSaving(false); return;
         }
-        if (userFormData.Password.length < 6) {
-            showToast('❌ Пароль має містити мінімум 6 символів!');
-            setIsSaving(false); return;
-        }
-        if (!userFormData.SecretAnswer.trim()) {
-            showToast('❌ Будь ласка, введіть відповідь на секретне запитання!');
-            setIsSaving(false); return;
-        }
-        // --- КІНЕЦЬ ВАЛІДАЦІЇ ---
 
         try {
-            if (editMode && userFormData.Role === 'user') {
-                const userBeingEdited = users.find(u => u.Id === currentUserId);
-                if (userBeingEdited.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
-                    showToast("❌ Не можна зняти права з єдиного адміністратора!");
-                    setIsSaving(false);
-                    return;
-                }
-            }
-
-            const dataToSave = {
-                ...userFormData,
-                // Додаємо 38 і чисті цифри
-                Phone: '38' + rawPhoneDigits,
-                SecretAnswer: userFormData.SecretAnswer.trim().toLowerCase()
-            };
-
             if (editMode) {
+                // Не дозволяємо зняти права з єдиного адміністратора
+                if (userFormData.role === 'user') {
+                    const editing = users.find(u => u.id === currentUserId);
+                    if (editing?.role === 'admin' && users.filter(u => u.role === 'admin').length <= 1) {
+                        showToast("❌ Не можна зняти права з єдиного адміністратора!");
+                        setIsSaving(false);
+                        return;
+                    }
+                }
+
                 const { error } = await supabase
-                    .from('Users')
-                    .update(dataToSave)
-                    .eq('Id', currentUserId);
+                    .from('profiles')
+                    .update({
+                        first_name: userFormData.first_name.trim(),
+                        last_name: userFormData.last_name.trim(),
+                        phone: rawPhoneDigits,
+                        role: userFormData.role
+                    })
+                    .eq('id', currentUserId);
 
                 if (error) throw error;
                 showToast("✅ Дані користувача успішно оновлено!");
             } else {
-                const { data: existingUser } = await supabase
-                    .from('Users')
-                    .select('Id')
-                    .eq('Nickname', dataToSave.Nickname.trim())
-                    .maybeSingle();
-
-                if (existingUser) {
-                    showToast("❌ Користувач з таким нікнеймом вже існує!");
-                    setIsSaving(false);
-                    return;
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!userFormData.nickname.trim()) {
+                    showToast('❌ Нікнейм обов’язковий!'); setIsSaving(false); return;
+                }
+                if (!emailRegex.test(userFormData.email)) {
+                    showToast('❌ Введіть коректний Email!'); setIsSaving(false); return;
+                }
+                if (userFormData.password.length < 6) {
+                    showToast('❌ Пароль має містити мінімум 6 символів!'); setIsSaving(false); return;
                 }
 
-                const { error } = await supabase
-                    .from('Users')
-                    .insert([dataToSave]);
-
-                if (error) throw error;
+                await callAdminFn({
+                    action: 'create',
+                    nickname: userFormData.nickname.trim(),
+                    email: userFormData.email.trim(),
+                    password: userFormData.password,
+                    first_name: userFormData.first_name.trim(),
+                    last_name: userFormData.last_name.trim(),
+                    phone: rawPhoneDigits,
+                    role: userFormData.role
+                });
                 showToast("🎉 Нового користувача успішно створено!");
             }
 
@@ -270,6 +252,23 @@ function AdminUsers() {
         }
     };
 
+    const handleResetPassword = async () => {
+        if (newPassword.length < 6) {
+            showToast('❌ Новий пароль має містити мінімум 6 символів!');
+            return;
+        }
+        setIsResetting(true);
+        try {
+            await callAdminFn({ action: 'set_password', userId: currentUserId, password: newPassword });
+            showToast('🔑 Пароль користувача змінено!');
+            setNewPassword('');
+        } catch (err) {
+            showToast('❌ Помилка зміни паролю: ' + err.message);
+        } finally {
+            setIsResetting(false);
+        }
+    };
+
     const confirmDeleteClick = (id) => {
         setUserToDelete(id);
     };
@@ -277,16 +276,19 @@ function AdminUsers() {
     const executeDelete = async () => {
         if (!userToDelete) return;
         try {
-            const user = users.find(u => u.Id === userToDelete);
-            if (user?.Role === 'admin' && users.filter(u => u.Role === 'admin').length <= 1) {
+            const user = users.find(u => u.id === userToDelete);
+            if (user?.role === 'admin' && users.filter(u => u.role === 'admin').length <= 1) {
                 showToast("❌ Не можна видалити єдиного адміністратора!");
                 closeDeleteModal();
                 return;
             }
-            const { error } = await supabase.from('Users').delete().eq('Id', userToDelete);
+
+            // Видалення через захищений RPC (перевіряє is_admin на сервері)
+            const { error } = await supabase.rpc('admin_delete_user', { target: userToDelete });
             if (error) throw error;
+
             showToast("🗑️ Користувача успішно видалено!");
-            setUsers(prev => prev.filter(u => u.Id !== userToDelete));
+            setUsers(prev => prev.filter(u => u.id !== userToDelete));
             closeDeleteModal();
         } catch (err) {
             showToast("❌ Помилка видалення: " + err.message);
@@ -324,42 +326,37 @@ function AdminUsers() {
                                     <thead>
                                         <tr>
                                             <th>Користувач</th>
-                                            <th>Контакти</th>
+                                            <th>Телефон</th>
                                             <th>Роль</th>
-                                            <th>Пароль</th>
                                             <th style={{ textAlign: 'center' }}>Дії</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {users.map((user) => (
-                                            <tr key={user.Id}>
+                                            <tr key={user.id}>
                                                 <td>
                                                     <div className="user-info-cell">
                                                         <div className="user-avatar-placeholder">
-                                                            {user.FirstName ? user.FirstName.charAt(0).toUpperCase() : '👤'}
+                                                            {user.first_name ? user.first_name.charAt(0).toUpperCase() : '👤'}
                                                         </div>
                                                         <div>
-                                                            <strong>{user.FirstName} {user.LastName}</strong>
-                                                            <div className="user-nickname">@{user.Nickname}</div>
+                                                            <strong>{user.first_name} {user.last_name}</strong>
+                                                            <div className="user-nickname">@{user.nickname}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div style={{ color: '#333', fontWeight: '500' }}>{user.Email}</div>
-                                                    <div style={{ color: '#666', fontSize: '0.9rem' }}>{user.Phone ? `+${user.Phone}` : 'Не вказано'}</div>
+                                                    <div style={{ color: '#666', fontSize: '0.9rem' }}>{user.phone ? `+${user.phone}` : 'Не вказано'}</div>
                                                 </td>
                                                 <td>
-                                                    <span className={`user-role-badge ${user.Role === 'admin' ? 'role-admin' : 'role-user'}`}>
-                                                        {user.Role === 'admin' ? 'Адмін' : 'Користувач'}
+                                                    <span className={`user-role-badge ${user.role === 'admin' ? 'role-admin' : 'role-user'}`}>
+                                                        {user.role === 'admin' ? 'Адмін' : 'Користувач'}
                                                     </span>
-                                                </td>
-                                                <td style={{ color: '#888', fontSize: '0.9rem' }}>
-                                                    {user.Password ? '••••••••' : '—'}
                                                 </td>
                                                 <td>
                                                     <div className="admin-table-actions">
                                                         <button className="edit-icon-btn" onClick={() => handleEditOpen(user)} title="Редагувати">✎</button>
-                                                        <button className="delete-icon-btn" onClick={() => confirmDeleteClick(user.Id)} title="Видалити">×</button>
+                                                        <button className="delete-icon-btn" onClick={() => confirmDeleteClick(user.id)} title="Видалити">×</button>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -386,8 +383,8 @@ function AdminUsers() {
                                     <label>Нікнейм (Логін)</label>
                                     <input
                                         type="text"
-                                        value={userFormData.Nickname}
-                                        onChange={e => setUserFormData({ ...userFormData, Nickname: e.target.value })}
+                                        value={userFormData.nickname}
+                                        onChange={e => setUserFormData({ ...userFormData, nickname: e.target.value })}
                                         className="form-control"
                                         placeholder="Наприклад: @ivan"
                                         maxLength="20"
@@ -399,8 +396,8 @@ function AdminUsers() {
                                     <label>Роль в системі</label>
                                     <CustomDropdown
                                         options={[{ value: 'user', label: 'Користувач' }, { value: 'admin', label: 'Адміністратор' }]}
-                                        value={userFormData.Role}
-                                        onChange={val => setUserFormData({ ...userFormData, Role: val })}
+                                        value={userFormData.role}
+                                        onChange={val => setUserFormData({ ...userFormData, role: val })}
                                         placeholder="Оберіть роль"
                                     />
                                 </div>
@@ -411,8 +408,8 @@ function AdminUsers() {
                                     <label>Ім'я</label>
                                     <input
                                         type="text"
-                                        value={userFormData.FirstName}
-                                        onChange={e => setUserFormData({ ...userFormData, FirstName: e.target.value })}
+                                        value={userFormData.first_name}
+                                        onChange={e => setUserFormData({ ...userFormData, first_name: e.target.value })}
                                         className="form-control"
                                         placeholder="Іван"
                                         maxLength="30"
@@ -423,8 +420,8 @@ function AdminUsers() {
                                     <label>Прізвище</label>
                                     <input
                                         type="text"
-                                        value={userFormData.LastName}
-                                        onChange={e => setUserFormData({ ...userFormData, LastName: e.target.value })}
+                                        value={userFormData.last_name}
+                                        onChange={e => setUserFormData({ ...userFormData, last_name: e.target.value })}
                                         className="form-control"
                                         placeholder="Іваненко"
                                         maxLength="30"
@@ -433,86 +430,88 @@ function AdminUsers() {
                                 </div>
                             </div>
 
-                            <div className="form-row">
-                                <div className="input-group">
-                                    <label>Email</label>
-                                    <input
-                                        type="email"
-                                        value={userFormData.Email}
-                                        onChange={e => setUserFormData({ ...userFormData, Email: e.target.value })}
-                                        className="form-control"
-                                        placeholder="vash@mail.com"
-                                        maxLength="100"
-                                        required
-                                    />
-                                </div>
-                                <div className="input-group">
-                                    <label>Телефон</label>
-                                    <input
-                                        type="tel"
-                                        value={userFormData.Phone}
-                                        onChange={handlePhoneChange}
-                                        placeholder="+38(0__) ___ __ __"
-                                        className="form-control"
-                                        maxLength="19"
-                                        required
-                                    />
-                                </div>
-                            </div>
-
                             <div className="input-group">
-                                <label>Пароль</label>
-                                <div className="password-input-wrapper-admin">
-                                    <input
-                                        type={showPassword ? "text" : "password"}
-                                        value={userFormData.Password}
-                                        onChange={e => setUserFormData({ ...userFormData, Password: e.target.value })}
-                                        className="form-control"
-                                        placeholder="Створіть надійний пароль"
-                                        maxLength="64"
-                                        required
-                                    />
-                                    <button
-                                        type="button"
-                                        className="toggle-password-admin"
-                                        onClick={() => setShowPassword(!showPassword)}
-                                    >
-                                        {showPassword ? "🙉" : "🙈"}
-                                    </button>
-                                </div>
+                                <label>Телефон</label>
+                                <input
+                                    type="tel"
+                                    value={userFormData.phone}
+                                    onChange={handlePhoneChange}
+                                    placeholder="+38(0__) ___ __ __"
+                                    className="form-control"
+                                    maxLength="19"
+                                    required
+                                />
                             </div>
 
-                            <div className="input-group" style={{ background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-                                <label style={{ color: '#49109f', marginBottom: '10px' }}>Секретне запитання</label>
-                                <p>Для відновлення паролю</p>
-                                <CustomDropdown
-                                    options={[
-                                        { value: 'Як звали вашого першого домашнього улюбленця?', label: 'Як звали вашого першого домашнього улюбленця?' },
-                                        { value: 'Яка ваша улюблена порода собак/котів?', label: 'Яка ваша улюблена порода собак/котів?' },
-                                        { value: 'Місто, у якому ви народилися?', label: 'Місто, у якому ви народилися?' },
-                                        { value: 'Який ваш улюблений колір?', label: 'Який ваш улюблений колір?' }
-                                    ]}
-                                    value={userFormData.SecretQuestion}
-                                    onChange={val => setUserFormData({ ...userFormData, SecretQuestion: val })}
-                                    placeholder="Оберіть питання"
-                                />
-                                <input
-                                    type="text"
-                                    value={userFormData.SecretAnswer}
-                                    onChange={e => setUserFormData({ ...userFormData, SecretAnswer: e.target.value })}
-                                    className="form-control"
-                                    required
-                                    placeholder="Ваша відповідь..."
-                                    maxLength="50"
-                                    style={{ marginTop: '10px' }}
-                                />
-                            </div>
+                            {/* Email і пароль — лише при СТВОРЕННІ (для наявних керує Supabase Auth) */}
+                            {!editMode && (
+                                <>
+                                    <div className="input-group">
+                                        <label>Email</label>
+                                        <input
+                                            type="email"
+                                            value={userFormData.email}
+                                            onChange={e => setUserFormData({ ...userFormData, email: e.target.value })}
+                                            className="form-control"
+                                            placeholder="vash@mail.com"
+                                            maxLength="100"
+                                            required
+                                        />
+                                    </div>
+                                    <div className="input-group">
+                                        <label>Пароль</label>
+                                        <div className="password-input-wrapper-admin">
+                                            <input
+                                                type={showPassword ? "text" : "password"}
+                                                value={userFormData.password}
+                                                onChange={e => setUserFormData({ ...userFormData, password: e.target.value })}
+                                                className="form-control"
+                                                placeholder="Мінімум 6 символів"
+                                                maxLength="64"
+                                                required
+                                            />
+                                            <button type="button" className="toggle-password-admin" onClick={() => setShowPassword(!showPassword)}>
+                                                {showPassword ? "🙉" : "🙈"}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </>
+                            )}
 
                             <div className="form-actions">
                                 <button type="button" className="cancel-btn" onClick={closeEditModal} disabled={isSaving}>Скасувати</button>
                                 <button type="submit" className="save-btn" disabled={isSaving}>{isSaving ? 'Збереження...' : 'Зберегти користувача'}</button>
                             </div>
                         </form>
+
+                        {/* Скидання паролю — лише при редагуванні наявного користувача */}
+                        {editMode && (
+                            <div className="input-group" style={{ marginTop: '10px', background: '#f8f9fa', padding: '15px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+                                <label style={{ color: '#49109f', marginBottom: '10px' }}>🔑 Скинути пароль</label>
+                                <div className="password-input-wrapper-admin">
+                                    <input
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={e => setNewPassword(e.target.value)}
+                                        className="form-control"
+                                        placeholder="Новий пароль (мінімум 6 символів)"
+                                        maxLength="64"
+                                    />
+                                    <button type="button" className="toggle-password-admin" onClick={() => setShowNewPassword(!showNewPassword)}>
+                                        {showNewPassword ? "🙉" : "🙈"}
+                                    </button>
+                                </div>
+                                <button
+                                    type="button"
+                                    className="save-btn"
+                                    style={{ marginTop: '10px' }}
+                                    onClick={handleResetPassword}
+                                    disabled={isResetting || newPassword.length < 6}
+                                >
+                                    {isResetting ? 'Змінюємо...' : 'Змінити пароль'}
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>,
                 document.body

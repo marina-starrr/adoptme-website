@@ -18,7 +18,7 @@ function UserHeader() {
     const [selectedPetIds, setSelectedPetIds] = useState([]);
     const [isFetchingLive, setIsFetchingLive] = useState(false);
 
-    const { isLoggedIn, logout } = useAuth();
+    const { isLoggedIn, logout, userId, nickname, role, profile, userEmail } = useAuth();
     const [isOpen, setIsOpen] = useState(false);
     const [isModalClosing, setIsModalClosing] = useState(false);
     const [isSuccessScreen, setIsSuccessScreen] = useState(false);
@@ -43,7 +43,7 @@ function UserHeader() {
 
     const { showToast } = useToast();
 
-    const userRole = localStorage.getItem('userRole');
+    const userRole = role;
     const isAuthPage = location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password';
     const showLoggedInUI = isLoggedIn && !isAuthPage;
 
@@ -74,9 +74,7 @@ function UserHeader() {
 
     useEffect(() => {
         const fetchNotifications = async () => {
-            const userNickname = localStorage.getItem('userNickname');
-
-            if (!userNickname || userNickname === 'Гість') {
+            if (!userId) {
                 setNotifications([]);
                 return;
             }
@@ -87,20 +85,20 @@ function UserHeader() {
             const { data: treatmentData, error: treatmentError } = await supabase
                 .from('TreatmentNotifications')
                 .select('*')
-                .eq('UserNickname', userNickname)
+                .eq('user_id', userId)
                 .eq('Status', 'Оброблена');
 
             const { data: adoptionData, error: adoptionError } = await supabase
                 .from('AdoptionRequests')
                 .select('*')
-                .eq('UserNickname', userNickname)
+                .eq('user_id', userId)
                 .neq('Status', 'Нова')
                 .eq('UserNotified', false);
 
             const { data: favoriteData, error: favoriteError } = await supabase
                 .from('FavoriteNotifications')
                 .select('*')
-                .eq('UserNickname', userNickname)
+                .eq('user_id', userId)
                 .eq('IsRead', false);
 
             let combinedNotifications = [];
@@ -156,11 +154,8 @@ function UserHeader() {
             setNotifications(combinedNotifications);
         };
 
-        if (isLoggedIn) {
+        if (isLoggedIn && userId) {
             fetchNotifications();
-
-            const userNickname = localStorage.getItem('userNickname');
-            if (!userNickname || userNickname === 'Гість') return;
 
             const channel = supabase
                 .channel('user-live-notifications')
@@ -174,38 +169,16 @@ function UserHeader() {
                 supabase.removeChannel(channel);
             };
         }
-    }, [isLoggedIn]);
+    }, [isLoggedIn, userId]);
 
     useEffect(() => {
-        if (showForm) {
-            const loadUserData = async () => {
-                const localNickname = localStorage.getItem('userNickname');
-                if (localNickname && localNickname !== 'Гість') {
-                    try {
-                        const { data: userData, error } = await supabase
-                            .from('Users')
-                            .select('FirstName, LastName, Phone, Email')
-                            .eq('Nickname', localNickname)
-                            .maybeSingle();
-
-                        if (userData) {
-                            if (userData.FirstName) setAdopterFirstName(userData.FirstName);
-                            if (userData.LastName) setAdopterLastName(userData.LastName);
-                            if (userData.Email) setAdopterEmail(userData.Email);
-                            if (userData.Phone) {
-                                setAdopterPhone(formatExistingPhone(userData.Phone));
-                            } else {
-                                setAdopterPhone('');
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Помилка завантаження профілю:', err);
-                    }
-                }
-            };
-            loadUserData();
+        if (showForm && profile) {
+            if (profile.first_name) setAdopterFirstName(profile.first_name);
+            if (profile.last_name) setAdopterLastName(profile.last_name);
+            if (userEmail) setAdopterEmail(userEmail);
+            setAdopterPhone(profile.phone ? formatExistingPhone(profile.phone) : '');
         }
-    }, [showForm]);
+    }, [showForm, profile, userEmail]);
 
     useEffect(() => {
         const handleOpenFavorites = () => {
@@ -273,13 +246,11 @@ function UserHeader() {
     };
 
     const handleRemove = async (id) => {
-        const userNickname = localStorage.getItem('userNickname');
-
-        if (userNickname) {
+        if (userId) {
             const { error } = await supabase
                 .from('Favorites')
                 .delete()
-                .eq('UserNickname', userNickname)
+                .eq('user_id', userId)
                 .eq('PetId', id);
 
             if (error) {
@@ -375,11 +346,11 @@ function UserHeader() {
         const selectedPets = livePetsData.filter(p => selectedPetIds.includes(p.Id));
         const petNames = selectedPets.map(f => f.Name).join(", ");
         const petIds = selectedPets.map(f => f.Id);
-        const userNickname = localStorage.getItem('userNickname');
 
         const adoptionData = {
             PetIds: petIds,
-            UserNickname: userNickname,
+            user_id: userId,
+            UserNickname: nickname,
             PetName: petNames,
             AdopterName: `${adopterFirstName} ${adopterLastName}`,
             AdopterPhone: adopterPhone,
@@ -397,11 +368,11 @@ function UserHeader() {
         const { error } = await supabase.from('AdoptionRequests').insert([adoptionData]);
 
         if (!error) {
-            if (userNickname && petIds.length > 0) {
+            if (userId && petIds.length > 0) {
                 await supabase
                     .from('Favorites')
                     .delete()
-                    .eq('UserNickname', userNickname)
+                    .eq('user_id', userId)
                     .in('PetId', petIds);
             }
 
@@ -439,20 +410,8 @@ function UserHeader() {
         }, 300);
     };
 
-    const handleLogoutClick = () => {
-        const userNickname = localStorage.getItem('userNickname');
-        const currentFavorites = localStorage.getItem('favorites');
-
-        if (userNickname && currentFavorites) {
-            localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
-        }
-
-        localStorage.removeItem('favorites');
-        localStorage.removeItem('userNickname');
-        localStorage.removeItem('userRole');
-        window.dispatchEvent(new Event('cartUpdated'));
-
-        logout();
+    const handleLogoutClick = async () => {
+        await logout(); // signOut + очищення localStorage + подія cartUpdated
         setIsAccountOpen(false);
         navigate('/login');
     };
@@ -539,7 +498,7 @@ function UserHeader() {
                         {isAccountOpen && (
                             <div className="profile-mini-menu">
                                 <div className="mini-menu-header">
-                                    <span className="mini-menu-name">@{localStorage.getItem('userNickname')}</span>
+                                    <span className="mini-menu-name">@{nickname}</span>
                                 </div>
 
                                 {userRole === 'admin' ? (

@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom'; 
+import { useNavigate, Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
 import './Help.css';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function Help() {
   const navigate = useNavigate();
+  const { userId, nickname, profile } = useAuth();
 
   const [openFaq, setOpenFaq] = useState(null);
 
@@ -73,41 +75,18 @@ function Help() {
     return formatted;
   };
 
-  const openModal = async () => {
-    const localNickname = localStorage.getItem('userNickname');
-
-    if (!localNickname || localNickname === 'Гість') {
+  const openModal = () => {
+    if (!userId) {
       showToast('⚠️ Будь ласка, увійдіть або зареєструйтесь, щоб надіслати заявку на волонтерство!');
-      navigate('/login'); 
-      return; 
+      navigate('/login');
+      return;
     }
 
     setIsSuccessScreen(false);
     setIsModalOpen(true);
 
-    let name = '';
-    let phone = '';
-
-    try {
-      const { data: userData, error } = await supabase
-        .from('Users')
-        .select('FirstName, Phone')
-        .eq('Nickname', localNickname)
-        .maybeSingle();
-
-      if (userData) {
-        name = userData.FirstName || '';
-        phone = userData.Phone || '';
-      } else if (error) {
-        console.error("Помилка завантаження з БД:", error);
-      }
-    } catch (err) {
-      console.error("Помилка автоматичного завантаження профілю:", err);
-    }
-
-    if (!name) {
-      name = localNickname;
-    }
+    const name = profile?.first_name || nickname || '';
+    const phone = profile?.phone || '';
 
     if (name) setVolunteerName(name);
     if (phone) {
@@ -171,8 +150,9 @@ function Help() {
 
     const volunteerData = {
       PetIds: selectedPet ? [selectedPet.Id] : [],
-      UserNickname: localStorage.getItem('userNickname') || 'Гість',
-      PetName: selectedPet ? `Волонтерство (${selectedPet.Name})` : 'Волонтерство', 
+      user_id: userId,
+      UserNickname: nickname,
+      PetName: selectedPet ? `Волонтерство (${selectedPet.Name})` : 'Волонтерство',
       AdopterName: volunteerName,
       AdopterPhone: volunteerPhone,
       Reason: `Вид допомоги: ${finalHelpType}.\nЗручний день: ${formattedDate}.`,

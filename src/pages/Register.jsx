@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
 import './Login.css';
 import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
@@ -17,11 +16,7 @@ function Register() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const [secretQuestion, setSecretQuestion] = useState('Як звали вашого першого домашнього улюбленця?');
-  const [secretAnswer, setSecretAnswer] = useState('');
-
   const navigate = useNavigate();
-  const { login } = useAuth();
   const { showToast } = useToast(); // 👈 Підключаємо функцію з контексту
 
   const handlePhoneChange = (e) => {
@@ -59,65 +54,54 @@ function Register() {
       return;
     }
 
-    if (!secretAnswer.trim()) {
-      showToast('❌ Будь ласка, дайте відповідь на секретне запитання!');
-      return;
-    }
-
     try {
       const cleanedNickname = nickname.trim();
       const cleanedEmail = email.trim();
       // Очищаємо телефон від дужок, плюсів та пробілів
       const cleanedPhone = phone.replace(/\D/g, '');
 
-      // 1. ПЕРЕВІРКА НА ДУБЛІКАТИ
-      const { data: existingUsers, error: checkError } = await supabase
-        .from('Users')
-        .select('Nickname, Email, Phone')
-        .or(`Nickname.eq.${cleanedNickname},Email.eq.${cleanedEmail},Phone.eq.${cleanedPhone}`);
+      // 1. Перевірка, що нікнейм вільний (безпечний RPC → лише true/false)
+      const { data: available, error: nickError } = await supabase
+        .rpc('nickname_available', { p_nickname: cleanedNickname });
 
-      if (checkError) {
+      if (nickError) {
         showToast('❌ Помилка перевірки даних!');
         return;
       }
-
-      if (existingUsers && existingUsers.length > 0) {
-        if (existingUsers.some(u => u.Nickname === cleanedNickname)) showToast('❌ Цей Нікнейм вже зайнятий!');
-        else if (existingUsers.some(u => u.Email === cleanedEmail)) showToast('❌ Цей Email вже зареєстровано!');
-        else if (existingUsers.some(u => u.Phone === cleanedPhone)) showToast('❌ Цей номер телефону вже використовується!');
+      if (!available) {
+        showToast('❌ Цей Нікнейм вже зайнятий!');
         return;
       }
 
-      // 2. РЕЄСТРАЦІЯ
-      const { error: insertError } = await supabase
-        .from('Users')
-        .insert([
-          {
-            Nickname: cleanedNickname,
-            FirstName: firstName.trim(),
-            LastName: lastName.trim(),
-            Phone: cleanedPhone,
-            Email: cleanedEmail,
-            Password: password,
-            SecretQuestion: secretQuestion,
-            SecretAnswer: secretAnswer.trim().toLowerCase()
-          }
-        ]);
+      // 2. Реєстрація через Supabase Auth. Профіль створить тригер handle_new_user
+      //    з даних, переданих у user_metadata.
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: cleanedEmail,
+        password,
+        options: {
+          data: {
+            nickname: cleanedNickname,
+            first_name: firstName.trim(),
+            last_name: lastName.trim(),
+            phone: cleanedPhone,
+          },
+          emailRedirectTo: `${window.location.origin}/login`,
+        },
+      });
 
-      if (insertError) {
-        showToast('❌ Помилка при реєстрації!');
-        console.error("Insert Error:", insertError);
+      if (signUpError) {
+        if (signUpError.message?.toLowerCase().includes('already registered')) {
+          showToast('❌ Цей Email вже зареєстровано!');
+        } else {
+          showToast('❌ Помилка при реєстрації: ' + signUpError.message);
+        }
+        console.error("SignUp Error:", signUpError);
         return;
       }
 
-      // 3. УСПІШНИЙ ВХІД
-      localStorage.setItem('userNickname', cleanedNickname);
-      localStorage.setItem('userRole', 'user');
-      login();
-      window.dispatchEvent(new Event('authChanged'));
-
-      navigate('/', {
-        state: { welcomeMsg: '✅ Реєстрація успішна! Вітаємо в родині AdoptMe 🐾' }
+      // 3. Email-підтвердження увімкнено → сесії ще нема, ведемо на вхід
+      navigate('/login', {
+        state: { welcomeMsg: '✅ Майже готово! Перевірте пошту й підтвердьте email, щоб увійти 🐾' }
       });
 
     } catch (err) {
@@ -191,30 +175,6 @@ function Register() {
                 {showConfirmPassword ? "🙉" : "🙈"}
               </button>
             </div>
-          </div>
-
-          <div className="input-group" style={{ marginTop: '15px', borderTop: '1px solid #eee', paddingTop: '15px' }}>
-            <label>Секретне запитання</label>
-            <p>Для відновлення паролю</p>
-            <select
-              value={secretQuestion}
-              onChange={(e) => setSecretQuestion(e.target.value)}
-              style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #ccc', marginBottom: '10px' }}
-            >
-              <option value="Як звали вашого першого домашнього улюбленця?">Як звали вашого першого домашнього улюбленця?</option>
-              <option value="Яка ваша улюблена порода собак/котів?">Яка ваша улюблена порода собак/котів?</option>
-              <option value="Місто, у якому ви народилися?">Місто, у якому ви народилися?</option>
-              <option value="Який ваш улюблений колір?">Який ваш улюблений колір?</option>
-            </select>
-
-            <input
-              type="text"
-              value={secretAnswer}
-              onChange={(e) => setSecretAnswer(e.target.value)}
-              placeholder="Ваша відповідь..."
-              maxLength="30"
-              required
-            />
           </div>
 
           <button type="submit" className="login-submit-btn" style={{ marginTop: '15px' }}>Зареєструватися</button>

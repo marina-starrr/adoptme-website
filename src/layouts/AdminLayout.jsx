@@ -81,21 +81,8 @@ function AdminLayout() {
         };
     }, []);
 
-    const handleLogout = () => {
-        const userNickname = localStorage.getItem('userNickname');
-        const currentFavorites = localStorage.getItem('favorites');
-
-        if (userNickname && currentFavorites) {
-            localStorage.setItem(`favorites_${userNickname}`, currentFavorites);
-        }
-
-        localStorage.removeItem('favorites');
-        localStorage.removeItem('userNickname');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('token');
-        window.dispatchEvent(new Event('cartUpdated'));
-
-        logout();
+    const handleLogout = async () => {
+        await logout(); // signOut + очищення localStorage + подія cartUpdated
         navigate('/login', {
             state: { welcomeMsg: '🐾 Ви успішно вийшли з акаунту' }
         });

@@ -229,7 +229,7 @@ function AdminPets() {
   const getTodayDate = () => new Date().toISOString().split('T')[0];
 
   const initialFormState = {
-    Name: '', Type: 'Кіт', Breed: 'Безпородна', Age: '', Gender: 'Хлопчик', ImageName: '', Images: [], Tags: '', Description: '', HomeDescription: null, Status: 'Шукає дім', OwnerId: null, OwnerName: '', ArrivalDate: getTodayDate(), IsVaccinated: false, MedicalNotes: '', EnergyLevel: 'Середній', Friendliness: 'Дружелюбний до всіх', NeedsTraining: false, Size: 'Середній', FavoriteFood: "М'яско"
+    Name: '', Type: 'Кіт', Breed: 'Безпородна', Age: '', Gender: 'Хлопчик', ImageName: '', Images: [], Tags: '', Description: '', HomeDescription: null, Status: 'Шукає дім', OwnerUserId: null, OwnerName: '', ArrivalDate: getTodayDate(), IsVaccinated: false, MedicalNotes: '', EnergyLevel: 'Середній', Friendliness: 'Дружелюбний до всіх', NeedsTraining: false, Size: 'Середній', FavoriteFood: "М'яско"
   };
 
   const [petFormData, setPetFormData] = useState(initialFormState);
@@ -266,7 +266,9 @@ function AdminPets() {
   }
 
   async function fetchUsers() {
-    const { data, error = null } = await supabase.from('Users').select('*');
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, nickname');
     if (!error) {
       setUsersList(data || []);
     }
@@ -296,7 +298,7 @@ function AdminPets() {
 
     setPetFormData({
       ...pet,
-      Name: pet.Name || '', Type: pet.Type || 'Кіт', Breed: pet.Breed || 'Безпородна', Age: pet.Age || '', Gender: pet.Gender || 'Хлопчик', ImageName: pet.ImageName || '', Images: pet.Images || [], Tags: pet.Tags || '', Description: pet.Description || '', HomeDescription: pet.HomeDescription || '', Status: pet.Status || 'Шукає дім', OwnerId: pet.OwnerId || null, OwnerName: pet.OwnerName || '', ArrivalDate: pet.ArrivalDate || getTodayDate(), IsVaccinated: pet.IsVaccinated || false, MedicalNotes: pet.MedicalNotes || '', EnergyLevel: pet.EnergyLevel || 'Середній', Friendliness: pet.Friendliness || 'Дружелюбний до всіх', NeedsTraining: pet.NeedsTraining || false, Size: pet.Size || 'Середній', FavoriteFood: pet.FavoriteFood || "М'яско"
+      Name: pet.Name || '', Type: pet.Type || 'Кіт', Breed: pet.Breed || 'Безпородна', Age: pet.Age || '', Gender: pet.Gender || 'Хлопчик', ImageName: pet.ImageName || '', Images: pet.Images || [], Tags: pet.Tags || '', Description: pet.Description || '', HomeDescription: pet.HomeDescription || '', Status: pet.Status || 'Шукає дім', OwnerUserId: pet.OwnerUserId || null, OwnerName: pet.OwnerName || '', ArrivalDate: pet.ArrivalDate || getTodayDate(), IsVaccinated: pet.IsVaccinated || false, MedicalNotes: pet.MedicalNotes || '', EnergyLevel: pet.EnergyLevel || 'Середній', Friendliness: pet.Friendliness || 'Дружелюбний до всіх', NeedsTraining: pet.NeedsTraining || false, Size: pet.Size || 'Середній', FavoriteFood: pet.FavoriteFood || "М'яско"
     });
     setSelectedFiles([]);
     setIsModalOpen(true);
@@ -363,7 +365,7 @@ function AdminPets() {
       };
 
       if (!isHome) {
-        dataToSave.OwnerId = null;
+        dataToSave.OwnerUserId = null;
         dataToSave.OwnerName = null;
         dataToSave.HomeDescription = null;
       }
@@ -379,20 +381,17 @@ function AdminPets() {
         if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
           const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
-          const { data: favUsers } = await supabase.from('Favorites').select('*').eq('PetId', currentPetId);
-          const validFavUsers = favUsers ? favUsers.filter(fav => fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname) : [];
+          const { data: favUsers } = await supabase.from('Favorites').select('user_id').eq('PetId', currentPetId);
+          const validFavUsers = favUsers ? favUsers.filter(fav => fav.user_id) : [];
 
           if (validFavUsers.length > 0) {
-            const notificationsToInsert = validFavUsers.map(fav => {
-              const nick = fav.UserNickname || fav.userNickname || fav.usernickname || fav.user_nickname;
-              return {
-                UserNickname: nick,
-                PetId: currentPetId,
-                PetName: dataToSave.Name,
-                NewStatus: targetStatus,
-                IsRead: false
-              };
-            });
+            const notificationsToInsert = validFavUsers.map(fav => ({
+              user_id: fav.user_id,
+              PetId: currentPetId,
+              PetName: dataToSave.Name,
+              NewStatus: targetStatus,
+              IsRead: false
+            }));
             await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
           }
         }
@@ -404,22 +403,18 @@ function AdminPets() {
         if (newPetData && newPetData.length > 0) {
           const newPetId = newPetData[0].Id || newPetData[0].id;
 
-          const { data: freshUsers } = await supabase.from('Users').select('Nickname');
+          const { data: freshUsers } = await supabase.from('profiles').select('id');
 
           if (freshUsers && freshUsers.length > 0) {
-            const validUsers = freshUsers.filter(u => u.Nickname && u.Nickname !== 'Гість');
+            const notificationsToInsert = freshUsers.map(user => ({
+              user_id: user.id,
+              PetId: newPetId,
+              PetName: dataToSave.Name,
+              NewStatus: 'Новенький хвостик',
+              IsRead: false
+            }));
 
-            if (validUsers.length > 0) {
-              const notificationsToInsert = validUsers.map(user => ({
-                UserNickname: user.Nickname,
-                PetId: newPetId,
-                PetName: dataToSave.Name,
-                NewStatus: 'Новенький хвостик',
-                IsRead: false
-              }));
-
-              await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
-            }
+            await supabase.from('FavoriteNotifications').insert(notificationsToInsert);
           }
         }
         showToast("🎉 Нового хвостика успішно додано!");
@@ -863,17 +858,16 @@ function AdminPets() {
                   <CustomDropdown
                     placeholder="-- Виберіть користувача --"
                     options={usersList.map(user => ({
-                      value: user.Id.toString(),
-                      label: `${user.FirstName} ${user.LastName} (@${user.Nickname})`
+                      value: user.id,
+                      label: `${user.first_name} ${user.last_name} (@${user.nickname})`
                     }))}
-                    value={petFormData.OwnerId ? petFormData.OwnerId.toString() : ''}
+                    value={petFormData.OwnerUserId || ''}
                     onChange={val => {
-                      const selectedUserId = val;
-                      const selectedUser = usersList.find(u => u.Id.toString() === selectedUserId);
+                      const selectedUser = usersList.find(u => u.id === val);
                       setPetFormData({
                         ...petFormData,
-                        OwnerId: selectedUserId ? parseInt(selectedUserId) : null,
-                        OwnerName: selectedUser ? `${selectedUser.FirstName} ${selectedUser.LastName}` : ''
+                        OwnerUserId: val || null,
+                        OwnerName: selectedUser ? `${selectedUser.first_name} ${selectedUser.last_name}` : ''
                       });
                     }}
                   />
