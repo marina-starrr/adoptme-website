@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../supabaseClient';
+import { petImageUrl } from '../../utils/petImage';
 import './AdminHappyPets.css';
 import { useToast } from '../../context/ToastContext';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -370,7 +371,7 @@ function AdminHappyPets() {
                         <div className="image-preview-container">
                             {formData.images.map((imgName, index) => (
                                 <div key={index} className="image-preview-box">
-                                    <img src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`} alt="preview" />
+                                    <img src={petImageUrl(imgName)} alt="preview" />
                                     <button type="button" onClick={() => removeImage(index)} className="remove-img-btn">✖</button>
                                 </div>
                             ))}
@@ -406,7 +407,7 @@ function AdminHappyPets() {
                         <tbody>
                             {happyPets.map((pet) => {
                                 const firstImg = (pet.Images && pet.Images.length > 0) ? pet.Images[0] : pet.ImageName;
-                                const imgSrc = firstImg ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${firstImg}` : '/placeholder.png';
+                                const imgSrc = firstImg ? petImageUrl(firstImg) : '/placeholder.png';
 
                                 return (
                                     <tr key={pet.Id}>

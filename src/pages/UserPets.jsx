@@ -1,58 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
+import CustomDropdown from '../components/CustomDropdown';
 import UserPetCard from '../components/UserPetCard';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
+import { getAgeInMonths } from '../utils/petAge';
 import './UserPets.css';
 import { useToast } from '../context/ToastContext';
-
-// КАСТОМНИЙ ВИПАДАЮЧИЙ СПИСОК
-function CustomDropdown({ options, value, onChange, placeholder }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  return (
-    <div className="custom-dropdown-container" ref={dropdownRef}>
-      <div 
-        className={`custom-dropdown-header ${isOpen ? 'open' : ''}`} 
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        <span>{selectedOption ? selectedOption.label : placeholder}</span>
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-      </div>
-      
-      {isOpen && (
-        <div className="custom-dropdown-list-wrapper">
-          <ul className="custom-dropdown-list">
-            {options.map((opt) => (
-              <li 
-                key={opt.value} 
-                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
 
 function UserPets() {
   const [petsList, setPetsList] = useState([]);
@@ -129,19 +83,6 @@ function UserPets() {
       setLoading(false);
     }
   }
-
-  const getAgeInMonths = (ageStr) => {
-    if (!ageStr) return 0;
-    const lowerStr = ageStr.toLowerCase();
-    const match = lowerStr.match(/(\d+([.,]\d+)?)/);
-    if (!match) return 0;
-    const num = parseFloat(match[0].replace(',', '.'));
-
-    if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('р.')) return num * 12;
-    if (lowerStr.includes('тиж')) return num * 0.25;
-    if (lowerStr.includes('дн') || lowerStr.includes('день')) return num / 30;
-    return num;
-  };
 
   // Розумна фільтрація
   const filteredAndSortedPets = [...petsList]
@@ -406,7 +347,7 @@ function UserPets() {
                           age={pet.Age}
                           gender={pet.Gender}
                           tags={pet.Tags} 
-                          image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
+                          image={petImageUrl(pet.ImageName)}
                           status={pet.Status} 
                         />
                       </div>

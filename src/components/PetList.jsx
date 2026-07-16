@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
 
 const PetList = () => {
   const [pets, setPets] = useState([]);
@@ -17,16 +18,12 @@ const PetList = () => {
     fetchPets();
   }, []);
 
-  const getImageUrl = (fileName) => {
-    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${fileName}`;
-  };
-
   return (
     <div className="catalog-grid">
       {pets.map((pet) => (
         <div key={pet.Id} className="pet-card">
           <img 
-            src={getImageUrl(pet.ImageName)} 
+            src={petImageUrl(pet.ImageName)}
             alt={pet.Name} 
             style={{ width: '200px', borderRadius: '10px' }} 
           />

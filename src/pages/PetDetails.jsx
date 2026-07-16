@@ -1,60 +1,15 @@
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { useEffect, useState, useRef } from 'react'; // 👈 Додано useRef
+import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
+import BaseDropdown from '../components/CustomDropdown';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import './PetDetails.css';
 
-// 🌟 Компонент випадаючого списку
-function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  return (
-    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1 }}>
-      <div 
-        className={`custom-dropdown-header ${isOpen ? 'open' : ''} inline-input`} 
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        style={{ cursor: disabled ? 'default' : 'pointer' }}
-      >
-        <span>{selectedOption ? selectedOption.label : placeholder}</span>
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-      </div>
-      
-      {isOpen && !disabled && (
-        <div className="custom-dropdown-list-wrapper">
-          <ul className="custom-dropdown-list">
-            {options.map((opt) => (
-              <li 
-                key={opt.value} 
-                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
+// Інлайн-варіант випадаючого списку для картки тваринки
+const CustomDropdown = (props) => <BaseDropdown variant="inline" {...props} />;
 
 const isVideoFile = (urlOrName) => {
   if (!urlOrName) return false;
@@ -110,7 +65,7 @@ function PetDetails() {
     const initialImgs = getDbImages(pet).map(imgName => ({
       isNew: false,
       name: imgName,
-      preview: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`
+      preview: petImageUrl(imgName)
     }));
     setEditableImages(initialImgs);
     setActiveImageIndex(0);
@@ -242,7 +197,7 @@ function PetDetails() {
 
     const dbImgs = getDbImages(pet);
     const imageUrl = dbImgs.length > 0
-      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${dbImgs[0]}`
+      ? petImageUrl(dbImgs[0])
       : null;
 
     if (!isAlreadyFav) {
@@ -307,7 +262,7 @@ function PetDetails() {
             : isVideoFile(img.name)
       }))
     : getDbImages(pet).map(imgName => ({
-        url: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${imgName}`,
+        url: petImageUrl(imgName),
         isVideo: isVideoFile(imgName)
       }));
 

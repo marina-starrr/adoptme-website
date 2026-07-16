@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom'; 
 import { useAuth } from '../context/AuthContext'; 
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
 import './Reviews.css';
 import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
@@ -230,7 +231,7 @@ function Reviews() {
 
                                     const imgElement = (
                                         <img 
-                                            src={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${petImage}`} 
+                                            src={petImageUrl(petImage)}
                                             alt="Тваринка" 
                                             className="pet-bubble-img" 
                                             title="Переглянути анкету"

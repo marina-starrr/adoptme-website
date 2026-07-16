@@ -1,60 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
+import { petImageUrl } from '../../utils/petImage';
+import { getAgeInMonths } from '../../utils/petAge';
+import BaseDropdown from '../../components/CustomDropdown';
 import './AdminPets.css';
 import { useToast } from '../../context/ToastContext';
 
-// Універсальний компонент випадаючого списку
-function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  return (
-    <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef} style={{ width: '100%', opacity: disabled ? 0.6 : 1, pointerEvents: disabled ? 'none' : 'auto', position: 'relative' }}>
-      <div
-        className={`custom-dropdown-header ${isOpen ? 'open' : ''} form-control`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-        style={{ padding: '14px 18px', border: isOpen ? '1px solid #6847DD' : '1px solid rgba(104, 71, 221, 0.2)' }}
-      >
-        <span>{selectedOption ? selectedOption.label : placeholder}</span>
-        <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-      </div>
-
-      {isOpen && !disabled && (
-        <div className="custom-dropdown-list-wrapper" style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, width: '100%', zIndex: 1000 }}>
-          <ul className="custom-dropdown-list">
-            {options.map((opt) => (
-              <li
-                key={opt.value}
-                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
-                onClick={() => {
-                  onChange(opt.value);
-                  setIsOpen(false);
-                }}
-              >
-                {opt.label}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
+// Варіант випадаючого списку для форм адмінки
+const CustomDropdown = (props) => <BaseDropdown variant="form" {...props} />;
 
 function AdminPets() {
   const navigate = useNavigate();
@@ -99,22 +55,6 @@ function AdminPets() {
   const [filterEnergy, setFilterEnergy] = useState('Всі');
   const [filterVaccinated, setFilterVaccinated] = useState('Всі');
   const [filterTraining, setFilterTraining] = useState('Всі');
-
-  const getAgeInMonths = (ageStr) => {
-    if (!ageStr) return 0;
-    const lowerStr = ageStr.toLowerCase();
-    const match = lowerStr.match(/(\d+([.,]\d+)?)/);
-    if (!match) return 0;
-    const num = parseFloat(match[0]);
-    if (lowerStr.includes('рік') || lowerStr.includes('рок') || lowerStr.includes('річ') || lowerStr.includes('р.')) {
-      return num * 12;
-    } else if (lowerStr.includes('тиж')) {
-      return num * 0.25;
-    } else if (lowerStr.includes('дн') || lowerStr.includes('день')) {
-      return num / 30;
-    }
-    return num;
-  };
 
   const filteredAndSortedPets = [...petsList]
     .filter(pet => {
@@ -625,7 +565,7 @@ function AdminPets() {
                     age={pet.Age}
                     gender={pet.Gender}
                     tags={pet.Tags}
-                    image={`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`}
+                    image={petImageUrl(pet.ImageName)}
                     isAdmin={true}
                     status={pet.Status}
                   />

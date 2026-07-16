@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
 import { useAuth } from '../context/AuthContext';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Profile.css';
@@ -92,7 +93,7 @@ function Profile() {
             ...app,
             PetId: matchedPet?.Id,
             PetImage: matchedPet
-              ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${matchedPet.ImageName}`
+              ? petImageUrl(matchedPet.ImageName)
               : '/ava.png'
           };
         });

@@ -1,57 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
+import CustomDropdown from '../../components/CustomDropdown';
 import './AdminUsers.css';
 import { useToast } from '../../context/ToastContext';
-
-// Універсальний компонент випадаючого списку
-function CustomDropdown({ options, value, onChange, placeholder, disabled }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const dropdownRef = useRef(null);
-
-    useEffect(() => {
-        const handleClickOutside = (event) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-                setIsOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    const selectedOption = options.find(opt => opt.value === value);
-
-    return (
-        <div className={`custom-dropdown-container ${disabled ? 'disabled' : ''}`} ref={dropdownRef}>
-            <div
-                className={`custom-dropdown-header ${isOpen ? 'open' : ''}`}
-                onClick={() => !disabled && setIsOpen(!isOpen)}
-            >
-                <span>{selectedOption ? selectedOption.label : <span style={{ color: '#999' }}>{placeholder}</span>}</span>
-                <span className="dropdown-arrow">{isOpen ? '▲' : '▼'}</span>
-            </div>
-
-            {isOpen && !disabled && (
-                <div className="custom-dropdown-list-wrapper">
-                    <ul className="custom-dropdown-list">
-                        {options.map((opt) => (
-                            <li
-                                key={opt.value}
-                                className={`custom-dropdown-item ${value === opt.value ? 'selected' : ''}`}
-                                onClick={() => {
-                                    onChange(opt.value);
-                                    setIsOpen(false);
-                                }}
-                            >
-                                {opt.label}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            )}
-        </div>
-    );
-}
 
 // Виклик Edge Function admin-users із розбором помилки
 async function callAdminFn(body) {

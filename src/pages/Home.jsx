@@ -3,6 +3,7 @@ import { useLocation, Link } from 'react-router-dom';
 import BackgroundPaws from '../components/BackgroundPaws';
 import './Home.css';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
 import { useToast } from '../context/ToastContext'; 
 
 function LuckyCard({ pet }) {
@@ -109,9 +110,9 @@ function Home() {
         const formattedPets = visiblePetsData.map(pet => {
           let images = [];
           if (pet.Images && Array.isArray(pet.Images) && pet.Images.length > 0) {
-            images = pet.Images.map(img => `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${img}`);
+            images = pet.Images.map(img => petImageUrl(img));
           } else if (pet.ImageName) {
-            images = [`${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`];
+            images = [petImageUrl(pet.ImageName)];
           } else {
             images = ['/placeholder.png'];
           }
@@ -186,7 +187,7 @@ function Home() {
   const getNewPetImg = (pet) => {
     const firstImg = (pet.Images && pet.Images.length > 0) ? pet.Images[0] : pet.ImageName;
     return firstImg 
-      ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${firstImg}` 
+      ? petImageUrl(firstImg)
       : '/placeholder.png';
   };
 

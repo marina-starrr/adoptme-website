@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
 import { supabase } from '../supabaseClient';
+import { petImageUrl } from '../utils/petImage';
 import './Login.css';
 
 function Login() {
@@ -55,7 +56,7 @@ function Login() {
                 const formattedFavorites = fullPetsData.map(pet => ({
                     id: pet.Id,
                     name: pet.Name,
-                    image: `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/pets/${pet.ImageName}`
+                    image: petImageUrl(pet.ImageName)
                 }));
 
                 localStorage.setItem('favorites', JSON.stringify(formattedFavorites));
