@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import './UserPetCard.css';
 import { useAuth } from '../context/AuthContext';
+import { getStatusConfig } from '../utils/petStatus';
 import { useToast } from '../context/ToastContext'; // 👈 Додано контекст сповіщень
 
 function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Шукає дім" }) {
@@ -126,17 +127,6 @@ function UserPetCard({ id, name, age, gender, tags, image, isAdmin, status = "Ш
             } else {
                 showToast("❌ Сталася помилка при підписці: " + error.message);
             }
-        }
-    };
-
-    const getStatusConfig = (petStatus) => {
-        switch (petStatus) {
-            case 'Особливий догляд': return { class: 'status-special', icon: '❤️‍🩹' };
-            case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
-            case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
-            case 'Не вдалось врятувати': return { class: 'status-died', icon: '😞' };
-            case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
-            default: return { class: 'status-looking', icon: '🐾' };
         }
     };
 

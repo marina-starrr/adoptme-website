@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '../../supabaseClient';
 import CustomDropdown from '../../components/CustomDropdown';
+import { formatPhone380 } from '../../utils/phone';
 import './AdminUsers.css';
 import { useToast } from '../../context/ToastContext';
 
@@ -19,20 +20,6 @@ async function callAdminFn(body) {
     if (data?.error) throw new Error(data.error);
     return data;
 }
-
-const formatPhone = (raw) => {
-    let digits = (raw || '').replace(/\D/g, '');
-    if (digits.length === 0) return '';
-    if (!digits.startsWith('380')) digits = '380' + digits;
-    digits = digits.substring(0, 12);
-    let formatted = '+';
-    if (digits.length > 0) formatted += digits.substring(0, 2);
-    if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
-    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
-    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
-    return formatted;
-};
 
 function AdminUsers() {
     const [users, setUsers] = useState([]);
@@ -119,7 +106,7 @@ function AdminUsers() {
             nickname: user.nickname || '',
             first_name: user.first_name || '',
             last_name: user.last_name || '',
-            phone: formatPhone(user.phone),
+            phone: formatPhone380(user.phone),
             email: '',
             password: '',
             role: user.role || 'user'
@@ -128,7 +115,7 @@ function AdminUsers() {
     };
 
     const handlePhoneChange = (e) => {
-        setUserFormData({ ...userFormData, phone: formatPhone(e.target.value) });
+        setUserFormData({ ...userFormData, phone: formatPhone380(e.target.value) });
     };
 
     const handleSaveUser = async (e) => {

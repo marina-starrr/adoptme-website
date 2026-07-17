@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient';
 import './Help.css';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
+import { formatStoredPhone, formatPhoneTyping } from '../utils/phone';
 import { AnimatePresence, motion } from 'framer-motion';
 
 function Help() {
@@ -52,29 +53,6 @@ function Help() {
     setOpenFaq(openFaq === index ? null : index);
   };
 
-  const formatExistingPhone = (phoneStr) => {
-    if (!phoneStr) return '';
-    let digits = phoneStr.replace(/\D/g, '');
-    
-    if (digits.startsWith('380')) {
-      digits = digits.substring(3);
-    } else if (digits.startsWith('0')) {
-      digits = digits.substring(1);
-    } else if (digits.startsWith('38')) {
-      digits = digits.substring(2);
-    }
-    
-    digits = digits.substring(0, 9); 
-    
-    let formatted = '+38(0';
-    if (digits.length > 0) formatted += digits.substring(0, 2);
-    if (digits.length > 2) formatted += ') ' + digits.substring(2, 5);
-    if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
-    if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
-    
-    return formatted;
-  };
-
   const openModal = () => {
     if (!userId) {
       showToast('⚠️ Будь ласка, увійдіть або зареєструйтесь, щоб надіслати заявку на волонтерство!');
@@ -90,7 +68,7 @@ function Help() {
 
     if (name) setVolunteerName(name);
     if (phone) {
-      setVolunteerPhone(formatExistingPhone(phone));
+      setVolunteerPhone(formatStoredPhone(phone));
     } else {
       setVolunteerPhone(''); 
     }
@@ -111,25 +89,7 @@ function Help() {
     }
   };
 
-  const handlePhoneChange = (e) => {
-    let input = e.target.value;
-    
-    if (input.length < 5 || !input.startsWith('+38(0')) {
-      setVolunteerPhone('+38(0');
-      return;
-    }
-    
-    let rawAfter = input.substring(5).replace(/\D/g, '');
-    rawAfter = rawAfter.substring(0, 9);
-    
-    let formatted = '+38(0';
-    if (rawAfter.length > 0) formatted += rawAfter.substring(0, 2);
-    if (rawAfter.length > 2) formatted += ') ' + rawAfter.substring(2, 5);
-    if (rawAfter.length > 5) formatted += ' ' + rawAfter.substring(5, 7);
-    if (rawAfter.length > 7) formatted += ' ' + rawAfter.substring(7, 9);
-    
-    setVolunteerPhone(formatted);
-  };
+  const handlePhoneChange = (e) => setVolunteerPhone(formatPhoneTyping(e.target.value));
 
   const formatToDDMMYYYY = (dateStr) => {
     if (!dateStr) return '';

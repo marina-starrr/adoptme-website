@@ -5,6 +5,7 @@ import UserPetCard from '../../components/UserPetCard';
 import { supabase } from '../../supabaseClient';
 import { petImageUrl } from '../../utils/petImage';
 import { getAgeInMonths } from '../../utils/petAge';
+import { PET_STATUS } from '../../utils/petStatus';
 import BaseDropdown from '../../components/CustomDropdown';
 import './AdminPets.css';
 import { useToast } from '../../context/ToastContext';
@@ -318,7 +319,7 @@ function AdminPets() {
         if (error) throw error;
 
         const cleanStatus = dataToSave.Status?.trim();
-        if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
+        if (isStatusChanged && [PET_STATUS.TREATMENT, PET_STATUS.HOME, PET_STATUS.LOST, PET_STATUS.RESERVED, PET_STATUS.LOOKING].includes(cleanStatus)) {
           const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
           const { data: favUsers } = await supabase.from('Favorites').select('user_id').eq('PetId', currentPetId);

@@ -4,6 +4,7 @@ import './UserHeader.css';
 import DonateButton from './DonateButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../supabaseClient';
+import { formatStoredPhone, formatPhoneTyping } from '../utils/phone';
 import { useToast } from '../context/ToastContext';
 
 function UserHeader() {
@@ -52,25 +53,6 @@ function UserHeader() {
             navigate('/admin/adoptions', { replace: true });
         }
     }, [userRole, location.pathname, navigate]);
-
-    const formatExistingPhone = (phoneStr) => {
-        if (!phoneStr) return '';
-        let digits = phoneStr.replace(/\D/g, '');
-
-        if (digits.startsWith('380')) digits = digits.substring(3);
-        else if (digits.startsWith('0')) digits = digits.substring(1);
-        else if (digits.startsWith('38')) digits = digits.substring(2);
-
-        digits = digits.substring(0, 9);
-
-        let formatted = '+38(0';
-        if (digits.length > 0) formatted += digits.substring(0, 2);
-        if (digits.length > 2) formatted += ') ' + digits.substring(2, 5);
-        if (digits.length > 5) formatted += ' ' + digits.substring(5, 7);
-        if (digits.length > 7) formatted += ' ' + digits.substring(7, 9);
-
-        return formatted;
-    };
 
     useEffect(() => {
         const fetchNotifications = async () => {
@@ -176,7 +158,7 @@ function UserHeader() {
             if (profile.first_name) setAdopterFirstName(profile.first_name);
             if (profile.last_name) setAdopterLastName(profile.last_name);
             if (userEmail) setAdopterEmail(userEmail);
-            setAdopterPhone(profile.phone ? formatExistingPhone(profile.phone) : '');
+            setAdopterPhone(profile.phone ? formatStoredPhone(profile.phone) : '');
         }
     }, [showForm, profile, userEmail]);
 
@@ -303,25 +285,7 @@ function UserHeader() {
         setAdopterLastName(cleanedValue.substring(0, 25));
     };
 
-    const handlePhoneChange = (e) => {
-        let input = e.target.value;
-
-        if (input.length < 5 || !input.startsWith('+38(0')) {
-            setAdopterPhone('+38(0');
-            return;
-        }
-
-        let rawAfter = input.substring(5).replace(/\D/g, '');
-        rawAfter = rawAfter.substring(0, 9);
-
-        let formatted = '+38(0';
-        if (rawAfter.length > 0) formatted += rawAfter.substring(0, 2);
-        if (rawAfter.length > 2) formatted += ') ' + rawAfter.substring(2, 5);
-        if (rawAfter.length > 5) formatted += ' ' + rawAfter.substring(5, 7);
-        if (rawAfter.length > 7) formatted += ' ' + rawAfter.substring(7, 9);
-
-        setAdopterPhone(formatted);
-    };
+    const handlePhoneChange = (e) => setAdopterPhone(formatPhoneTyping(e.target.value));
 
     const handleCommentChange = (e) => {
         const value = e.target.value;

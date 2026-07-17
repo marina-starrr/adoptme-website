@@ -2,6 +2,7 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { petImageUrl } from '../utils/petImage';
+import { getStatusConfig, PET_STATUS } from '../utils/petStatus';
 import BaseDropdown from '../components/CustomDropdown';
 import BackgroundPaws from '../components/BackgroundPaws';
 import { useAuth } from '../context/AuthContext';
@@ -155,7 +156,7 @@ function PetDetails() {
       if (error) throw error;
 
       const cleanStatus = finalData.Status?.trim();
-      if (isStatusChanged && ['На лікуванні', 'Вже вдома', 'Не вдалось врятувати', 'Заброньована', 'Шукає дім'].includes(cleanStatus)) {
+      if (isStatusChanged && [PET_STATUS.TREATMENT, PET_STATUS.HOME, PET_STATUS.LOST, PET_STATUS.RESERVED, PET_STATUS.LOOKING].includes(cleanStatus)) {
         const targetStatus = cleanStatus === 'Вже вдома' ? 'Вже знайшла дім' : cleanStatus;
 
         const { data: favUsers } = await supabase
@@ -234,17 +235,6 @@ function PetDetails() {
       showToast(`🔔 Дякуємо! Администратора сповіщено. Ви отримаєте повідомлення, коли ${pet.Name} одужає.`);
     } else {
       showToast("❌ Сталася помилка: " + error.message);
-    }
-  };
-
-  const getStatusConfig = (petStatus) => {
-    switch (petStatus) {
-      case 'Особливий догляд': return { class: 'status-special', icon: '❤️‍🩹' };
-      case 'На лікуванні': return { class: 'status-treatment', icon: '💊' };
-      case 'Вже вдома': return { class: 'status-home', icon: '🏡' };
-      case 'Не вдалось врятувати': return { class: 'status-died', icon: '😞' };
-      case 'Заброньована': case 'Заброньовано': return { class: 'status-reserved', icon: '🔒' };
-      default: return { class: 'status-looking', icon: '🐾' };
     }
   };
 

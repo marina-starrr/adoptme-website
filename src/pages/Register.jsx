@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { formatPhone380 } from '../utils/phone';
 import './Login.css';
 import { useToast } from '../context/ToastContext'; // 👈 Глобальні тости
 
@@ -19,20 +20,7 @@ function Register() {
   const navigate = useNavigate();
   const { showToast } = useToast(); // 👈 Підключаємо функцію з контексту
 
-  const handlePhoneChange = (e) => {
-    const rawDigits = e.target.value.replace(/\D/g, '');
-    if (rawDigits.length === 0) { setPhone(''); return; }
-    let digits = rawDigits;
-    if (!digits.startsWith('380')) digits = '380' + digits;
-    digits = digits.substring(0, 12);
-    let formatted = '+';
-    if (digits.length > 0) formatted += digits.substring(0, 2);
-    if (digits.length > 2) formatted += '(' + digits.substring(2, 5);
-    if (digits.length > 5) formatted += ') ' + digits.substring(5, 8);
-    if (digits.length > 8) formatted += ' ' + digits.substring(8, 10);
-    if (digits.length > 10) formatted += ' ' + digits.substring(10, 12);
-    setPhone(formatted);
-  };
+  const handlePhoneChange = (e) => setPhone(formatPhone380(e.target.value));
 
   const handleRegister = async (e) => {
     e.preventDefault();
