@@ -3,10 +3,9 @@ import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-route
 import { AuthProvider } from './context/AuthContext';
 import { ToastProvider } from './context/ToastContext'; // 👈 Наш глобальний провайдер тостів
 import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 
 import UserLayout from './layouts/UserLayout';
-import AdminLayout from './layouts/AdminLayout';
 import ProtectedRoute from './components/ProtectedRoute';
 
 import Home from './pages/Home';
@@ -18,17 +17,19 @@ import Profile from './pages/Profile';
 import PetDetails from './pages/PetDetails';
 import Help from './pages/Help';
 
-import Login from './pages/Login';
-import ForgotPassword from './pages/ForgotPassword';
-import UpdatePassword from './pages/UpdatePassword';
-import Register from './pages/Register';
+// Ліниво завантажувані сторінки — окремі чанки, поза стартовим бандлом
+const Login = lazy(() => import('./pages/Login'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const UpdatePassword = lazy(() => import('./pages/UpdatePassword'));
+const Register = lazy(() => import('./pages/Register'));
 
-import AdminAdoptions from './pages/admin/AdminAdoptions';
-import AdminPets from './pages/admin/AdminPets';
-import AdminReviews from './pages/admin/AdminReviews';
-import AdminUsers from './pages/admin/AdminUsers';
-import AdminHappyPets from './pages/admin/AdminHappyPets';
-import AdminNotifications from './pages/admin/AdminNotifications';
+const AdminLayout = lazy(() => import('./layouts/AdminLayout'));
+const AdminAdoptions = lazy(() => import('./pages/admin/AdminAdoptions'));
+const AdminPets = lazy(() => import('./pages/admin/AdminPets'));
+const AdminReviews = lazy(() => import('./pages/admin/AdminReviews'));
+const AdminUsers = lazy(() => import('./pages/admin/AdminUsers'));
+const AdminHappyPets = lazy(() => import('./pages/admin/AdminHappyPets'));
+const AdminNotifications = lazy(() => import('./pages/admin/AdminNotifications'));
 
 function AppRoutes() {
   const location = useLocation();
@@ -74,6 +75,7 @@ function AppRoutes() {
         exit="exit"
         style={{ display: 'flex', flexDirection: 'column', flex: 1, width: '100%' }}
       >
+        <Suspense fallback={<h2 className="loading-message">Завантаження... 🐾</h2>}>
         <Routes location={location}>
           <Route element={<UserLayout />}>
             <Route path="/" element={<Home />} />
@@ -106,6 +108,7 @@ function AppRoutes() {
             <Route path="notifications" element={<AdminNotifications />} />
           </Route>
         </Routes>
+        </Suspense>
 
         {/* Анімація переходу між сторінками */}
         <motion.div
